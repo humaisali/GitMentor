@@ -187,98 +187,92 @@ For each project phase in your roadmap, the AI generates detailed, dynamic check
 
 ## Architecture
 
+### System Overview
+
+```mermaid
+graph TD
+    subgraph Client["Frontend (React + Vite)"]
+        FW[Focus Workspace]
+        RB[Roadmap Builder]
+        RA[Repo Analysis]
+        AG[Analytics & Gamification]
+    end
+
+    subgraph Server["Backend (Express.js)"]
+        AC[Auth Controller]
+        RC[Repository Controller]
+        RMC[Roadmap Controller]
+        ANC[Analytics Controller]
+        IC[Insight Controller]
+        CC[Calendar Controller]
+    end
+
+    subgraph Database["MongoDB"]
+        U[(User)]
+        R[(Repository)]
+        P[(Project)]
+        I[(Insight)]
+        A[(Analytics)]
+        B[(BuildSession)]
+    end
+
+    subgraph External["External Services"]
+        GH[GitHub REST API]
+        GM[Google Gemini Flash]
+        GC[Google Calendar API]
+    end
+
+    Client -- REST API --> Server
+    Server -- Mongoose --> Database
+    RC -- Fetch Repos --> GH
+    ANC -- Fetch Stats --> GH
+    IC -- Generate Insights --> GM
+    RMC -- Generate Roadmaps --> GM
+    RC -- Code Review --> GM
+    CC -- Sync Events --> GC
 ```
-+---------------------------------------------------------------+
-|                        CLIENT (React)                         |
-|  +----------+ +----------+ +----------+ +------------------+ |
-|  | Focus    | | Roadmap  | | Repos    | | Analytics        | |
-|  | Workspace| | Builder  | | Analysis | | & Gamification   | |
-|  +----------+ +----------+ +----------+ +------------------+ |
-|                          |  REST API                          |
-+---------------------------------------------------------------+
-|                    SERVER (Express.js)                         |
-|  +------------+ +--------------+ +------------------------+  |
-|  | Auth       | | Repository   | | AI Pipeline            |  |
-|  | Controller | | Controller   | | (Gemini Flash)         |  |
-|  +------------+ +--------------+ +------------------------+  |
-|  | Roadmap    | | Analytics    | | Calendar               |  |
-|  | Controller | | Controller   | | Controller             |  |
-|  +------------+ +--------------+ +------------------------+  |
-|                          |                                    |
-+---------------------------------------------------------------+
-|                    DATABASE (MongoDB)                          |
-|  +------+ +------------+ +---------+ +---------+ +--------+ |
-|  | User | | Repository | | Project | | Insight | |Analytics| |
-|  +------+ +------------+ +---------+ +---------+ +--------+ |
-+---------------------------------------------------------------+
-|                   EXTERNAL SERVICES                           |
-|  +----------------+ +--------------+ +----------------------+|
-|  | GitHub REST API | | Gemini Flash | | Google Calendar API  ||
-|  +----------------+ +--------------+ +----------------------+|
-+---------------------------------------------------------------+
-```
+
+### Layer Breakdown
+
+| Layer | Technology | Responsibilities |
+|:------|:-----------|:-----------------|
+| Frontend | React 19, Vite 8, Tailwind CSS 4 | Dashboard rendering, roadmap visualization, user interaction, analytics display |
+| Backend | Node.js, Express.js 5 | API handling, authentication, repository processing, AI request management |
+| Database | MongoDB, Mongoose 9 | Stores users, projects, progress data, AI feedback, and roadmap information |
+| AI | Google Gemini Flash SDK | Skill assessment, roadmap generation, mentorship, code reviews |
+| External | GitHub API, Google Calendar API | Repository data, contribution tracking, Build Day scheduling |
 
 ### Project Structure
 
 ```
 GitMentor/
-├── frontend/                         # React (Vite) + Tailwind CSS v4
+│
+├── frontend/                    # React + Vite + Tailwind CSS v4
 │   └── src/
 │       ├── components/
-│       │   ├── ui/                   # Card, Button, Input, Badge, Skeleton
-│       │   ├── widgets/              # Dashboard widgets
-│       │   └── ProtectedRoute.jsx
-│       ├── context/
-│       │   └── AuthContext.jsx
-│       ├── layouts/
-│       │   └── DashboardLayout.jsx
-│       └── pages/
-│           ├── Analytics.jsx         # Gamification, badges, stats
-│           ├── AuthCallback.jsx      # OAuth callback
-│           ├── FocusWorkspace.jsx     # Main dashboard
-│           ├── Login.jsx
-│           ├── Repositories.jsx      # Repo list + AI analysis
-│           ├── RepositoryDetails.jsx
-│           ├── Roadmap.jsx           # AI roadmap generation
-│           ├── ProjectDetails.jsx    # Phase execution and tracking
-│           └── Settings.jsx
+│       │   ├── ui/              # Reusable UI primitives (Card, Button, Input, Badge, Skeleton)
+│       │   └── widgets/         # Dashboard widgets (AI Insights, Repo Overview, Metrics, Activity Feed, Calendar)
+│       ├── context/             # AuthContext for global auth state
+│       ├── layouts/             # DashboardLayout (sidebar + content area)
+│       └── pages/               # Route-level pages
+│           ├── FocusWorkspace   # Main dashboard with widget grid
+│           ├── Analytics        # Gamification, badges, GitHub stats
+│           ├── Roadmap          # AI roadmap generation and listing
+│           ├── ProjectDetails   # Phase execution and tracking
+│           ├── Repositories     # Repo list with AI analysis
+│           └── Settings         # Account configuration
 │
-├── backend/                          # Node.js + Express.js + Mongoose
-│   ├── server.js
+├── backend/                     # Node.js + Express.js + Mongoose
+│   ├── server.js                # Entry point and middleware setup
 │   └── src/
-│       ├── config/
-│       │   └── passport.js           # GitHub and Google OAuth
-│       ├── controllers/
-│       │   ├── authController.js
-│       │   ├── insightController.js
-│       │   ├── repositoryController.js
-│       │   ├── roadmapController.js
-│       │   ├── calendarController.js
-│       │   └── analyticsController.js
-│       ├── middlewares/
-│       │   └── authMiddleware.js
-│       ├── models/
-│       │   ├── User.js
-│       │   ├── Repository.js
-│       │   ├── Project.js
-│       │   ├── Insight.js
-│       │   ├── Analytics.js
-│       │   └── BuildSession.js
-│       ├── routes/
-│       │   ├── authRoutes.js         # /api/auth/*
-│       │   ├── repositoryRoutes.js   # /api/repositories/*
-│       │   ├── insightRoutes.js      # /api/insights/*
-│       │   ├── roadmapRoutes.js      # /api/roadmaps/*
-│       │   ├── calendarRoutes.js     # /api/calendar/*
-│       │   └── analyticsRoutes.js    # /api/analytics/*
-│       └── utils/
-│           ├── githubApi.js
-│           ├── geminiApi.js
-│           └── badgeRules.js
+│       ├── config/              # Passport OAuth strategies (GitHub, Google)
+│       ├── controllers/         # Business logic (auth, repos, roadmaps, insights, calendar, analytics)
+│       ├── middlewares/         # JWT verification
+│       ├── models/              # Mongoose schemas (User, Repository, Project, Insight, Analytics, BuildSession)
+│       ├── routes/              # Express route definitions for each API domain
+│       └── utils/               # GitHub API client, Gemini AI client, badge evaluation rules
 │
-└── Documentation/
-    ├── gitmentor_complete_srs_document.md
-    └── Progress Till Now
+└── Documentation/               # SRS document and progress tracker
 ```
 
 ---
