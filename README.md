@@ -190,46 +190,31 @@ For each project phase in your roadmap, the AI generates detailed, dynamic check
 ### System Overview
 
 ```mermaid
-graph TD
+graph TB
+
     subgraph Client["Frontend (React + Vite)"]
-        FW[Focus Workspace]
-        RB[Roadmap Builder]
-        RA[Repo Analysis]
-        AG[Analytics & Gamification]
+        direction LR
+        FW["Focus Workspace"] ~~~ RB["Roadmap Builder"] ~~~ RA["Repo Analysis"] ~~~ AG["Analytics"]
     end
 
     subgraph Server["Backend (Express.js)"]
-        AC[Auth Controller]
-        RC[Repository Controller]
-        RMC[Roadmap Controller]
-        ANC[Analytics Controller]
-        IC[Insight Controller]
-        CC[Calendar Controller]
+        direction LR
+        AC["Auth"] ~~~ RC["Repositories"] ~~~ RMC["Roadmaps"] ~~~ IC["Insights"] ~~~ ANC["Analytics"] ~~~ CC["Calendar"]
     end
 
-    subgraph Database["MongoDB"]
-        U[(User)]
-        R[(Repository)]
-        P[(Project)]
-        I[(Insight)]
-        A[(Analytics)]
-        B[(BuildSession)]
+    subgraph DB["MongoDB"]
+        direction LR
+        U[("User")] ~~~ R[("Repository")] ~~~ P[("Project")] ~~~ I[("Insight")] ~~~ A[("Analytics")]
     end
 
-    subgraph External["External Services"]
-        GH[GitHub REST API]
-        GM[Google Gemini Flash]
-        GC[Google Calendar API]
+    subgraph Ext["External Services"]
+        direction LR
+        GH["GitHub API"] ~~~ GM["Gemini Flash"] ~~~ GC["Calendar API"]
     end
 
-    Client -- REST API --> Server
-    Server -- Mongoose --> Database
-    RC -- Fetch Repos --> GH
-    ANC -- Fetch Stats --> GH
-    IC -- Generate Insights --> GM
-    RMC -- Generate Roadmaps --> GM
-    RC -- Code Review --> GM
-    CC -- Sync Events --> GC
+    Client -- "REST API" --> Server
+    Server -- "Mongoose" --> DB
+    Server -- "HTTP" --> Ext
 ```
 
 ### Layer Breakdown
