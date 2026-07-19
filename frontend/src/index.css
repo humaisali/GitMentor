@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --color-charcoal-base: #09090B;
+  --color-muted-surface: #18181B;
+  --color-canvas-white: #F9FAFB;
+  --color-muted-cyan: #06B6D4;
+  --color-muted-steel: #A1A1AA;
+  --color-whisper-border: rgba(255, 255, 255, 0.1);
+
+  --font-geist: 'Geist Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-charcoal-base text-canvas-white font-geist antialiased;
+  }
+}
+
+/* Base resets & utilities for the specific design system */
+@layer utilities {
+  .border-whisper {
+    border-color: var(--color-whisper-border);
+  }
+  
+  .active-press {
+    @apply transition-transform active:translate-y-[1px];
+  }
+}
+
+/* Hide Scrollbar */
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
