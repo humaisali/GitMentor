@@ -1,8 +1,8 @@
-<p align="center">
+<!-- <p align="center">
   <img src="https://img.shields.io/badge/GitMentor-AI%20Powered-0ea5e9?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="GitMentor" />
   <img src="https://img.shields.io/badge/Status-In%20Development-f59e0b?style=for-the-badge" alt="Status" />
   <img src="https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge" alt="License" />
-</p>
+</p> -->
 
 <h1 align="center">GitMentor</h1>
 
