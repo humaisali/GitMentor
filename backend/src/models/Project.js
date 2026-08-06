@@ -62,7 +62,15 @@ const projectSchema = new mongoose.Schema(
       title: { type: String },
       description: { type: String },
       estimatedTime: { type: String },
-      isCompleted: { type: Boolean, default: false }
+      isCompleted: { type: Boolean, default: false },
+      isStarted: { type: Boolean, default: false },
+      tasks: [{
+        taskId: { type: String },
+        title: { type: String },
+        description: { type: String },
+        steps: [{ type: String }],
+        isCompleted: { type: Boolean, default: false }
+      }]
     }],
     learningMaterials: [{
       title: { type: String },
