@@ -4,6 +4,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Sparkles, ArrowLeft, CheckCircle2, Circle, Check, Info, X, ListTodo, Bot } from 'lucide-react';
 import { Badge } from '../components/ui/Badge';
+import ProjectChatAssistant from '../components/ProjectChatAssistant';
 
 const API_BASE = 'http://localhost:5000/api/roadmaps';
 
@@ -246,6 +247,7 @@ const PhaseDetails = () => {
           </div>
         </div>
       )}
+      <ProjectChatAssistant projectId={projectId} />
     </div>
   );
 };
