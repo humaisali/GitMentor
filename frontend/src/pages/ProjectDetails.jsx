@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { Badge } from '../components/ui/Badge';
 import { Sparkles, ArrowLeft, CheckCircle2, Circle, Clock, Check, ExternalLink, BookOpen, Layers, Compass, ListTodo, Info, X, Play } from 'lucide-react';
+import ProjectChatAssistant from '../components/ProjectChatAssistant';
 
 const API_BASE = 'http://localhost:5000/api/roadmaps';
 
@@ -389,6 +390,8 @@ const ProjectDetails = () => {
       )}
 
 
+
+      {project?.detailedPlan && <ProjectChatAssistant projectId={projectId} />}
     </div>
   );
 };
