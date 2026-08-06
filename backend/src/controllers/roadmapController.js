@@ -1,6 +1,6 @@
 import Project from '../models/Project.js';
 import Repository from '../models/Repository.js';
-import { generateRoadmap } from '../utils/geminiApi.js';
+import { generateRoadmap, chatWithProjectAssistant } from '../utils/geminiApi.js';
 
 // @desc    Get user's roadmap projects
 // @route   GET /api/roadmaps
@@ -236,5 +236,36 @@ export const completePhase = async (req, res) => {
     res.status(200).json(project);
   } catch (error) {
     res.status(500).json({ message: 'Error completing phase', error: error.message });
+  }
+};
+
+// @desc    Chat with project-scoped AI assistant
+// @route   POST /api/roadmaps/:projectId/chat
+// @access  Private
+export const chatWithProject = async (req, res) => {
+  try {
+    const { message, history = [] } = req.body;
+
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      return res.status(400).json({ message: 'Message is required.' });
+    }
+
+    const project = await Project.findOne({ projectId: req.params.projectId, user: req.user._id });
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found.' });
+    }
+
+    // Limit history to last 15 messages to control token usage
+    const trimmedHistory = history.slice(-15);
+
+    const reply = await chatWithProjectAssistant(project.toObject(), trimmedHistory, message.trim());
+
+    res.status(200).json({ reply });
+  } catch (error) {
+    console.error('Chat error:', error);
+    if (error.status === 429 || error.message?.includes('429') || error.message?.includes('quota')) {
+      return res.status(429).json({ message: 'Gemini API rate limit reached. Please wait a minute and try again.' });
+    }
+    res.status(500).json({ message: 'Error processing chat message', error: error.message });
   }
 };

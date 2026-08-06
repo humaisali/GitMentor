@@ -1,5 +1,5 @@
 import express from 'express';
-import { getRoadmap, generateNewRoadmap, generatePlan, selectTimeline, completePhase, startPhase, completeTask } from '../controllers/roadmapController.js';
+import { getRoadmap, generateNewRoadmap, generatePlan, selectTimeline, completePhase, startPhase, completeTask, chatWithProject } from '../controllers/roadmapController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -15,6 +15,9 @@ router.route('/:projectId/plan')
 
 router.route('/:projectId/timeline')
   .post(protect, selectTimeline);
+
+router.route('/:projectId/chat')
+  .post(protect, chatWithProject);
 
 router.route('/:projectId/phases/:phaseId/start')
   .post(protect, startPhase);
