@@ -264,7 +264,7 @@ export const generateLearningMaterials = async (projectTitle, projectDescription
     Project description: "${projectDescription}"
     Tech stack: ${techStackStr}
     
-    Recommend 6 real, high-quality online learning resources (blog posts, tutorials, documentation pages, or articles) that would be most helpful for someone building this project.
+    Recommend 6 real, high-quality online learning topics (blog posts, tutorials, documentation pages, or articles) that would be most helpful for someone building this project.
     
     Focus on:
     - Resources that cover the core technologies and patterns needed
@@ -273,8 +273,7 @@ export const generateLearningMaterials = async (projectTitle, projectDescription
     
     For each resource, provide:
     - title: A descriptive, realistic article title that would help with this project
-    - url: A realistic URL to the resource on the platform (use real domain patterns like https://medium.com/..., https://dev.to/..., https://www.freecodecamp.org/news/..., https://developer.mozilla.org/..., etc.)
-    - source: The platform name (e.g., "Medium", "Dev.to", "freeCodeCamp", "MDN Web Docs")
+    - source:Povide the Exact Resource URL. DO NOT CHANGE IT. Don't make a False URL. If you don't have the exact URL, provide the most likely search query.
   `;
 
   try {
@@ -289,15 +288,21 @@ export const generateLearningMaterials = async (projectTitle, projectDescription
             type: Type.OBJECT,
             properties: {
               title: { type: Type.STRING },
-              url: { type: Type.STRING },
               source: { type: Type.STRING },
             },
-            required: ["title", "url", "source"],
+            required: ["title", "source"],
           },
         },
       },
     });
-    return JSON.parse(response.text);
+    const materials = JSON.parse(response.text);
+    
+    // Construct reliable Google search URLs from the titles
+    return materials.map(m => ({
+      title: m.title,
+      source: m.source,
+      url: `https://www.google.com/search?q=${encodeURIComponent(m.title + ' ' + m.source)}`
+    }));
   } catch (error) {
     console.error('Error generating learning materials:', error);
     throw error;

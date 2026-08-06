@@ -259,55 +259,58 @@ const ProjectDetails = () => {
             </div>
           )}
 
-          {/* Active Timeline & Execution Phases */}
+          {/* Active Timeline & Learning Materials — Left Column */}
           {project.selectedTimeline && (
-             <div className="md:col-span-4 bg-muted-surface rounded-2xl p-7 shadow-lg relative overflow-hidden h-fit self-start">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-success/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
-               <h4 className="text-[11px] font-mono tracking-widest text-muted-steel mb-4 uppercase flex items-center gap-2">
-                 <Clock size={14} className="text-success" /> Active Timeline
-               </h4>
-               <p className="text-xl font-medium text-canvas-white mb-2">
-                 {project.timelineOptions?.find(t => t.id === project.selectedTimeline)?.title || 'Custom Timeline'}
-               </p>
-               <div className="inline-block px-3 py-1 bg-muted-surface rounded-full border border-whisper/50 text-xs text-muted-cyan font-mono mb-5">
-                 {project.timelineOptions?.find(t => t.id === project.selectedTimeline)?.duration}
-               </div>
-               <p className="text-[15px] text-muted-steel leading-relaxed pt-5 border-t border-whisper/30">
-                 {project.timelineOptions?.find(t => t.id === project.selectedTimeline)?.description}
-               </p>
-             </div>
-          )}
-
-          {/* Learning Materials */}
-          {project.selectedTimeline && project.learningMaterials && project.learningMaterials.length > 0 && (
-            <div className="md:col-span-4 bg-muted-surface rounded-2xl p-7 shadow-lg relative overflow-hidden h-fit self-start">
-              <div className="absolute bottom-0 left-0 w-40 h-40 bg-muted-cyan/5 rounded-full blur-3xl pointer-events-none translate-y-1/2 -translate-x-1/2"></div>
-              <h4 className="text-[11px] font-mono tracking-widest text-muted-steel mb-5 uppercase flex items-center gap-2">
-                <BookOpen size={14} className="text-muted-cyan" /> Learning Materials
-              </h4>
-              <div className="space-y-1 relative z-10">
-                {project.learningMaterials.map((material, idx) => (
-                  <a
-                    key={idx}
-                    href={material.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex items-start gap-3 p-3 -mx-1 rounded-xl transition-all duration-200 hover:bg-white/[0.04]"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-canvas-white/90 leading-snug mb-1.5 group-hover:text-muted-cyan transition-colors line-clamp-2">
-                        {material.title}
-                      </p>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono tracking-wide bg-white/[0.06] border border-whisper/30 text-muted-steel">
-                        {material.source}
-                      </span>
-                    </div>
-                    <div className="shrink-0 mt-0.5 p-1.5 rounded-lg bg-white/[0.04] border border-transparent group-hover:border-muted-cyan/30 group-hover:bg-muted-cyan/10 transition-all">
-                      <ExternalLink size={14} className="text-muted-steel group-hover:text-muted-cyan transition-colors" />
-                    </div>
-                  </a>
-                ))}
+            <div className="md:col-span-4 flex flex-col gap-5 self-start">
+              {/* Active Timeline */}
+              <div className="bg-muted-surface rounded-2xl p-7 shadow-lg relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-success/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+                <h4 className="text-[11px] font-mono tracking-widest text-muted-steel mb-4 uppercase flex items-center gap-2">
+                  <Clock size={14} className="text-success" /> Active Timeline
+                </h4>
+                <p className="text-xl font-medium text-canvas-white mb-2">
+                  {project.timelineOptions?.find(t => t.id === project.selectedTimeline)?.title || 'Custom Timeline'}
+                </p>
+                <div className="inline-block px-3 py-1 bg-muted-surface rounded-full border border-whisper/50 text-xs text-muted-cyan font-mono mb-5">
+                  {project.timelineOptions?.find(t => t.id === project.selectedTimeline)?.duration}
+                </div>
+                <p className="text-[15px] text-muted-steel leading-relaxed pt-5 border-t border-whisper/30">
+                  {project.timelineOptions?.find(t => t.id === project.selectedTimeline)?.description}
+                </p>
               </div>
+
+              {/* Learning Materials */}
+              {project.learningMaterials && project.learningMaterials.length > 0 && (
+                <div className="bg-muted-surface rounded-2xl p-7 shadow-lg relative overflow-hidden">
+                  <div className="absolute bottom-0 left-0 w-40 h-40 bg-muted-cyan/5 rounded-full blur-3xl pointer-events-none translate-y-1/2 -translate-x-1/2"></div>
+                  <h4 className="text-[11px] font-mono tracking-widest text-muted-steel mb-5 uppercase flex items-center gap-2">
+                    <BookOpen size={14} className="text-muted-cyan" /> Learning Materials
+                  </h4>
+                  <div className="space-y-1 relative z-10">
+                    {project.learningMaterials.map((material, idx) => (
+                      <a
+                        key={idx}
+                        href={material.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group flex items-start gap-3 p-3 -mx-1 rounded-xl transition-all duration-200 hover:bg-white/[0.04]"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-canvas-white/90 leading-snug mb-1.5 group-hover:text-muted-cyan transition-colors line-clamp-2">
+                            {material.title}
+                          </p>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono tracking-wide bg-white/[0.06] border border-whisper/30 text-muted-steel">
+                            {material.source}
+                          </span>
+                        </div>
+                        <div className="shrink-0 mt-0.5 p-1.5 rounded-lg bg-white/[0.04] border border-transparent group-hover:border-muted-cyan/30 group-hover:bg-muted-cyan/10 transition-all">
+                          <ExternalLink size={14} className="text-muted-steel group-hover:text-muted-cyan transition-colors" />
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
