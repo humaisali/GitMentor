@@ -21,7 +21,7 @@ const getAI = () => {
 export const generateRoadmap = async (repositories, userPrompt = null) => {
   const ai = getAI();
 
-  const customGoalSection = userPrompt 
+  const customGoalSection = userPrompt
     ? `\n    The user has a specific goal: "${userPrompt}". 
     Create a highly focused 5-step roadmap specifically to achieve this goal, taking their current skill level (inferred from their repositories) into account as a starting point.`
     : `\n    Generate a progressive 5-step project roadmap to help them reach a "Full-Stack Mastery" or "Advanced Software Engineer" level.`;
@@ -33,12 +33,12 @@ export const generateRoadmap = async (repositories, userPrompt = null) => {
     
     User Repositories Data:
     ${JSON.stringify(repositories.map(repo => ({
-      name: repo.name,
-      language: repo.language,
-      description: repo.description,
-      topics: repo.topics || [],
-      stargazers_count: repo.stargazers_count
-    })), null, 2)}
+    name: repo.name,
+    language: repo.language,
+    description: repo.description,
+    topics: repo.topics || [],
+    stargazers_count: repo.stargazers_count
+  })), null, 2)}
     
     Generate exactly 5 projects in order of progression.
     Return a JSON array where each object has the following keys:
@@ -249,6 +249,7 @@ export const generateProjectPhases = async (projectTitle, timelineDuration) => {
 
 /**
  * Generate curated learning materials (blogs, articles, tutorials) for a project.
+ * Uses Gemini's Google Search grounding to find REAL, working URLs.
  * @param {String} projectTitle - The project title.
  * @param {String} projectDescription - The project description.
  * @param {Array} techStack - The project's tech stack.
@@ -260,20 +261,13 @@ export const generateLearningMaterials = async (projectTitle, projectDescription
   const techStackStr = techStack.length > 0 ? techStack.join(', ') : 'general web development';
 
   const prompt = `
-    You are a senior developer educator. A user is working on a project called "${projectTitle}".
+    Search the web and find 4 to 6 real, high-quality learning resources (blog posts, tutorials, articles, or documentation pages) that would help someone build a project called "${projectTitle}".
     Project description: "${projectDescription}"
     Tech stack: ${techStackStr}
     
-    Recommend 6 real, high-quality online learning topics (blog posts, tutorials, documentation pages, or articles) that would be most helpful for someone building this project.
+    Focus on practical tutorials, guides, and articles from well-known developer platforms like Medium, Dev.to, freeCodeCamp, MDN Web Docs, DigitalOcean, LogRocket Blog, official documentation, etc.
     
-    Focus on:
-    - Resources that cover the core technologies and patterns needed
-    - Mix of beginner-friendly and intermediate content
-    - Prefer well-known platforms: Medium, Dev.to, freeCodeCamp, MDN Web Docs, CSS-Tricks, Smashing Magazine, LogRocket Blog, DigitalOcean Community, Hashnode, official documentation sites
-    
-    For each resource, provide:
-    - title: A descriptive, realistic article title that would help with this project
-    - source:Povide the Exact Resource URL. DO NOT CHANGE IT. Don't make a False URL. If you don't have the exact URL, provide the most likely search query.
+    List each resource with its title and a brief note about why it's helpful.
   `;
 
   try {
@@ -281,28 +275,60 @@ export const generateLearningMaterials = async (projectTitle, projectDescription
       model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              title: { type: Type.STRING },
-              source: { type: Type.STRING },
-            },
-            required: ["title", "source"],
-          },
-        },
+        tools: [{ googleSearch: {} }],
       },
     });
-    const materials = JSON.parse(response.text);
-    
-    // Construct reliable Google search URLs from the titles
-    return materials.map(m => ({
-      title: m.title,
-      source: m.source,
-      url: `https://www.google.com/search?q=${encodeURIComponent(m.title + ' ' + m.source)}`
-    }));
+
+    // Extract real URLs from Google Search grounding metadata
+    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+
+    // Domain-to-friendly-name mapping
+    const sourceMap = {
+      'medium.com': 'Medium',
+      'dev.to': 'Dev.to',
+      'freecodecamp.org': 'freeCodeCamp',
+      'developer.mozilla.org': 'MDN Web Docs',
+      'css-tricks.com': 'CSS-Tricks',
+      'smashingmagazine.com': 'Smashing Magazine',
+      'blog.logrocket.com': 'LogRocket Blog',
+      'digitalocean.com': 'DigitalOcean',
+      'hashnode.dev': 'Hashnode',
+      'stackoverflow.com': 'Stack Overflow',
+      'github.com': 'GitHub',
+      'mongodb.com': 'MongoDB',
+      'react.dev': 'React Docs',
+      'nodejs.org': 'Node.js Docs',
+      'expressjs.com': 'Express Docs',
+      'nextjs.org': 'Next.js Docs',
+      'vuejs.org': 'Vue.js Docs',
+      'angular.dev': 'Angular Docs',
+      'python.langchain.com': 'LangChain Docs',
+      'docs.python.org': 'Python Docs',
+    };
+
+    const materials = groundingChunks
+      .filter(chunk => chunk.web?.uri && chunk.web?.title)
+      .slice(0, 6)
+      .map(chunk => {
+        let source = 'Web';
+        try {
+          const hostname = new URL(chunk.web.uri).hostname.replace('www.', '');
+          // Check exact match first, then partial domain match
+          source = sourceMap[hostname];
+          if (!source) {
+            const matchedKey = Object.keys(sourceMap).find(key => hostname.includes(key));
+            source = matchedKey ? sourceMap[matchedKey] : hostname.charAt(0).toUpperCase() + hostname.slice(1);
+          }
+        } catch { /* fallback to 'Web' */ }
+
+        return {
+          title: chunk.web.title,
+          url: chunk.web.uri,
+          source
+        };
+      });
+
+    return materials;
   } catch (error) {
     console.error('Error generating learning materials:', error);
     throw error;
