@@ -4,7 +4,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { Badge } from '../components/ui/Badge';
-import { Sparkles, ArrowLeft, CheckCircle2, Circle, Clock, Check } from 'lucide-react';
+import { Sparkles, ArrowLeft, CheckCircle2, Circle, Clock, Check, ExternalLink, BookOpen } from 'lucide-react';
 
 const API_BASE = 'http://localhost:5000/api/roadmaps';
 
@@ -276,6 +276,39 @@ const ProjectDetails = () => {
                  {project.timelineOptions?.find(t => t.id === project.selectedTimeline)?.description}
                </p>
              </div>
+          )}
+
+          {/* Learning Materials */}
+          {project.selectedTimeline && project.learningMaterials && project.learningMaterials.length > 0 && (
+            <div className="md:col-span-4 bg-muted-surface rounded-2xl p-7 shadow-lg relative overflow-hidden h-fit self-start">
+              <div className="absolute bottom-0 left-0 w-40 h-40 bg-muted-cyan/5 rounded-full blur-3xl pointer-events-none translate-y-1/2 -translate-x-1/2"></div>
+              <h4 className="text-[11px] font-mono tracking-widest text-muted-steel mb-5 uppercase flex items-center gap-2">
+                <BookOpen size={14} className="text-muted-cyan" /> Learning Materials
+              </h4>
+              <div className="space-y-1 relative z-10">
+                {project.learningMaterials.map((material, idx) => (
+                  <a
+                    key={idx}
+                    href={material.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-start gap-3 p-3 -mx-1 rounded-xl transition-all duration-200 hover:bg-white/[0.04]"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-canvas-white/90 leading-snug mb-1.5 group-hover:text-muted-cyan transition-colors line-clamp-2">
+                        {material.title}
+                      </p>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono tracking-wide bg-white/[0.06] border border-whisper/30 text-muted-steel">
+                        {material.source}
+                      </span>
+                    </div>
+                    <div className="shrink-0 mt-0.5 p-1.5 rounded-lg bg-white/[0.04] border border-transparent group-hover:border-muted-cyan/30 group-hover:bg-muted-cyan/10 transition-all">
+                      <ExternalLink size={14} className="text-muted-steel group-hover:text-muted-cyan transition-colors" />
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
           )}
 
           {project.selectedTimeline && project.phases && project.phases.length > 0 && (

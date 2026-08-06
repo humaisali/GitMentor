@@ -246,3 +246,60 @@ export const generateProjectPhases = async (projectTitle, timelineDuration) => {
     throw error;
   }
 };
+
+/**
+ * Generate curated learning materials (blogs, articles, tutorials) for a project.
+ * @param {String} projectTitle - The project title.
+ * @param {String} projectDescription - The project description.
+ * @param {Array} techStack - The project's tech stack.
+ * @returns {Array} List of learning material objects with title, url, and source.
+ */
+export const generateLearningMaterials = async (projectTitle, projectDescription, techStack = []) => {
+  const ai = getAI();
+
+  const techStackStr = techStack.length > 0 ? techStack.join(', ') : 'general web development';
+
+  const prompt = `
+    You are a senior developer educator. A user is working on a project called "${projectTitle}".
+    Project description: "${projectDescription}"
+    Tech stack: ${techStackStr}
+    
+    Recommend 6 real, high-quality online learning resources (blog posts, tutorials, documentation pages, or articles) that would be most helpful for someone building this project.
+    
+    Focus on:
+    - Resources that cover the core technologies and patterns needed
+    - Mix of beginner-friendly and intermediate content
+    - Prefer well-known platforms: Medium, Dev.to, freeCodeCamp, MDN Web Docs, CSS-Tricks, Smashing Magazine, LogRocket Blog, DigitalOcean Community, Hashnode, official documentation sites
+    
+    For each resource, provide:
+    - title: A descriptive, realistic article title that would help with this project
+    - url: A realistic URL to the resource on the platform (use real domain patterns like https://medium.com/..., https://dev.to/..., https://www.freecodecamp.org/news/..., https://developer.mozilla.org/..., etc.)
+    - source: The platform name (e.g., "Medium", "Dev.to", "freeCodeCamp", "MDN Web Docs")
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              url: { type: Type.STRING },
+              source: { type: Type.STRING },
+            },
+            required: ["title", "url", "source"],
+          },
+        },
+      },
+    });
+    return JSON.parse(response.text);
+  } catch (error) {
+    console.error('Error generating learning materials:', error);
+    throw error;
+  }
+};

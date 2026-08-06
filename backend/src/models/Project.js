@@ -63,6 +63,11 @@ const projectSchema = new mongoose.Schema(
       description: { type: String },
       estimatedTime: { type: String },
       isCompleted: { type: Boolean, default: false }
+    }],
+    learningMaterials: [{
+      title: { type: String },
+      url: { type: String },
+      source: { type: String }
     }]
   },
   { timestamps: true }

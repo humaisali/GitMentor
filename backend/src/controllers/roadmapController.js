@@ -114,9 +114,16 @@ export const selectTimeline = async (req, res) => {
     const timeline = project.timelineOptions.find(t => t.id === timelineId);
     if (!timeline) return res.status(400).json({ message: 'Invalid timeline ID' });
 
-    // Generate phases from Gemini
-    const { generateProjectPhases } = await import('../utils/geminiApi.js');
-    const phases = await generateProjectPhases(project.title, timeline.duration);
+    // Generate phases and learning materials in parallel from Gemini
+    const { generateProjectPhases, generateLearningMaterials } = await import('../utils/geminiApi.js');
+    const [phases, learningMaterials] = await Promise.all([
+      generateProjectPhases(project.title, timeline.duration),
+      generateLearningMaterials(
+        project.title,
+        project.description,
+        project.detailedPlan?.techStack || []
+      )
+    ]);
 
     project.selectedTimeline = timelineId;
     project.phases = phases.map(p => ({
@@ -125,6 +132,11 @@ export const selectTimeline = async (req, res) => {
       description: p.description,
       estimatedTime: p.estimatedTime,
       isCompleted: false
+    }));
+    project.learningMaterials = learningMaterials.map(m => ({
+      title: m.title,
+      url: m.url,
+      source: m.source
     }));
 
     await project.save();
