@@ -248,6 +248,53 @@ export const generateProjectPhases = async (projectTitle, timelineDuration) => {
 };
 
 /**
+ * Split a phase into detailed, actionable tasks with step-by-step guides.
+ */
+export const generatePhaseTasks = async (projectTitle, phaseTitle, phaseDescription) => {
+  const ai = getAI();
+
+  const prompt = `
+    A user is building "${projectTitle}". They are currently working on a phase titled "${phaseTitle}".
+    Phase Description: "${phaseDescription}"
+    
+    Break this phase down into 4 to 6 detailed, actionable tasks.
+    For each task, provide a highly detailed step-by-step guide on how the developer should complete that task.
+    Return a JSON array where each object has the following keys:
+    - taskId: string (e.g. 'TASK-1')
+    - title: string (e.g. 'Set up Express Server')
+    - description: string (A brief 1-2 sentence summary of the task's goal)
+    - steps: array of strings (Detailed step-by-step guide, where each string in the array is a separate instruction step)
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              taskId: { type: Type.STRING },
+              title: { type: Type.STRING },
+              description: { type: Type.STRING },
+              steps: { type: Type.ARRAY, items: { type: Type.STRING } },
+            },
+            required: ["taskId", "title", "description", "steps"]
+          }
+        }
+      }
+    });
+    return JSON.parse(response.text);
+  } catch (error) {
+    console.error('Error generating phase tasks:', error);
+    throw error;
+  }
+};
+
+/**
  * Generate curated learning materials (blogs, articles, tutorials) for a project.
  * Uses Gemini's Google Search grounding to find REAL, working URLs.
  * @param {String} projectTitle - The project title.
