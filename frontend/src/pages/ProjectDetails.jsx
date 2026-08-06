@@ -4,7 +4,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { Badge } from '../components/ui/Badge';
-import { Sparkles, ArrowLeft, CheckCircle2, Circle, Clock, Check, ExternalLink, BookOpen, Layers, Compass } from 'lucide-react';
+import { Sparkles, ArrowLeft, CheckCircle2, Circle, Clock, Check, ExternalLink, BookOpen, Layers, Compass, ListTodo, Info, X, Play } from 'lucide-react';
 
 const API_BASE = 'http://localhost:5000/api/roadmaps';
 
@@ -17,6 +17,9 @@ const ProjectDetails = () => {
   const [generatingTimeline, setGeneratingTimeline] = useState(false);
   const [selectedOptionId, setSelectedOptionId] = useState(null);
   const [completingPhase, setCompletingPhase] = useState(null);
+  const [startingPhase, setStartingPhase] = useState(null);
+  const [completingTask, setCompletingTask] = useState(null);
+  const [taskModal, setTaskModal] = useState({ isOpen: false, task: null });
 
   const token = localStorage.getItem('gitmentor_token');
   const headers = { Authorization: `Bearer ${token}` };
@@ -39,6 +42,17 @@ const ProjectDetails = () => {
   useEffect(() => {
     fetchProject();
   }, [projectId]);
+
+  useEffect(() => {
+    if (taskModal.isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [taskModal.isOpen]);
 
   const handleGeneratePlan = async () => {
     setGeneratingPlan(true);
@@ -96,6 +110,42 @@ const ProjectDetails = () => {
       console.error(err);
     } finally {
       setCompletingPhase(null);
+    }
+  };
+
+  const handleStartPhase = async (phaseId) => {
+    setStartingPhase(phaseId);
+    try {
+      const res = await fetch(`${API_BASE}/${projectId}/phases/${phaseId}/start`, {
+        method: 'POST',
+        headers
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setProject(updated);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setStartingPhase(null);
+    }
+  };
+
+  const handleCompleteTask = async (phaseId, taskId) => {
+    setCompletingTask(taskId);
+    try {
+      const res = await fetch(`${API_BASE}/${projectId}/phases/${phaseId}/tasks/${taskId}/complete`, {
+        method: 'POST',
+        headers
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setProject(updated);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCompletingTask(null);
     }
   };
 
@@ -364,15 +414,65 @@ const ProjectDetails = () => {
                         </div>
                         <p className="text-[15px] text-muted-steel leading-relaxed mb-4">{phase.description}</p>
                         
-                        {isUnlocked && !isCompleted && (
+                        {isUnlocked && !isCompleted && !phase.isStarted && (
                           <Button 
                             variant="primary" 
-                            className="text-sm px-5 py-2 h-auto rounded-lg shadow-md"
-                            disabled={completingPhase === phase.phaseId}
-                            onClick={() => handleCompletePhase(phase.phaseId)}
+                            className="text-sm px-5 py-2 h-auto rounded-lg shadow-md gap-2"
+                            disabled={startingPhase === phase.phaseId}
+                            onClick={() => handleStartPhase(phase.phaseId)}
                           >
-                            {completingPhase === phase.phaseId ? 'Completing...' : 'Mark Phase Complete'}
+                            {startingPhase === phase.phaseId ? <Sparkles size={16} className="animate-pulse" /> : <Play size={16} />}
+                            {startingPhase === phase.phaseId ? 'Generating Tasks...' : 'Start this Phase'}
                           </Button>
+                        )}
+                        
+                        {isUnlocked && !isCompleted && phase.isStarted && phase.tasks && phase.tasks.length > 0 && (
+                          <div className="mt-4 pt-4 border-t border-whisper/30">
+                            <h5 className="text-[11px] font-mono tracking-widest text-muted-steel mb-4 uppercase flex items-center gap-2">
+                              <ListTodo size={14} className="text-muted-cyan" /> Phase Tasks
+                            </h5>
+                            <div className="space-y-3 mb-5">
+                              {phase.tasks.map((task) => (
+                                <div key={task.taskId} className={`flex items-center justify-between gap-3 p-3 rounded-lg border transition-colors ${task.isCompleted ? 'bg-success/5 border-success/20' : 'bg-charcoal-base border-whisper/50'}`}>
+                                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <p className={`text-sm truncate ${task.isCompleted ? 'text-muted-steel line-through' : 'text-canvas-white/90'}`}>
+                                      {task.title}
+                                    </p>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <Button
+                                      variant="outline"
+                                      className="h-7 px-3 py-0 text-xs border-whisper/50 text-muted-steel hover:text-canvas-white hover:border-muted-steel"
+                                      onClick={() => setTaskModal({ isOpen: true, task })}
+                                    >
+                                      Details
+                                    </Button>
+                                    <Button
+                                      variant="primary"
+                                      className="h-7 px-3 py-0 text-xs gap-1.5"
+                                      disabled={task.isCompleted || completingTask === task.taskId}
+                                      onClick={() => handleCompleteTask(phase.phaseId, task.taskId)}
+                                    >
+                                      {completingTask === task.taskId ? <Sparkles size={12} className="animate-pulse" /> : <Check size={12} />}
+                                      {task.isCompleted ? 'Done' : 'Done'}
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            
+                            {phase.tasks.every(t => t.isCompleted) && (
+                              <Button 
+                                variant="primary" 
+                                className="text-sm px-5 py-2 h-auto rounded-lg shadow-md w-full sm:w-auto"
+                                disabled={completingPhase === phase.phaseId}
+                                onClick={() => handleCompletePhase(phase.phaseId)}
+                              >
+                                {completingPhase === phase.phaseId ? 'Completing...' : 'Mark Phase Complete'}
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -381,6 +481,45 @@ const ProjectDetails = () => {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Task Details Modal */}
+      {taskModal.isOpen && taskModal.task && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-muted-surface border border-whisper rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between p-6 border-b border-whisper/40 bg-charcoal-base">
+              <h3 className="text-lg font-medium text-canvas-white flex items-center gap-3">
+                <ListTodo size={20} className="text-muted-cyan" /> {taskModal.task.title}
+              </h3>
+              <button 
+                onClick={() => setTaskModal({ isOpen: false, task: null })}
+                className="text-muted-steel hover:text-canvas-white transition-colors p-1"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto custom-scrollbar">
+              <h4 className="text-[11px] font-mono tracking-widest text-muted-steel mb-4 uppercase">Step-by-Step Guide</h4>
+              {taskModal.task.steps && taskModal.task.steps.length > 0 ? (
+                <ul className="space-y-4">
+                  {taskModal.task.steps.map((step, i) => (
+                    <li key={i} className="flex gap-4">
+                      <span className="shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-muted-cyan/10 border border-muted-cyan/20 text-muted-cyan text-xs font-mono mt-0.5">{i + 1}</span>
+                      <p className="text-canvas-white/85 text-[15px] leading-relaxed pt-0.5">{step}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="prose prose-invert max-w-none text-canvas-white/80 text-[15px] leading-relaxed whitespace-pre-wrap">
+                  {taskModal.task.description}
+                </div>
+              )}
+            </div>
+            <div className="p-6 border-t border-whisper/40 bg-charcoal-base/50 flex justify-end">
+              <Button variant="outline" onClick={() => setTaskModal({ isOpen: false, task: null })}>Close</Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
