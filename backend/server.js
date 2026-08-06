@@ -57,6 +57,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Suppress Chrome DevTools warning
+app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
+  res.status(200).json({});
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/repositories', repositoryRoutes);
