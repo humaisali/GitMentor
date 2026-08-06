@@ -146,6 +146,64 @@ export const selectTimeline = async (req, res) => {
   }
 };
 
+// @desc    Start a phase and generate tasks
+// @route   POST /api/roadmaps/:projectId/phases/:phaseId/start
+// @access  Private
+export const startPhase = async (req, res) => {
+  try {
+    const { projectId, phaseId } = req.params;
+    
+    const project = await Project.findOne({ projectId, user: req.user._id });
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    const phase = project.phases.find(p => p.phaseId === phaseId);
+    if (!phase) return res.status(404).json({ message: 'Phase not found' });
+    if (phase.isStarted) return res.status(400).json({ message: 'Phase already started' });
+
+    const { generatePhaseTasks } = await import('../utils/geminiApi.js');
+    const tasksData = await generatePhaseTasks(project.title, phase.title, phase.description);
+
+    phase.isStarted = true;
+    phase.tasks = tasksData.map(t => ({
+      taskId: t.taskId,
+      title: t.title,
+      description: t.description,
+      steps: t.steps || [],
+      isCompleted: false
+    }));
+
+    await project.save();
+    res.status(200).json(project);
+  } catch (error) {
+    res.status(500).json({ message: 'Error starting phase', error: error.message });
+  }
+};
+
+// @desc    Mark a task as completed
+// @route   POST /api/roadmaps/:projectId/phases/:phaseId/tasks/:taskId/complete
+// @access  Private
+export const completeTask = async (req, res) => {
+  try {
+    const { projectId, phaseId, taskId } = req.params;
+
+    const project = await Project.findOne({ projectId, user: req.user._id });
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    const phase = project.phases.find(p => p.phaseId === phaseId);
+    if (!phase) return res.status(404).json({ message: 'Phase not found' });
+
+    const task = phase.tasks.find(t => t.taskId === taskId);
+    if (!task) return res.status(404).json({ message: 'Task not found' });
+
+    task.isCompleted = true;
+
+    await project.save();
+    res.status(200).json(project);
+  } catch (error) {
+    res.status(500).json({ message: 'Error completing task', error: error.message });
+  }
+};
+
 // @desc    Mark a phase as completed
 // @route   POST /api/roadmaps/:projectId/phases/:phaseId/complete
 // @access  Private
