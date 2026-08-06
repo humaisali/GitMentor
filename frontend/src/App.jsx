@@ -6,6 +6,7 @@ import Roadmap from './pages/Roadmap';
 import Repositories from './pages/Repositories';
 import RepositoryDetails from './pages/RepositoryDetails';
 import ProjectDetails from './pages/ProjectDetails';
+import PhaseDetails from './pages/PhaseDetails';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import AuthCallback from './pages/AuthCallback';
@@ -31,6 +32,7 @@ function App() {
         <Route path="analytics" element={<Analytics />} />
         <Route path="roadmap" element={<Roadmap />} />
         <Route path="roadmaps/:projectId" element={<ProjectDetails />} />
+        <Route path="roadmaps/:projectId/phases/:phaseId" element={<PhaseDetails />} />
         <Route path="repositories" element={<Repositories />} />
         <Route path="repositories/:id" element={<RepositoryDetails />} />
         <Route path="settings" element={<Settings />} />
