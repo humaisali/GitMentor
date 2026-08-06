@@ -165,7 +165,7 @@ export const generateProjectPlan = async (projectTitle, projectDescription) => {
     - scope: A string summarizing the project boundaries.
     - objectives: An array of 3-5 key outcomes.
     - methodologies: An array of 2-3 development methodologies (e.g. "TDD", "Agile sprint").
-    - techStack: An array of 3-6 recommended technologies.
+    - techStack: An array of 3-6 recommended technologies. Return ONLY the short technology name (e.g. "React", "Node.js", "PostgreSQL", "Docker", "AWS", "OAuth2/JWT"). Do NOT add descriptions, parenthetical notes, or explanations after the name.
     - timelineOptions: Exactly 3 options (e.g. 1 week, 2 weeks, 4 weeks), each with an 'id', 'title', 'duration', and 'description'.
   `;
 

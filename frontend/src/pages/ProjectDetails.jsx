@@ -4,7 +4,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { Badge } from '../components/ui/Badge';
-import { Sparkles, ArrowLeft, CheckCircle2, Circle, Clock, Check, ExternalLink, BookOpen } from 'lucide-react';
+import { Sparkles, ArrowLeft, CheckCircle2, Circle, Clock, Check, ExternalLink, BookOpen, Layers, Compass } from 'lucide-react';
 
 const API_BASE = 'http://localhost:5000/api/roadmaps';
 
@@ -187,18 +187,22 @@ const ProjectDetails = () => {
           {/* Sidebar stack */}
           <div className="md:col-span-4 flex flex-col gap-5">
             {/* Tech Stack */}
-            <div className="bg-muted-surface rounded-2xl p-7 shadow-lg flex-1">
-              <h4 className="text-[11px] font-mono tracking-widest text-muted-steel mb-5 uppercase">Tech Stack</h4>
-              <div className="flex flex-wrap gap-2.5">
+            <div className="bg-muted-surface rounded-2xl p-7 shadow-lg flex-1 overflow-hidden min-w-0">
+              <h4 className="text-[11px] font-mono tracking-widest text-muted-steel mb-5 uppercase flex items-center gap-2">
+                <Layers size={14} className="text-muted-cyan" /> Tech Stack
+              </h4>
+              <div className="flex flex-wrap gap-2 w-full">
                 {project.detailedPlan.techStack?.map((tech, i) => (
-                  <Badge key={i} variant="default" className="px-3 py-1.5 text-xs bg-muted-surface/50 border-whisper/30 text-canvas-white/80">{tech}</Badge>
+                  <Badge key={i} variant="default" className="px-3 py-1.5 text-xs bg-muted-surface/50 border-whisper/30 text-canvas-white/80 break-all" style={{ maxWidth: 'calc(100% - 4px)' }}>{tech}</Badge>
                 ))}
               </div>
             </div>
             
             {/* Methodologies */}
             <div className="bg-muted-surface rounded-2xl p-7 shadow-lg flex-1">
-              <h4 className="text-[11px] font-mono tracking-widest text-muted-steel mb-5 uppercase">Methodologies</h4>
+              <h4 className="text-[11px] font-mono tracking-widest text-muted-steel mb-5 uppercase flex items-center gap-2">
+                <Compass size={14} className="text-muted-cyan" /> Methodologies
+              </h4>
               <div className="flex flex-col gap-4">
                 {project.detailedPlan.methodologies?.map((meth, i) => (
                   <div key={i} className="text-sm text-canvas-white/90 flex items-center gap-3">
