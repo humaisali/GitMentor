@@ -30,12 +30,12 @@ export const RepositoryOverviewWidget = () => {
   }, []);
 
   return (
-    <Card className="flex flex-col h-full p-6">
+    <Card className="flex flex-col p-6">
       <div className="flex justify-between items-center mb-6 shrink-0">
         <h2 className="text-lg font-medium text-canvas-white">Active Repositories</h2>
       </div>
       
-      <div className="flex flex-col gap-3 flex-1 overflow-auto custom-scrollbar pr-2">
+      <div className="flex flex-col gap-3">
         {loading ? (
           // Loading Skeletons
           [1, 2, 3].map((i) => (

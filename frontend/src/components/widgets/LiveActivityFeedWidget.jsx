@@ -58,7 +58,7 @@ export const LiveActivityFeedWidget = () => {
   };
 
   return (
-    <Card className="flex flex-col h-full p-6 flex-1 min-h-[350px]">
+    <Card className="flex flex-col p-6">
       <div className="flex items-center justify-between mb-6 shrink-0">
         <h3 className="text-lg font-medium text-canvas-white flex items-center gap-2">
           <Activity size={18} className="text-muted-cyan animate-pulse" /> Live Activity Feed
@@ -66,7 +66,7 @@ export const LiveActivityFeedWidget = () => {
         <span className="text-xs text-muted-steel font-mono bg-charcoal-base px-2 py-1 rounded-md">Auto-sync: 60s</span>
       </div>
       
-      <div className="flex-1 overflow-auto relative custom-scrollbar pr-2">
+      <div className="relative max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
         <div className="absolute top-0 bottom-0 left-4 w-px bg-whisper/50 z-0"></div>
         {loading ? (
           <div className="flex flex-col gap-4">

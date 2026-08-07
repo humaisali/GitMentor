@@ -50,7 +50,7 @@ export const AIInsightsWidget = () => {
         {!loading && <Badge variant="default" className="text-xs bg-charcoal-base">{insights.length} PENDING</Badge>}
       </div>
       
-      <div className="flex-1 overflow-auto space-y-4 custom-scrollbar pr-2">
+      <div className="space-y-4">
         {loading ? (
           // Loading Skeletons
           [1, 2].map(i => (
