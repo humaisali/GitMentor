@@ -5,7 +5,7 @@ import { LiveActivityFeedWidget } from '../components/widgets/LiveActivityFeedWi
 
 const FocusWorkspace = () => {
   return (
-    <div className="flex flex-col gap-6 h-full pb-8">
+    <div className="flex flex-col gap-6 flex-1 pb-8">
       <header className="mb-2 shrink-0">
         <h1 className="text-3xl font-semibold tracking-tight text-canvas-white">Focus Workspace</h1>
         <p className="text-muted-steel mt-1 font-mono text-sm">Dashboard overview and current activity.</p>

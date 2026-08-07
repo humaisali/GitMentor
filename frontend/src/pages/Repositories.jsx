@@ -95,7 +95,7 @@ const Repositories = () => {
   const repos = activeTab === 'github' ? githubRepos : trackedRepos;
 
   return (
-    <div className="flex flex-col gap-6 h-full">
+    <div className="flex flex-col gap-6 pb-6">
       <header className="shrink-0 flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-canvas-white">Repositories</h1>
@@ -137,7 +137,7 @@ const Repositories = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-h-0 overflow-auto space-y-3 pb-6">
+      <div className="flex-1 space-y-3">
         {loading ? (
           [1, 2, 3, 4].map(i => (
             <Card key={i} className="p-5">

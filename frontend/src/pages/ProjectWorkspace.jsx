@@ -133,7 +133,7 @@ const ProjectWorkspace = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-6xl mx-auto h-full p-4 overflow-auto pb-10 custom-scrollbar">
+    <div className="flex flex-col gap-6 max-w-6xl mx-auto p-4 pb-10">
       <header className="mb-2 shrink-0">
         <button 
           onClick={() => navigate(`/roadmaps/${projectId}`)}

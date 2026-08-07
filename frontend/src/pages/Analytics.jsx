@@ -34,7 +34,7 @@ const Analytics = () => {
   }, []);
 
   return (
-    <div className="flex flex-col gap-6 h-full pb-8">
+    <div className="flex flex-col gap-6 pb-8">
       <header className="flex justify-between items-end mb-2 shrink-0">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-canvas-white">Analytics</h1>
@@ -59,7 +59,7 @@ const Analytics = () => {
           </div>
         </div>
       ) : data ? (
-        <div className="flex-1 overflow-auto pr-2 pb-10">
+        <div className="flex-1 pr-2 pb-10">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-min">
             
             {/* ROW 1: Heatmap (Span 2) & Streaks (Span 1) */}

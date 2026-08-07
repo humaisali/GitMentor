@@ -51,7 +51,7 @@ const DashboardLayout = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-auto bg-charcoal-base">
-        <div className="max-w-[1200px] mx-auto p-8 h-full">
+        <div className="max-w-[1200px] mx-auto p-8 min-h-full flex flex-col">
           <Outlet />
         </div>
       </main>

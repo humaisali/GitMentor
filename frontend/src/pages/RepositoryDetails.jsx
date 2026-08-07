@@ -65,7 +65,7 @@ const RepositoryDetails = () => {
   if (!repo) return null;
 
   return (
-    <div className="flex flex-col gap-6 h-full pb-8">
+    <div className="flex flex-col gap-6 pb-8">
       <header className="shrink-0 flex items-start gap-4">
         <button onClick={() => navigate('/repositories')} className="mt-1 p-2 rounded-md hover:bg-whisper transition-colors">
           <ArrowLeft size={20} className="text-muted-steel hover:text-canvas-white" />
@@ -79,7 +79,7 @@ const RepositoryDetails = () => {
         </div>
       </header>
 
-      <div className="flex-1 overflow-auto pr-2 pb-10">
+      <div className="flex-1 pr-2 pb-10">
         <div className="mb-6">
           <h2 className="text-xl font-medium text-canvas-white mb-2">Deep AI Repository Analysis</h2>
           <p className="text-muted-steel text-sm max-w-3xl">
