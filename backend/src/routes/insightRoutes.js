@@ -1,8 +1,11 @@
 import express from 'express';
-import { getInsightsForRepo, resolveInsight } from '../controllers/insightController.js';
+import { getInsightsForRepo, resolveInsight, getUserInsights } from '../controllers/insightController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
+
+router.route('/user')
+  .get(protect, getUserInsights);
 
 router.route('/:repoId')
   .get(protect, getInsightsForRepo);
