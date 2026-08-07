@@ -41,7 +41,7 @@ The whole idea is simple: stop watching tutorials and start shipping real projec
 ## Features
 
 ### 1. GitHub Profile Analysis
-The system connects to your GitHub account and scans your repositories, contribution history, languages used, stars, forks, and overall activity patterns. It gives you a clear picture of where you stand as a developer based on real data.
+The system connects to your GitHub account and scans your repositories, contribution history, languages used, stars, forks, and overall activity patterns. It gives you a clear picture of where you stand as a developer based on real data. You have full control over your connected repos, allowing you to seamlessly **Track** or **Untrack** repositories as needed.
 
 ### 2. AI Skill Assessment
 Using the data pulled from GitHub, the AI engine estimates your skill level (Beginner, Intermediate, or Advanced), identifies gaps in areas like frontend, backend, deployment, testing, and architecture, and generates a technical profile of your strengths and weaknesses.
@@ -58,7 +58,7 @@ Schedule dedicated coding sessions (called Build Days) and sync them directly to
 While you're working through a project, the AI acts as your mentor. It provides architecture suggestions, helps break tasks into manageable steps, offers debugging guidance, and gives you actionable development support. Think of it as having a senior developer available whenever you need direction.
 
 ### 6. Repository Code Review
-Submit any of your repositories for an AI-powered review. The system evaluates code quality, security vulnerabilities, scalability, readability, documentation, and maintainability, then gives you specific feedback on what to improve.
+Submit any of your repositories for an AI-powered review. The system evaluates code quality, security vulnerabilities, scalability, readability, documentation, and maintainability, then gives you specific feedback on what to improve. It also generates an actionable **suggested solution** for each issue, allowing you to track your progress by marking problems as **Solved** directly from the dashboard.
 
 ### 7. Progress Dashboard & Analytics
 The Focus Workspace dashboard gives you a real-time view of your journey: AI-generated actionable insights, a repository overview, key developer metrics, a live GitHub activity feed, and a contribution calendar heatmap. Everything in one place.
