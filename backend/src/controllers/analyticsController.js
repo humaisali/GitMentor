@@ -1,5 +1,8 @@
 import User from '../models/User.js';
 import Analytics from '../models/Analytics.js';
+import Project from '../models/Project.js';
+import Repository from '../models/Repository.js';
+import Insight from '../models/Insight.js';
 import { evaluateBadges } from '../utils/badgeRules.js';
 
 const GITHUB_GRAPHQL_URL = 'https://api.github.com/graphql';
@@ -233,5 +236,43 @@ export const getRecentEvents = async (req, res) => {
   } catch (error) {
     console.error('Error fetching recent events:', error);
     res.status(500).json({ message: 'Failed to fetch recent events', error: error.message });
+  }
+};
+
+export const getDashboardMetrics = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Roadmaps Completed (from Project)
+    const completedRoadmaps = await Project.countDocuments({ user: userId, status: 'COMPLETED' });
+    
+    // Tasks Completed
+    const projects = await Project.find({ user: userId });
+    let tasksCompleted = 0;
+    projects.forEach(p => {
+      p.phases.forEach(phase => {
+        phase.tasks.forEach(task => {
+          if (task.isCompleted) tasksCompleted++;
+        });
+      });
+    });
+
+    // Repos Tracked
+    const reposTracked = await Repository.countDocuments({ user: userId });
+
+    // Insights Fixed
+    const repos = await Repository.find({ user: userId }).select('_id');
+    const repoIds = repos.map(r => r._id);
+    const insightsFixed = await Insight.countDocuments({ repository: { $in: repoIds }, isResolved: true });
+
+    res.status(200).json({
+      roadmapsCompleted: completedRoadmaps,
+      tasksCompleted,
+      insightsFixed,
+      reposTracked
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard metrics:', error);
+    res.status(500).json({ message: 'Failed to fetch dashboard metrics', error: error.message });
   }
 };

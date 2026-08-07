@@ -118,3 +118,23 @@ export const resolveInsight = async (req, res) => {
     res.status(500).json({ message: 'Server Error resolving insight', error: error.message });
   }
 };
+
+// @desc    Get user's pending insights across all repos
+// @route   GET /api/insights/user
+// @access  Private
+export const getUserInsights = async (req, res) => {
+  try {
+    const repos = await Repository.find({ user: req.user._id }).select('_id fullName');
+    const repoIds = repos.map(r => r._id);
+
+    const insights = await Insight.find({ 
+      repository: { $in: repoIds }, 
+      isResolved: false 
+    }).sort({ createdAt: -1 }).limit(10).populate('repository', 'name fullName');
+
+    res.status(200).json(insights);
+  } catch (error) {
+    console.error('Error fetching user insights:', error);
+    res.status(500).json({ message: 'Server Error fetching user insights', error: error.message });
+  }
+};
