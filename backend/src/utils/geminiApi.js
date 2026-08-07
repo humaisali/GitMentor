@@ -117,6 +117,7 @@ export const generateRepoInsights = async (repository, context = {}) => {
     - severity: string ('error', 'warning', 'info')
     - title: string
     - description: string
+    - suggestedSolution: string (A concise, actionable solution to resolve the issue)
     - file: string (e.g., 'package.json', 'src/main.js', 'Dockerfile' - guess the file based on context)
   `;
 
@@ -136,9 +137,10 @@ export const generateRepoInsights = async (repository, context = {}) => {
               severity: { type: Type.STRING },
               title: { type: Type.STRING },
               description: { type: Type.STRING },
+              suggestedSolution: { type: Type.STRING },
               file: { type: Type.STRING },
             },
-            required: ["insightId", "type", "severity", "title", "description", "file"],
+            required: ["insightId", "type", "severity", "title", "description", "suggestedSolution", "file"],
           },
         },
       },
