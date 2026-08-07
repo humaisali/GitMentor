@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Skeleton } from '../ui/Skeleton';
-import { ShieldAlert, Zap, BookOpen, Check } from 'lucide-react';
+import { ShieldAlert, Zap, BookOpen, ExternalLink } from 'lucide-react';
 
 const getIcon = (type) => {
   switch(type) {
@@ -45,79 +46,50 @@ export const AIInsightsWidget = () => {
     fetchInsights();
   }, []);
 
-  const handleResolve = async (id) => {
-    try {
-      const token = localStorage.getItem('gitmentor_token');
-      const res = await fetch(`http://localhost:5000/api/insights/${id}/resolve`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        setInsights(prev => prev.filter(insight => (insight._id || insight.id) !== id));
-      }
-    } catch (err) {
-      console.error('Failed to resolve insight', err);
-    }
-  };
-
   return (
     <Card className="flex flex-col h-full p-6">
       <div className="flex justify-between items-center mb-6 shrink-0">
-        <h2 className="text-lg font-medium text-canvas-white">Actionable Insights</h2>
+        <h2 className="text-lg font-medium text-canvas-white">Pending Fixes</h2>
         {!loading && <Badge variant="default" className="text-xs bg-charcoal-base">{insights.length} PENDING</Badge>}
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-3">
         {loading ? (
           // Loading Skeletons
-          [1, 2].map(i => (
-            <div key={i} className="p-5 rounded-xl bg-charcoal-base flex flex-col gap-3">
-              <div className="flex justify-between">
-                <Skeleton className="h-5 w-48" />
-                <Skeleton className="h-5 w-24 rounded-full" />
+          [1, 2, 3].map(i => (
+            <div key={i} className="p-4 rounded-xl bg-charcoal-base flex items-center justify-between">
+              <div className="flex flex-col gap-2 w-full">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
               </div>
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-              <div className="border-t border-whisper pt-3 mt-2 flex justify-between">
-                <Skeleton className="h-3 w-32" />
-                <Skeleton className="h-6 w-16" />
-              </div>
+              <Skeleton className="h-8 w-16" />
             </div>
           ))
         ) : insights.length === 0 ? (
-           <div className="h-full flex items-center justify-center text-muted-steel text-sm py-10">No critical insights found. Great job!</div>
+           <div className="h-full flex items-center justify-center text-muted-steel text-sm py-10">No pending fixes found. Great job!</div>
         ) : (
           insights.map(insight => {
             const id = insight._id || insight.id;
+            const repoId = insight.repository?._id || insight.repository;
             return (
-              <div key={id} className="p-5 rounded-xl bg-charcoal-base flex flex-col gap-3 group transition-colors border border-transparent hover:border-muted-cyan/30 hover:bg-charcoal-base/80">
-                <div className="flex items-start justify-between">
+              <div key={id} className="p-4 rounded-xl bg-charcoal-base flex items-center justify-between group transition-colors border border-transparent hover:border-muted-cyan/30 hover:bg-charcoal-base/80">
+                <div className="flex flex-col gap-1.5 overflow-hidden pr-4 w-full">
                   <div className="flex items-center gap-2">
                     {getIcon(insight.type)}
-                    <span className="font-medium text-sm text-canvas-white">{insight.title}</span>
+                    <span className="font-medium text-sm text-canvas-white truncate" title={insight.title}>{insight.title}</span>
                   </div>
-                  <Badge variant={insight.severity}>{insight.type}</Badge>
+                  <div className="flex items-center gap-2 text-xs font-mono text-muted-steel">
+                    <span className="bg-surface-dim px-1.5 py-0.5 rounded text-[10px] text-muted-cyan border border-whisper/50">{insight.type}</span>
+                    <span className="truncate max-w-[200px]" title={insight.file}>{insight.file}</span>
+                  </div>
                 </div>
                 
-                <p className="text-sm text-muted-steel leading-relaxed">
-                  {insight.description}
-                </p>
-                {insight.suggestedSolution && (
-                  <p className="text-sm text-muted-cyan leading-relaxed mt-1 bg-surface-dim p-2 rounded border border-whisper">
-                    <span className="font-semibold">Fix:</span> {insight.suggestedSolution}
-                  </p>
-                )}
-                
-                <div className="flex items-center justify-between mt-2 pt-3 border-t border-whisper">
-                  <div className="flex items-center gap-3">
-                    {insight.repository && insight.repository.name && (
-                      <span className="text-xs font-mono text-muted-steel max-w-[120px] truncate">{insight.repository.name}</span>
-                    )}
-                    <span className="text-xs font-mono text-muted-steel truncate max-w-[150px]">{insight.file}</span>
-                  </div>
-                  <Button variant="ghost" className="h-7 text-xs px-2 hover:bg-emerald-500/10 hover:text-emerald-500" onClick={() => handleResolve(id)}>
-                    <Check size={14} className="mr-1" /> Resolve
-                  </Button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Link to={`/repositories/${repoId}`} state={{ repo: insight.repository, highlightInsightId: insight._id }}>
+                    <Button variant="ghost" className="h-7 text-xs px-2 hover:text-muted-cyan" title="Go to specific insight">
+                      <ExternalLink size={14} className="mr-1" /> View
+                    </Button>
+                  </Link>
                 </div>
               </div>
             );
