@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/Button';
-import { Bot, X, Send, Sparkles, MessageCircle } from 'lucide-react';
+import { Sparkles, X, Send, MessageCircle, BotMessageSquare } from 'lucide-react';
 
 const API_BASE = 'http://localhost:5000/api/roadmaps';
 
@@ -63,11 +63,8 @@ const ProjectChatAssistant = ({ projectId }) => {
       if (res.ok) {
         const data = await res.json();
         setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
-      } else if (res.status === 429) {
-        setMessages(prev => [...prev, { role: 'assistant', content: 'API rate limit reached. Please wait about a minute and try again. ⏳' }]);
       } else {
-        const errData = await res.json().catch(() => null);
-        setMessages(prev => [...prev, { role: 'assistant', content: errData?.message || 'Sorry, I encountered an error. Please try again.' }]);
+        setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
       }
     } catch (err) {
       console.error('Chat error:', err);
@@ -98,7 +95,7 @@ const ProjectChatAssistant = ({ projectId }) => {
         const firstNewline = codeContent.indexOf('\n');
         const code = firstNewline > -1 ? codeContent.slice(firstNewline + 1) : codeContent;
         return (
-          <pre key={i} className="bg-black/40 rounded-lg p-3 my-2 overflow-x-auto text-[13px] font-mono text-muted-cyan/90 border border-whisper/20">
+          <pre key={i} className="bg-black/40 rounded-lg p-3 my-2 overflow-x-auto text-[13px] font-mono text-muted-cyan/90 border border-white/5">
             <code>{code}</code>
           </pre>
         );
@@ -186,10 +183,10 @@ const ProjectChatAssistant = ({ projectId }) => {
       {/* Floating Trigger Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-muted-cyan to-muted-cyan/70 text-charcoal-base shadow-lg shadow-muted-cyan/25 flex items-center justify-center hover:scale-110 transition-all duration-300 ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
+        className={`fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-muted-cyan to-muted-cyan/70 text-charcoal-base shadow-xl shadow-muted-cyan/20 flex items-center justify-center hover:scale-105 transition-all duration-300 ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
         title="Project Mentor"
       >
-        <Bot size={24} />
+        <BotMessageSquare size={26} />
       </button>
 
       {/* Chat Panel Overlay */}
@@ -201,13 +198,13 @@ const ProjectChatAssistant = ({ projectId }) => {
         />
 
         {/* Chat Panel */}
-        <div className={`absolute bottom-4 right-4 w-[420px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-2rem)] bg-muted-surface border border-whisper/60 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${isOpen ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-8 opacity-0 scale-95'}`}>
+        <div className={`absolute bottom-4 right-4 w-[420px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-2rem)] bg-charcoal-base border border-white/5 rounded-2xl shadow-2xl shadow-black/80 flex flex-col overflow-hidden transition-all duration-300 ${isOpen ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-8 opacity-0 scale-95'}`}>
           
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-whisper/40 bg-charcoal-base shrink-0">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-muted-surface/50 shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-muted-cyan to-muted-cyan/60 flex items-center justify-center">
-                <Bot size={18} className="text-charcoal-base" />
+              <div className="w-9 h-9 rounded-full bg-muted-cyan/10 border border-muted-cyan/20 flex items-center justify-center">
+                <BotMessageSquare size={16} className="text-muted-cyan" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-canvas-white leading-tight">Project Mentor</h3>
@@ -245,7 +242,7 @@ const ProjectChatAssistant = ({ projectId }) => {
                         setInput(suggestion);
                         setTimeout(() => inputRef.current?.focus(), 50);
                       }}
-                      className="w-full text-left text-xs text-muted-steel hover:text-canvas-white bg-charcoal-base hover:bg-white/[0.04] border border-whisper/40 rounded-lg px-3 py-2.5 transition-colors"
+                      className="w-full text-left text-xs text-muted-steel hover:text-canvas-white bg-muted-surface hover:bg-white/[0.06] border border-white/[0.05] rounded-lg px-3 py-2.5 transition-colors"
                     >
                       {suggestion}
                     </button>
@@ -261,12 +258,12 @@ const ProjectChatAssistant = ({ projectId }) => {
               >
                 <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                   msg.role === 'user'
-                    ? 'bg-muted-cyan/15 text-canvas-white border border-muted-cyan/20 rounded-br-md'
-                    : 'bg-charcoal-base text-canvas-white/85 border border-whisper/30 rounded-bl-md'
+                    ? 'bg-muted-cyan text-charcoal-base font-medium rounded-br-sm'
+                    : 'bg-muted-surface border border-white/[0.05] text-canvas-white/90 rounded-bl-sm shadow-sm'
                 }`}>
                   {msg.role === 'assistant' && (
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <Bot size={12} className="text-muted-cyan" />
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <BotMessageSquare size={12} className="text-muted-cyan" />
                       <span className="text-[10px] font-mono text-muted-steel uppercase tracking-wider">Mentor</span>
                     </div>
                   )}
@@ -278,9 +275,9 @@ const ProjectChatAssistant = ({ projectId }) => {
             {/* Thinking Indicator */}
             {isThinking && (
               <div className="flex justify-start">
-                <div className="bg-charcoal-base border border-whisper/30 rounded-2xl rounded-bl-md px-4 py-3">
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <Bot size={12} className="text-muted-cyan" />
+                <div className="bg-muted-surface border border-white/[0.05] rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Sparkles size={12} className="text-muted-cyan" />
                     <span className="text-[10px] font-mono text-muted-steel uppercase tracking-wider">Mentor</span>
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -300,7 +297,7 @@ const ProjectChatAssistant = ({ projectId }) => {
           </div>
 
           {/* Input Area */}
-          <div className="shrink-0 border-t border-whisper/40 bg-charcoal-base p-3">
+          <div className="shrink-0 border-t border-white/[0.05] bg-muted-surface/30 p-3">
             <div className="flex items-end gap-2">
               <textarea
                 ref={inputRef}
@@ -309,8 +306,8 @@ const ProjectChatAssistant = ({ projectId }) => {
                 onKeyDown={handleKeyDown}
                 placeholder="Ask about your project..."
                 rows={1}
-                className="flex-1 resize-none bg-muted-surface border border-whisper/50 rounded-xl px-4 py-2.5 text-sm text-canvas-white placeholder:text-muted-steel focus:outline-none focus:border-muted-cyan/50 transition-colors max-h-[100px] overflow-y-auto"
-                style={{ minHeight: '42px' }}
+                className="flex-1 resize-none bg-muted-surface border-none rounded-xl px-4 py-3 text-sm text-canvas-white placeholder:text-muted-steel focus:outline-none focus:ring-1 focus:ring-muted-cyan/50 transition-all max-h-[100px] overflow-y-auto"
+                style={{ minHeight: '44px' }}
               />
               <button
                 onClick={handleSend}
