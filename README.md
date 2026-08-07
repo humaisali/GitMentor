@@ -99,12 +99,12 @@ A persistent, floating AI chat assistant is available throughout the application
 | # | Feature | Status |
 |:-:|:--------|:------:|
 | 1 | GitHub Profile & Repository Analysis | Completed |
-| 2 | AI Skill Assessment Engine | In Progress |
+| 2 | AI Skill Assessment Engine | Not Implemented |
 | 3 | Personalized Project Roadmap Generation | Completed |
-| 4 | Build Day Scheduling with Google Calendar Sync | Completed |
+| 4 | Build Day Scheduling with Google Calendar Sync | Not Implemented |
 | 5 | AI Mentor Assistance | Completed |
 | 6 | AI-Powered Repository Code Review | Completed |
-| 7 | Progress Dashboard & Analytics | Completed |
+| 7 | Progress Dashboard & Analytics | Not Implemented |
 | 8 | Gamification & Contribution Consistency Tracking | Completed |
 | 9 | Customizable Project Goals & Pacing | Completed |
 | 10 | AI Task Breakdown Generation | Completed |
@@ -115,14 +115,14 @@ A persistent, floating AI chat assistant is available throughout the application
 | ID | Requirement | Status |
 |:---|:-----------|:------:|
 | FR-1 | User can authenticate using GitHub | Completed |
-| FR-2 | User can connect Google Calendar | Completed |
+| FR-2 | User can connect Google Calendar | Not Implemented |
 | FR-3 | System can fetch repositories | Completed |
-| FR-4 | System can analyze developer skills | In Progress |
+| FR-4 | System can analyze developer skills | Not Implemented |
 | FR-5 | AI can recommend projects | Completed |
-| FR-6 | User can schedule Build Days | Completed |
+| FR-6 | User can schedule Build Days | Not Implemented |
 | FR-7 | AI can provide development guidance | Completed |
 | FR-8 | System can review repositories | Completed |
-| FR-9 | Dashboard can track progress | Completed |
+| FR-9 | Dashboard can track progress | Not Implemented |
 | FR-10 | AI can generate task breakdowns | Completed |
 | FR-11 | System can monitor contribution consistency | Completed |
 | FR-12 | User can customize project goals | Completed |
