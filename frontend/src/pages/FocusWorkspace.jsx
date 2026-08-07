@@ -2,6 +2,7 @@ import { AIInsightsWidget } from '../components/widgets/AIInsightsWidget';
 import { RepositoryOverviewWidget } from '../components/widgets/RepositoryOverviewWidget';
 import { SystemMetricsWidget } from '../components/widgets/SystemMetricsWidget';
 import { LiveActivityFeedWidget } from '../components/widgets/LiveActivityFeedWidget';
+import { ContributionCalendarWidget } from '../components/widgets/ContributionCalendarWidget';
 
 const FocusWorkspace = () => {
   return (
@@ -15,6 +16,9 @@ const FocusWorkspace = () => {
         
         {/* Main Content Area */}
         <div className="lg:col-span-2 flex flex-col gap-6">
+          <div className="shrink-0">
+            <ContributionCalendarWidget />
+          </div>
           <div className="flex-1 flex flex-col">
             <AIInsightsWidget />
           </div>
@@ -26,7 +30,7 @@ const FocusWorkspace = () => {
           <div className="shrink-0">
             <SystemMetricsWidget />
           </div>
-          <div>
+          <div className="flex-1 flex flex-col">
             <RepositoryOverviewWidget />
           </div>
         </div>
