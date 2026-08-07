@@ -20,7 +20,9 @@ export const getInsightsForRepo = async (req, res) => {
           severity: 'error',
           title: 'Insecure Dependency in package.json',
           description: 'Found critical CVE in lodash version. Upgrade to 4.17.21 immediately.',
+          suggestedSolution: 'Run `npm install lodash@4.17.21` to update to the patched version.',
           file: 'package.json',
+          isResolved: false,
           createdAt: new Date().toISOString()
         },
         {
@@ -30,7 +32,9 @@ export const getInsightsForRepo = async (req, res) => {
           severity: 'warning',
           title: 'Unoptimized React Re-renders',
           description: 'DashboardLayout is re-rendering on every route change. Implement React.memo.',
+          suggestedSolution: 'Wrap the DashboardLayout component export with `React.memo(DashboardLayout)` to prevent unnecessary re-renders.',
           file: 'src/layouts/DashboardLayout.jsx',
+          isResolved: false,
           createdAt: new Date(Date.now() - 3600000).toISOString()
         }
       ]);
@@ -69,6 +73,7 @@ export const getInsightsForRepo = async (req, res) => {
           severity: item.severity,
           title: item.title,
           description: item.description,
+          suggestedSolution: item.suggestedSolution,
           file: item.file
         });
         savedInsights.push(await insight.save());
@@ -81,5 +86,35 @@ export const getInsightsForRepo = async (req, res) => {
   } catch (error) {
     console.error('Error fetching/generating insights:', error);
     res.status(500).json({ message: 'Server Error fetching insights', error: error.message });
+  }
+};
+
+// @desc    Mark an insight as resolved
+// @route   PATCH /api/insights/:id/resolve
+// @access  Private
+export const resolveInsight = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // In a real app, you might want to verify that the insight belongs to a repo
+    // that the current user owns or tracks.
+
+    const insight = await Insight.findById(id);
+
+    if (!insight) {
+      // Allow mock updates for demo purposes
+      if (id.startsWith('mock-ins-')) {
+        return res.status(200).json({ message: 'Mock insight resolved' });
+      }
+      return res.status(404).json({ message: 'Insight not found' });
+    }
+
+    insight.isResolved = true;
+    await insight.save();
+
+    res.status(200).json(insight);
+  } catch (error) {
+    console.error('Error resolving insight:', error);
+    res.status(500).json({ message: 'Server Error resolving insight', error: error.message });
   }
 };
