@@ -263,9 +263,6 @@ export const chatWithProject = async (req, res) => {
     res.status(200).json({ reply });
   } catch (error) {
     console.error('Chat error:', error);
-    if (error.status === 429 || error.message?.includes('429') || error.message?.includes('quota')) {
-      return res.status(429).json({ message: 'Gemini API rate limit reached. Please wait a minute and try again.' });
-    }
     res.status(500).json({ message: 'Error processing chat message', error: error.message });
   }
 };
