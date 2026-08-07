@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Sparkles, ArrowLeft, CheckCircle2, Circle, Check, Info, X, ListTodo, Bot } from 'lucide-react';
+import { Sparkles, ArrowLeft, CheckCircle2, Circle, Check, Info, X, ListTodo, Bot, BookOpen, ExternalLink } from 'lucide-react';
 import { Badge } from '../components/ui/Badge';
 import ProjectChatAssistant from '../components/ProjectChatAssistant';
 
@@ -151,18 +151,65 @@ const PhaseDetails = () => {
         >
           <ArrowLeft size={16} /> Back to Project
         </button>
-        <div className="bg-muted-surface rounded-2xl p-8 shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-muted-cyan/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
-          <Badge variant="primary" className="bg-muted-cyan/10 text-muted-cyan border-none mb-4">PHASE EXECUTION</Badge>
-          <h1 className="text-3xl font-semibold tracking-tight text-canvas-white mb-4">{phase.title}</h1>
-          <p className="text-[15px] text-muted-steel leading-relaxed">{phase.description}</p>
+
+        <div className="flex flex-col gap-6">
+          {/* Project Header */}
+          <div className="bg-charcoal-base border border-whisper/20 rounded-2xl p-6 shadow-sm">
+            <h1 className="text-2xl font-semibold tracking-tight text-canvas-white mb-2">{project.title}</h1>
+            <p className="text-sm text-muted-steel leading-relaxed">{project.description}</p>
+          </div>
+
+          {/* Phase Header */}
+          <div className="bg-muted-surface rounded-2xl p-8 shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-muted-cyan/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+            <Badge variant="primary" className="bg-muted-cyan/10 text-muted-cyan border-none mb-4">PHASE EXECUTION</Badge>
+            <h2 className="text-3xl font-semibold tracking-tight text-canvas-white mb-4">{phase.title}</h2>
+            <p className="text-[15px] text-muted-steel leading-relaxed">{phase.description}</p>
+          </div>
         </div>
       </header>
 
-      <div className="bg-muted-surface rounded-2xl p-8 shadow-lg flex-1">
-        <h3 className="text-xl font-medium text-canvas-white mb-8 flex items-center gap-2">
-          <ListTodo size={20} className="text-muted-cyan" /> Actionable Tasks
-        </h3>
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-5 auto-rows-min">
+        {/* Learning Materials Sidebar */}
+        <div className="md:col-span-4 flex flex-col gap-5 self-start">
+          {project.learningMaterials && project.learningMaterials.length > 0 && (
+            <div className="bg-muted-surface rounded-2xl p-7 shadow-lg relative overflow-hidden">
+              <div className="absolute bottom-0 left-0 w-40 h-40 bg-muted-cyan/5 rounded-full blur-3xl pointer-events-none translate-y-1/2 -translate-x-1/2"></div>
+              <h4 className="text-[11px] font-mono tracking-widest text-muted-steel mb-5 uppercase flex items-center gap-2">
+                <BookOpen size={14} className="text-muted-cyan" /> Learning Materials
+              </h4>
+              <div className="space-y-1 relative z-10">
+                {project.learningMaterials.map((material, idx) => (
+                  <a
+                    key={idx}
+                    href={material.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-start gap-3 p-3 -mx-1 rounded-xl transition-all duration-200 hover:bg-white/[0.04]"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-canvas-white/90 leading-snug mb-1.5 group-hover:text-muted-cyan transition-colors line-clamp-2">
+                        {material.title}
+                      </p>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono tracking-wide bg-white/[0.06] border border-whisper/30 text-muted-steel">
+                        {material.source}
+                      </span>
+                    </div>
+                    <div className="shrink-0 mt-0.5 p-1.5 rounded-lg bg-white/[0.04] border border-transparent group-hover:border-muted-cyan/30 group-hover:bg-muted-cyan/10 transition-all">
+                      <ExternalLink size={14} className="text-muted-steel group-hover:text-muted-cyan transition-colors" />
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Actionable Tasks */}
+        <div className="md:col-span-8 bg-muted-surface rounded-2xl p-8 shadow-lg flex-1">
+          <h3 className="text-xl font-medium text-canvas-white mb-8 flex items-center gap-2">
+            <ListTodo size={20} className="text-muted-cyan" /> Actionable Tasks
+          </h3>
 
         <div className="space-y-4 mb-8">
           {phase.tasks && phase.tasks.map((task) => (
@@ -199,14 +246,16 @@ const PhaseDetails = () => {
           <div className="pt-6 border-t border-whisper/30 flex justify-end">
             <Button 
               variant="primary" 
-              className="px-8 py-2.5 h-auto rounded-lg shadow-md"
-              disabled={completingPhase}
+              className="gap-2 px-6"
               onClick={handleCompletePhase}
+              disabled={completingPhase}
             >
-              {completingPhase ? 'Completing...' : 'Finish Phase'}
+              {completingPhase ? <Sparkles size={16} className="animate-pulse" /> : <CheckCircle2 size={16} />}
+              {completingPhase ? 'Completing...' : 'Complete Phase & Continue'}
             </Button>
           </div>
         )}
+        </div>
       </div>
 
       {/* Task Details Modal */}
