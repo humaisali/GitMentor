@@ -29,6 +29,9 @@ const insightSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    suggestedSolution: {
+      type: String,
+    },
     file: {
       type: String,
       required: true,
