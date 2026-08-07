@@ -144,7 +144,7 @@ const ProjectWorkspace = () => {
 
         <div className="flex flex-col gap-6">
           {/* Project Header */}
-          <div className="bg-muted-surface border border-whisper/20 rounded-2xl p-8 shadow-lg relative overflow-hidden">
+          <div className="bg-muted-surface rounded-2xl p-8 shadow-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-muted-cyan/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
             <Badge variant="primary" className="bg-muted-cyan/10 text-muted-cyan border-none mb-4">EXECUTION WORKSPACE</Badge>
             <h1 className="text-3xl font-semibold tracking-tight text-canvas-white mb-3">{project.title}</h1>
@@ -175,7 +175,7 @@ const ProjectWorkspace = () => {
                       <p className="text-sm text-canvas-white/90 leading-snug mb-1.5 group-hover:text-muted-cyan transition-colors line-clamp-2">
                         {material.title}
                       </p>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono tracking-wide bg-white/[0.06] border border-whisper/30 text-muted-steel">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono tracking-wide bg-white/[0.06] border border-white/5 text-muted-steel">
                         {material.source}
                       </span>
                     </div>
@@ -200,9 +200,9 @@ const ProjectWorkspace = () => {
             return (
               <div key={phase.phaseId} className={`relative flex flex-col p-7 rounded-2xl border transition-all 
                 ${isCompleted 
-                  ? 'bg-muted-surface/50 border-whisper/30' 
+                  ? 'bg-muted-surface/50 border-transparent' 
                   : isUnlocked 
-                    ? 'bg-muted-surface shadow-lg border-muted-cyan/30' 
+                    ? 'bg-muted-surface shadow-lg border-muted-cyan/10' 
                     : 'bg-charcoal-base/30 border-transparent opacity-60 grayscale'}`}>
                 
                 <div className="flex gap-5 mb-2">
@@ -224,7 +224,7 @@ const ProjectWorkspace = () => {
                       <h4 className={`text-xl font-medium pr-4 ${isCompleted ? 'text-muted-steel line-through' : 'text-canvas-white'}`}>
                         {phase.title}
                       </h4>
-                      <span className="shrink-0 inline-flex items-center px-3 py-1 rounded-full text-xs font-mono bg-charcoal-base border border-whisper text-muted-steel">
+                      <span className="shrink-0 inline-flex items-center px-3 py-1 rounded-full text-xs font-mono bg-charcoal-base border border-white/5 text-muted-steel">
                         {phase.estimatedTime}
                       </span>
                     </div>
@@ -248,7 +248,7 @@ const ProjectWorkspace = () => {
 
                     {/* State 2: Starting (Generating) */}
                     {isStarting && (
-                      <div className="bg-charcoal-base border border-whisper/20 rounded-xl p-6 flex flex-col items-center justify-center text-center">
+                      <div className="bg-charcoal-base border border-white/5 rounded-xl p-6 flex flex-col items-center justify-center text-center">
                          <div className="relative w-12 h-12 mb-4 flex items-center justify-center">
                           <div className="absolute inset-0 border-2 border-muted-cyan/20 rounded-full animate-[spin_3s_linear_infinite]"></div>
                           <div className="absolute inset-0 border-2 border-muted-cyan border-t-transparent rounded-full animate-[spin_1.5s_linear_infinite]"></div>
@@ -270,7 +270,7 @@ const ProjectWorkspace = () => {
                         
                         <div className="space-y-3">
                           {phase.tasks.map((task) => (
-                            <div key={task.taskId} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border transition-colors ${task.isCompleted ? 'bg-success/5 border-success/20' : 'bg-charcoal-base border-whisper/40 hover:border-whisper/80'}`}>
+                            <div key={task.taskId} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border transition-colors ${task.isCompleted ? 'bg-success/5 border-success/10' : 'bg-charcoal-base border-white/5 hover:border-white/10'}`}>
                               <div className="flex items-center gap-3 flex-1 min-w-0">
                                 <p className={`text-[14px] leading-snug ${task.isCompleted ? 'text-muted-steel line-through' : 'text-canvas-white/90'}`}>
                                   {task.title}
@@ -280,7 +280,7 @@ const ProjectWorkspace = () => {
                               <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                                 <Button
                                   variant="outline"
-                                  className="h-8 px-3 text-xs border-whisper/50 text-muted-steel hover:text-canvas-white hover:border-muted-steel"
+                                  className="h-8 px-3 text-xs border-white/10 text-muted-steel hover:text-canvas-white hover:border-muted-steel"
                                   onClick={() => setTaskModal({ isOpen: true, task })}
                                 >
                                   Details
@@ -326,9 +326,9 @@ const ProjectWorkspace = () => {
       {taskModal.isOpen && taskModal.task && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setTaskModal({ isOpen: false, task: null })}></div>
-          <Card className="relative w-full max-w-2xl max-h-[85vh] bg-muted-surface border-whisper shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <Card className="relative w-full max-w-2xl max-h-[85vh] bg-muted-surface border-white/5 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="flex items-start justify-between p-6 border-b border-whisper bg-charcoal-base/50 shrink-0">
+            <div className="flex items-start justify-between p-6 border-b border-white/5 bg-charcoal-base/50 shrink-0">
               <div className="pr-8">
                 <div className="flex items-center gap-2 mb-2">
                   <Badge variant="primary" className="bg-muted-cyan/10 text-muted-cyan border-none">TASK DETAILS</Badge>
@@ -349,7 +349,7 @@ const ProjectWorkspace = () => {
               <div className="space-y-6">
                 <div>
                   <h4 className="text-xs font-mono text-muted-steel uppercase tracking-wider mb-3">Context & Goal</h4>
-                  <p className="text-sm text-canvas-white/80 leading-relaxed bg-charcoal-base p-4 rounded-xl border border-whisper/40">
+                  <p className="text-sm text-canvas-white/80 leading-relaxed bg-charcoal-base p-4 rounded-xl border border-white/5">
                     {taskModal.task.description}
                   </p>
                 </div>
@@ -360,7 +360,7 @@ const ProjectWorkspace = () => {
                   </h4>
                   <div className="space-y-3">
                     {taskModal.task.steps && taskModal.task.steps.map((step, idx) => (
-                      <div key={idx} className="flex gap-4 p-4 rounded-xl bg-charcoal-base border border-whisper/40 relative overflow-hidden group">
+                      <div key={idx} className="flex gap-4 p-4 rounded-xl bg-charcoal-base border border-white/5 relative overflow-hidden group">
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-muted-cyan/30 group-hover:bg-muted-cyan transition-colors"></div>
                         <div className="flex flex-col gap-1 w-full pl-2">
                           <p className="text-sm text-canvas-white/90 leading-relaxed">{step}</p>
@@ -373,7 +373,7 @@ const ProjectWorkspace = () => {
             </div>
             
             {/* Modal Footer */}
-            <div className="p-5 border-t border-whisper bg-charcoal-base/50 shrink-0 flex justify-end gap-3">
+            <div className="p-5 border-t border-white/5 bg-charcoal-base/50 shrink-0 flex justify-end gap-3">
               <Button variant="outline" onClick={() => setTaskModal({ isOpen: false, task: null })}>
                 Close
               </Button>
