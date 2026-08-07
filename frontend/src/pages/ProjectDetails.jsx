@@ -119,8 +119,7 @@ const ProjectDetails = () => {
 
   const handleContinueProject = () => {
     if (!project || !project.phases || project.phases.length === 0) return;
-    const activePhase = project.phases.find(p => !p.isCompleted) || project.phases[project.phases.length - 1];
-    navigate(`/roadmaps/${projectId}/phases/${activePhase.phaseId}`);
+    navigate(`/roadmaps/${projectId}/workspace`);
   };
 
   if (!project) {
