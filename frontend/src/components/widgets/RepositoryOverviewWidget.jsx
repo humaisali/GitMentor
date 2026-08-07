@@ -30,7 +30,7 @@ export const RepositoryOverviewWidget = () => {
   }, []);
 
   return (
-    <Card className="flex flex-col p-6">
+    <Card className="flex flex-col p-6 h-full">
       <div className="flex justify-between items-center mb-6 shrink-0">
         <h2 className="text-lg font-medium text-canvas-white">Active Repositories</h2>
       </div>
