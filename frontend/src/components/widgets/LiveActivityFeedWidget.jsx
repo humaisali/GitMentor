@@ -75,7 +75,7 @@ export const LiveActivityFeedWidget = () => {
             <Skeleton className="h-12 w-full" />
           </div>
         ) : events.length > 0 ? (
-          <div className="flex flex-col gap-5 relative z-10">
+          <div className="flex flex-col gap-5 relative z-10 pt-1">
             {events.slice(0, 15).map(event => (
               <div key={event.id} className="flex gap-4 items-start group">
                 <div className="shrink-0 w-8 h-8 rounded-full bg-charcoal-base border border-whisper flex items-center justify-center relative z-10 group-hover:border-muted-cyan/50 group-hover:bg-muted-cyan/10 transition-colors">
