@@ -22,6 +22,19 @@ const RepositoryDetails = () => {
     fetchInsights();
   }, [repo, id]);
 
+  useEffect(() => {
+    if (insights.length > 0 && state?.highlightInsightId) {
+      setTimeout(() => {
+        const el = document.getElementById(`insight-${state.highlightInsightId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('ring-2', 'ring-muted-cyan', 'ring-offset-2', 'ring-offset-charcoal-base');
+          setTimeout(() => el.classList.remove('ring-2', 'ring-muted-cyan', 'ring-offset-2', 'ring-offset-charcoal-base'), 2500);
+        }
+      }, 100);
+    }
+  }, [insights, state?.highlightInsightId]);
+
   const fetchInsights = async () => {
     try {
       const token = localStorage.getItem('gitmentor_token');
@@ -73,7 +86,7 @@ const RepositoryDetails = () => {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-semibold tracking-tight text-canvas-white">{repo.name}</h1>
-            <Badge variant="outline">{repo.language}</Badge>
+            <Badge variant="outline">{repo.language || 'Unknown'}</Badge>
           </div>
           <p className="text-muted-steel mt-1 font-mono text-sm">{repo.fullName}</p>
         </div>
@@ -96,7 +109,7 @@ const RepositoryDetails = () => {
         ) : insights.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {insights.map(insight => (
-              <Card key={insight._id} className={`p-6 flex flex-col border-l-4 transition-all duration-200 h-full ${insight.isResolved ? 'bg-charcoal-base/50 opacity-60' : 'bg-charcoal-base shadow-md hover:shadow-lg hover:-translate-y-0.5'}`} style={{ borderLeftColor: insight.isResolved ? '#6b7280' : insight.severity === 'error' ? '#ef4444' : insight.severity === 'warning' ? '#eab308' : '#3b82f6' }}>
+              <Card id={`insight-${insight._id}`} key={insight._id} className={`p-6 flex flex-col border-l-4 transition-all duration-500 h-full ${insight.isResolved ? 'bg-charcoal-base/50 opacity-60' : 'bg-charcoal-base shadow-md hover:-translate-y-0.5'}`} style={{ borderLeftColor: insight.isResolved ? '#6b7280' : insight.severity === 'error' ? '#ef4444' : insight.severity === 'warning' ? '#eab308' : '#3b82f6' }}>
                 <div className="flex items-start gap-3 mb-4 shrink-0">
                   <div className="mt-1 shrink-0">{getIcon(insight.type)}</div>
                   <div className="flex-1 w-full flex justify-between items-start gap-4">
