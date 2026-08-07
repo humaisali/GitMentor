@@ -141,12 +141,23 @@ const ProjectDetails = () => {
         >
           <ArrowLeft size={16} /> Back to Roadmap
         </button>
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start gap-4">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight text-canvas-white">{project.title}</h1>
             <p className="text-muted-steel mt-2 max-w-2xl">{project.description}</p>
           </div>
-          <Badge variant={project.status === 'COMPLETED' ? 'success' : 'primary'}>{project.status}</Badge>
+          <div className="flex flex-col items-end gap-3 shrink-0">
+            <Badge variant={project.status === 'COMPLETED' ? 'success' : 'primary'}>{project.status}</Badge>
+            {project.selectedTimeline && (
+              <Button 
+                variant="primary" 
+                className="px-6 py-2.5 text-sm font-medium rounded-xl shadow-lg shadow-muted-cyan/20 gap-2"
+                onClick={handleContinueProject}
+              >
+                <Play size={16} /> Continue Project
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -276,9 +287,9 @@ const ProjectDetails = () => {
 
           {/* Active Timeline & Continue Project */}
           {project.selectedTimeline && (
-            <div className="md:col-span-12 flex flex-col md:flex-row gap-5">
+            <>
               {/* Active Timeline */}
-              <div className="md:w-1/3 bg-muted-surface rounded-2xl p-7 shadow-lg relative overflow-hidden">
+              <div className="md:col-span-8 bg-muted-surface rounded-2xl p-7 shadow-lg relative overflow-hidden flex flex-col justify-center">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-success/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
                 <h4 className="text-[11px] font-mono tracking-widest text-muted-steel mb-4 uppercase flex items-center gap-2">
                   <Clock size={14} className="text-success" /> Active Timeline
@@ -286,7 +297,7 @@ const ProjectDetails = () => {
                 <p className="text-xl font-medium text-canvas-white mb-2">
                   {project.timelineOptions?.find(t => t.id === project.selectedTimeline)?.title || 'Custom Timeline'}
                 </p>
-                <div className="inline-block px-3 py-1 bg-muted-surface rounded-full border border-whisper/50 text-xs text-muted-cyan font-mono mb-5">
+                <div className="inline-block px-3 py-1 bg-muted-surface rounded-full border border-whisper/50 text-xs text-muted-cyan font-mono mb-5 self-start">
                   {project.timelineOptions?.find(t => t.id === project.selectedTimeline)?.duration}
                 </div>
                 <p className="text-[15px] text-muted-steel leading-relaxed pt-5 border-t border-whisper/30">
@@ -295,25 +306,27 @@ const ProjectDetails = () => {
               </div>
 
               {/* Continue Project Action */}
-              <div className="md:w-2/3 bg-muted-surface rounded-2xl p-8 shadow-xl shadow-muted-cyan/5 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div className="absolute bottom-0 right-0 w-64 h-64 bg-muted-cyan/5 rounded-full blur-3xl pointer-events-none translate-y-1/2 translate-x-1/2"></div>
-                <div className="relative z-10 max-w-md">
-                  <h3 className="text-2xl font-semibold text-canvas-white tracking-tight mb-2 flex items-center gap-2">
-                    <Sparkles size={24} className="text-muted-cyan" /> Ready to Build?
+              <div className="md:col-span-4 bg-muted-surface rounded-2xl p-8 shadow-xl shadow-muted-cyan/5 relative overflow-hidden flex flex-col justify-center items-center text-center gap-6">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-muted-cyan/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+                
+                <div className="relative z-10">
+                  <h3 className="text-xl font-semibold text-canvas-white tracking-tight mb-3 flex items-center justify-center gap-2">
+                    <Sparkles size={20} className="text-muted-cyan" /> Ready to Build?
                   </h3>
-                  <p className="text-[15px] text-muted-steel leading-relaxed">
-                    Your workspace is ready. Enter the execution phase to access your learning materials, step-by-step guides, and start checking off tasks.
+                  <p className="text-sm text-muted-steel leading-relaxed mb-1">
+                    Your workspace is ready. Enter the execution phase to start checking off tasks.
                   </p>
                 </div>
+                
                 <Button 
                   variant="primary" 
-                  className="w-full md:w-auto px-8 py-4 text-sm font-medium rounded-xl shadow-lg shadow-muted-cyan/20 gap-2 shrink-0 relative z-10"
+                  className="w-full py-3.5 text-sm font-medium rounded-xl shadow-lg shadow-muted-cyan/20 gap-2 relative z-10"
                   onClick={handleContinueProject}
                 >
                   <Play size={18} /> Continue Project
                 </Button>
               </div>
-            </div>
+            </>
           )}
         </div>
       )}
