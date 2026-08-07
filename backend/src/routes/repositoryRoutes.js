@@ -1,5 +1,5 @@
 import express from 'express';
-import { getGitHubRepos, trackRepository, getTrackedRepos, refreshGitHubRepos } from '../controllers/repositoryController.js';
+import { getGitHubRepos, trackRepository, getTrackedRepos, refreshGitHubRepos, untrackRepository } from '../controllers/repositoryController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -11,5 +11,6 @@ router.get('/github', getGitHubRepos);
 router.get('/github/refresh', refreshGitHubRepos);
 router.post('/track', trackRepository);
 router.get('/tracked', getTrackedRepos);
+router.delete('/:id/untrack', untrackRepository);
 
 export default router;

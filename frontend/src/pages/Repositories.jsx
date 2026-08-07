@@ -87,6 +87,33 @@ const Repositories = () => {
     }
   };
 
+  const handleUntrack = async (repo) => {
+    let dbId = repo._id;
+    if (!dbId && repo.githubRepoId) {
+      const tracked = trackedRepos.find(r => r.githubRepoId === repo.githubRepoId);
+      if (tracked) dbId = tracked._id;
+    }
+    if (!dbId) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/${dbId}/untrack`, {
+        method: 'DELETE',
+        headers,
+      });
+
+      if (res.ok) {
+        setTrackedRepos(prev => prev.filter(r => r._id !== dbId));
+        setTrackingIds(prev => {
+          const next = new Set(prev);
+          next.delete(repo.githubRepoId || repo.id);
+          return next;
+        });
+      }
+    } catch (error) {
+      console.error('Error untracking repository:', error);
+    }
+  };
+
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -167,6 +194,7 @@ const Repositories = () => {
               isTracked={trackingIds.has(repo.githubRepoId)}
               showTrackButton={activeTab === 'github'}
               onTrack={handleTrack}
+              onUntrack={handleUntrack}
               formatDate={formatDate}
               onViewInsights={() => navigate(`/repositories/${repo._id}`, { state: { repo } })}
             />
@@ -177,7 +205,7 @@ const Repositories = () => {
   );
 };
 
-const RepoCard = ({ repo, isTracked, showTrackButton, onTrack, formatDate, onViewInsights }) => {
+const RepoCard = ({ repo, isTracked, showTrackButton, onTrack, onUntrack, formatDate, onViewInsights }) => {
   // Normalize between GitHub API shape and our DB shape
   const name = repo.name;
   const fullName = repo.fullName || repo.fullName;
@@ -229,9 +257,8 @@ const RepoCard = ({ repo, isTracked, showTrackButton, onTrack, formatDate, onVie
 
           {showTrackButton ? (
             isTracked ? (
-              <Button variant="ghost" className="h-8 gap-1.5 text-xs px-3 text-muted-cyan cursor-default" disabled>
-                <Check size={14} />
-                Tracked
+              <Button variant="ghost" className="h-8 gap-1.5 text-xs px-3 text-red-400 hover:text-red-300 hover:bg-red-400/10" onClick={() => onUntrack(repo)}>
+                Untrack
               </Button>
             ) : (
               <Button variant="primary" className="h-8 gap-1.5 text-xs px-3" onClick={() => onTrack(repo)}>
@@ -240,10 +267,15 @@ const RepoCard = ({ repo, isTracked, showTrackButton, onTrack, formatDate, onVie
               </Button>
             )
           ) : (
-            <Button variant="secondary" className="h-8 gap-1.5 text-xs px-3" onClick={onViewInsights}>
-              AI Insights
-              <ChevronRight size={14} />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" className="h-8 gap-1.5 text-xs px-3 text-red-400 hover:text-red-300 hover:bg-red-400/10" onClick={() => onUntrack(repo)}>
+                Untrack
+              </Button>
+              <Button variant="secondary" className="h-8 gap-1.5 text-xs px-3" onClick={onViewInsights}>
+                AI Insights
+                <ChevronRight size={14} />
+              </Button>
+            </div>
           )}
         </div>
       </div>

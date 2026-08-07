@@ -86,3 +86,23 @@ export const getTrackedRepos = async (req, res) => {
     res.status(500).json({ message: 'Error fetching tracked repositories', error: error.message });
   }
 };
+
+// @desc    Untrack a repository
+// @route   DELETE /api/repositories/:id/untrack
+// @access  Private
+export const untrackRepository = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Make sure the repo belongs to the current user
+    const repo = await Repository.findOneAndDelete({ _id: id, user: req.user._id });
+    
+    if (!repo) {
+      return res.status(404).json({ message: 'Repository not found or already untracked' });
+    }
+
+    res.status(200).json({ message: 'Repository untracked successfully', id });
+  } catch (error) {
+    res.status(500).json({ message: 'Error untracking repository', error: error.message });
+  }
+};
