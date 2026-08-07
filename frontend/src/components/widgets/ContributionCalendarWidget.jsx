@@ -34,44 +34,127 @@ export const ContributionCalendarWidget = ({ initialData }) => {
   };
 
   const getColorClass = (count) => {
-    if (count === 0) return 'bg-[#1a1a1e]';
-    if (count <= 2) return 'bg-muted-cyan/30';
-    if (count <= 5) return 'bg-muted-cyan/60';
-    if (count <= 8) return 'bg-muted-cyan/80';
-    return 'bg-muted-cyan';
+    if (count === 0) return 'bg-[#161b22] border-[#1b1f230f]'; 
+    if (count <= 2) return 'bg-[#003847] border-[#003847]/50';
+    if (count <= 5) return 'bg-[#005a73] border-[#005a73]/50';
+    if (count <= 8) return 'bg-[#007b9e] border-[#007b9e]/50';
+    return 'bg-[#009bc8] border-[#009bc8]/50'; // Using variations of muted-cyan
+  };
+
+  const getMonthLabels = () => {
+    if (!data || !data.weeks) return [];
+    const labels = [];
+    let currentMonth = -1;
+    data.weeks.forEach((week, i) => {
+      const firstDay = week.contributionDays[0];
+      if (firstDay) {
+        const date = new Date(firstDay.date);
+        const month = date.getMonth();
+        if (month !== currentMonth) {
+          labels.push({ month: date.toLocaleString('default', { month: 'short' }), index: i });
+          currentMonth = month;
+        }
+      }
+    });
+    return labels;
+  };
+
+  const calculateTotal = () => {
+    if (!data || !data.weeks) return 0;
+    if (data.totalContributions !== undefined) return data.totalContributions;
+    return data.weeks.reduce((acc, week) => {
+      return acc + week.contributionDays.reduce((dAcc, day) => dAcc + day.contributionCount, 0);
+    }, 0);
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 h-full flex flex-col">
+      <style>{`
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Activity size={20} className="text-muted-cyan" />
           <h2 className="text-lg font-medium text-canvas-white tracking-tight">Contribution Consistency</h2>
         </div>
         {!loading && data && (
-          <div className="text-sm font-mono">
-            <span className="text-muted-steel">Total Last Year: </span>
-            <span className="text-canvas-white font-semibold">{data.totalContributions}</span>
+          <div className="text-sm font-sans text-muted-steel">
+            <span className="text-canvas-white font-semibold">{calculateTotal()}</span> contributions in the last year
           </div>
         )}
       </div>
 
       {loading ? (
-        <Skeleton className="h-28 w-full" />
+        <Skeleton className="h-32 w-full" />
       ) : data && data.weeks ? (
-        <div className="flex overflow-hidden pb-4 pt-2 w-full justify-end">
-          <div className="flex gap-1 justify-end">
-            {data.weeks.map((week, wIndex) => (
-              <div key={wIndex} className="flex flex-col gap-1">
-                {week.contributionDays.map((day, dIndex) => (
-                  <div
-                    key={day.date}
-                    title={`${day.contributionCount} contributions on ${day.date}`}
-                    className={`w-[11px] h-[11px] rounded-[2px] transition-all cursor-pointer hover:ring-1 hover:ring-canvas-white hover:ring-offset-1 hover:ring-offset-charcoal-base ${getColorClass(day.contributionCount)}`}
-                  ></div>
+        <div className="w-full overflow-x-auto hide-scrollbar pb-2">
+          <div className="flex flex-col w-max pr-8">
+            {/* Month Labels */}
+            <div className="flex pl-[30px] mb-1 relative w-full" style={{ height: '16px' }}>
+              {getMonthLabels().map((label, i) => (
+                <span 
+                  key={i} 
+                  className="absolute text-[12px] text-muted-steel font-medium font-sans"
+                  style={{ left: `calc(30px + ${label.index * 14}px)` }} // 10px box + 4px gap = 14px per column
+                >
+                  {label.month}
+                </span>
+              ))}
+            </div>
+
+            <div className="flex">
+              {/* Day Labels */}
+              <div className="flex flex-col gap-[4px] pr-2 shrink-0 pt-0 w-[30px] items-start text-left">
+                <span className="text-[12px] text-muted-steel leading-[10px] h-[10px] block opacity-0 font-sans">Sun</span>
+                <span className="text-[12px] text-muted-steel leading-[10px] h-[10px] block font-sans">Mon</span>
+                <span className="text-[12px] text-muted-steel leading-[10px] h-[10px] block opacity-0 font-sans">Tue</span>
+                <span className="text-[12px] text-muted-steel leading-[10px] h-[10px] block font-sans">Wed</span>
+                <span className="text-[12px] text-muted-steel leading-[10px] h-[10px] block opacity-0 font-sans">Thu</span>
+                <span className="text-[12px] text-muted-steel leading-[10px] h-[10px] block font-sans">Fri</span>
+                <span className="text-[12px] text-muted-steel leading-[10px] h-[10px] block opacity-0 font-sans">Sat</span>
+              </div>
+
+              {/* Matrix */}
+              <div className="flex gap-[4px]">
+                {data.weeks.map((week, wIndex) => (
+                  <div key={wIndex} className="flex flex-col gap-[4px]">
+                    {Array.from({ length: 7 }).map((_, dIndex) => {
+                      const day = week.contributionDays.find(d => new Date(d.date).getDay() === dIndex);
+                      if (day) {
+                        return (
+                          <div
+                            key={day.date}
+                            title={`${day.contributionCount} contributions on ${day.date}`}
+                            className={`w-[10px] h-[10px] rounded-[2px] transition-all cursor-pointer border ${getColorClass(day.contributionCount)} hover:ring-1 hover:ring-muted-cyan hover:ring-offset-1 hover:ring-offset-charcoal-base`}
+                          ></div>
+                        );
+                      } else {
+                         return <div key={`empty-${dIndex}`} className="w-[10px] h-[10px]"></div>; 
+                      }
+                    })}
+                  </div>
                 ))}
               </div>
-            ))}
+            </div>
+
+            {/* Footer Legend */}
+            <div className="flex justify-end items-center mt-3 font-sans w-full pr-1">
+               <div className="flex items-center gap-1 text-[12px] text-muted-steel">
+                 <span className="mr-1">Less</span>
+                 <div className="w-[10px] h-[10px] rounded-[2px] border border-[#1b1f230f] bg-[#161b22]"></div>
+                 <div className="w-[10px] h-[10px] rounded-[2px] border border-[#003847]/50 bg-[#003847]"></div>
+                 <div className="w-[10px] h-[10px] rounded-[2px] border border-[#005a73]/50 bg-[#005a73]"></div>
+                 <div className="w-[10px] h-[10px] rounded-[2px] border border-[#007b9e]/50 bg-[#007b9e]"></div>
+                 <div className="w-[10px] h-[10px] rounded-[2px] border border-[#009bc8]/50 bg-[#009bc8]"></div>
+                 <span className="ml-1">More</span>
+               </div>
+            </div>
           </div>
         </div>
       ) : (
