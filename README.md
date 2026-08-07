@@ -61,7 +61,7 @@ While you're working through a project, the AI acts as your mentor. It provides 
 Submit any of your repositories for an AI-powered review. The system evaluates code quality, security vulnerabilities, scalability, readability, documentation, and maintainability, then gives you specific feedback on what to improve. It also generates an actionable **suggested solution** for each issue, allowing you to track your progress by marking problems as **Solved** directly from the dashboard.
 
 ### 7. Progress Dashboard & Analytics
-The Focus Workspace dashboard gives you a real-time view of your journey: AI-generated actionable insights, a repository overview, key developer metrics, a live GitHub activity feed, and a contribution calendar heatmap. Everything in one place.
+The Focus Workspace dashboard gives you a real-time view of your journey: AI-generated actionable insights, a repository overview, key developer metrics, a live GitHub activity feed, and a contribution calendar heatmap. The UI is built with a premium "Bento Box" layout utilizing native application-level scrolling semantics and perfectly balanced flexible columns.
 
 ### 8. Gamification & Consistency Tracking
 The system monitors your contribution consistency and rewards progress with 12 achievement badges that are automatically evaluated against your live GitHub stats. From maintaining streaks to earning stars, every milestone is tracked.
@@ -84,8 +84,11 @@ The system monitors your contribution consistency and rewards progress with 12 a
 ### 9. Customizable Project Goals
 You're in control of the pace. When working through a roadmap, you can choose between Aggressive, Moderate, or Relaxed timelines. The system adapts the project schedule and milestones based on your preference.
 
-### 10. AI Task Breakdown Generation
-For each project phase in your roadmap, the AI generates detailed, dynamic checklists with specific tasks. No more staring at a blank screen wondering what to build next; the work is already broken down for you.
+### 10. AI Task Breakdown & Unified Workspace
+For each project phase in your roadmap, the AI generates detailed, dynamic checklists with specific tasks. This generation happens instantly and inline within a unified Execution Workspace. No more jumping between pages or staring at a blank screen wondering what to build next; the work is already broken down for you right alongside your project's sticky learning materials.
+
+### 11. GitMentor Chat Assistant
+A persistent, floating AI chat assistant is available throughout the application. Built with a premium, glassy UI, it provides context-aware guidance, answers questions about your projects, and acts as your on-demand mentor without ever disrupting your current workflow.
 
 ---
 
@@ -105,6 +108,7 @@ For each project phase in your roadmap, the AI generates detailed, dynamic check
 | 8 | Gamification & Contribution Consistency Tracking | Completed |
 | 9 | Customizable Project Goals & Pacing | Completed |
 | 10 | AI Task Breakdown Generation | Completed |
+| 11 | GitMentor Chat Assistant | Completed |
 
 ### Functional Requirements (from SRS)
 
