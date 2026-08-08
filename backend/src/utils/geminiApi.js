@@ -71,7 +71,9 @@ export const generateSkillAssessment = async (analyticsData, trackedRepos = []) 
     3. An evaluation of exactly 7 skill categories: Frontend Development, Backend Development, Databases, Testing, Deployment, Architecture, DevOps & CI/CD.
        For each category, infer the developer's competency from their repos, languages, and contribution patterns.
        Identify specific strengths (technologies/practices they seem proficient in) and gaps (things they should learn).
+       CRITICAL: The 'level' for EACH category MUST be exactly one of these strings: "BEGINNER", "INTERMEDIATE", or "ADVANCED". Do not use NOVICE.
     4. Language proficiency for the developer's top languages (up to 6).
+       CRITICAL: The 'proficiency' for EACH language MUST be exactly one of: "BEGINNER", "INTERMEDIATE", or "ADVANCED".
     5. 4-5 actionable recommendations for growth.
 
     Be realistic and evidence-based. If the developer has few repos or limited activity, reflect that honestly.
@@ -96,7 +98,10 @@ export const generateSkillAssessment = async (analyticsData, trackedRepos = []) 
                 properties: {
                   name: { type: Type.STRING },
                   slug: { type: Type.STRING },
-                  level: { type: Type.STRING },
+                  level: { 
+                    type: Type.STRING,
+                    description: "Must be exactly 'BEGINNER', 'INTERMEDIATE', or 'ADVANCED'"
+                  },
                   score: { type: Type.NUMBER },
                   description: { type: Type.STRING },
                   strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
@@ -111,7 +116,10 @@ export const generateSkillAssessment = async (analyticsData, trackedRepos = []) 
                 type: Type.OBJECT,
                 properties: {
                   name: { type: Type.STRING },
-                  proficiency: { type: Type.STRING },
+                  proficiency: { 
+                    type: Type.STRING,
+                    description: "Must be exactly 'BEGINNER', 'INTERMEDIATE', or 'ADVANCED'"
+                  },
                   projectCount: { type: Type.NUMBER },
                 },
                 required: ["name", "proficiency", "projectCount"],
