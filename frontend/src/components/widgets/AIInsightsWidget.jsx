@@ -50,14 +50,13 @@ export const AIInsightsWidget = () => {
     <Card className="flex flex-col h-full p-6">
       <div className="flex justify-between items-center mb-6 shrink-0">
         <h2 className="text-lg font-medium text-canvas-white">Pending Fixes</h2>
-        {!loading && <Badge variant="default" className="text-xs bg-charcoal-base">{insights.length} PENDING</Badge>}
+        {!loading && <Badge variant="default">{insights.length} PENDING</Badge>}
       </div>
       
-      <div className="space-y-3">
+      <div className="space-y-3 max-h-[320px] overflow-y-auto custom-scrollbar pr-2">
         {loading ? (
-          // Loading Skeletons
           [1, 2, 3].map(i => (
-            <div key={i} className="p-4 rounded-xl bg-charcoal-base flex items-center justify-between">
+            <div key={i} className="p-4 rounded-xl glass-surface flex items-center justify-between">
               <div className="flex flex-col gap-2 w-full">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
@@ -68,18 +67,21 @@ export const AIInsightsWidget = () => {
         ) : insights.length === 0 ? (
            <div className="h-full flex items-center justify-center text-muted-steel text-sm py-10">No pending fixes found. Great job!</div>
         ) : (
-          insights.map(insight => {
+          insights.map((insight, index) => {
             const id = insight._id || insight.id;
             const repoId = insight.repository?._id || insight.repository;
             return (
-              <div key={id} className="p-4 rounded-xl bg-charcoal-base flex items-center justify-between group transition-colors border border-transparent hover:border-muted-cyan/30 hover:bg-charcoal-base/80">
+              <div 
+                key={id} 
+                className={`p-4 rounded-xl glass-surface flex items-center justify-between group transition-all duration-300 hover:border-muted-cyan/20 hover:shadow-[0_0_15px_rgba(88,166,255,0.08)] hover:-translate-y-0.5 animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}
+              >
                 <div className="flex flex-col gap-1.5 overflow-hidden pr-4 w-full">
                   <div className="flex items-center gap-2">
                     {getIcon(insight.type)}
                     <span className="font-medium text-sm text-canvas-white truncate" title={insight.title}>{insight.title}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs font-mono text-muted-steel">
-                    <span className="bg-surface-dim px-1.5 py-0.5 rounded text-[10px] text-muted-cyan border border-whisper/50">{insight.type}</span>
+                    <span className="bg-white/[0.04] px-1.5 py-0.5 rounded text-[10px] text-muted-cyan border border-white/[0.06]">{insight.type}</span>
                     <span className="truncate max-w-[200px]" title={insight.file}>{insight.file}</span>
                   </div>
                 </div>
