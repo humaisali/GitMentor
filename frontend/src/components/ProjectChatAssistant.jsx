@@ -183,7 +183,7 @@ const ProjectChatAssistant = ({ projectId }) => {
       {/* Floating Trigger Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-muted-cyan to-muted-cyan/70 text-charcoal-base shadow-xl shadow-muted-cyan/20 flex items-center justify-center hover:scale-105 transition-all duration-300 ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
+        className={`fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-muted-cyan to-blue-400 text-bg-deep shadow-[0_0_25px_rgba(88,166,255,0.3)] flex items-center justify-center hover:scale-110 hover:shadow-[0_0_35px_rgba(88,166,255,0.4)] transition-all duration-300 animate-pulse-glow ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
         title="Project Mentor"
       >
         <BotMessageSquare size={26} />
@@ -198,10 +198,10 @@ const ProjectChatAssistant = ({ projectId }) => {
         />
 
         {/* Chat Panel */}
-        <div className={`absolute bottom-4 right-4 w-[420px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-2rem)] bg-charcoal-base border border-white/5 rounded-2xl shadow-2xl shadow-black/80 flex flex-col overflow-hidden transition-all duration-300 ${isOpen ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-8 opacity-0 scale-95'}`}>
+        <div className={`absolute bottom-4 right-4 w-[420px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-2rem)] bg-bg-base/95 backdrop-blur-xl border border-white/[0.08] rounded-2xl shadow-elevation-4 flex flex-col overflow-hidden transition-all duration-300 ${isOpen ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-8 opacity-0 scale-95'}`}>
           
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-muted-surface/50 shrink-0">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06] bg-white/[0.02] shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-muted-cyan/10 border border-muted-cyan/20 flex items-center justify-center">
                 <BotMessageSquare size={16} className="text-muted-cyan" />
@@ -242,7 +242,7 @@ const ProjectChatAssistant = ({ projectId }) => {
                         setInput(suggestion);
                         setTimeout(() => inputRef.current?.focus(), 50);
                       }}
-                      className="w-full text-left text-xs text-muted-steel hover:text-canvas-white bg-muted-surface hover:bg-white/[0.06] border border-white/[0.05] rounded-lg px-3 py-2.5 transition-colors"
+                      className="w-full text-left text-xs text-muted-steel hover:text-canvas-white bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] rounded-xl px-3 py-2.5 transition-all duration-300 hover:border-muted-cyan/20 hover:shadow-[0_0_10px_rgba(88,166,255,0.06)]"
                     >
                       {suggestion}
                     </button>
@@ -258,8 +258,8 @@ const ProjectChatAssistant = ({ projectId }) => {
               >
                 <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                   msg.role === 'user'
-                    ? 'bg-muted-cyan text-charcoal-base font-medium rounded-br-sm'
-                    : 'bg-muted-surface border border-white/[0.05] text-canvas-white/90 rounded-bl-sm shadow-sm'
+                    ? 'bg-gradient-to-r from-muted-cyan to-blue-400 text-bg-deep font-medium rounded-br-sm shadow-[0_0_15px_rgba(88,166,255,0.2)]'
+                    : 'bg-white/[0.04] backdrop-blur-sm border border-white/[0.06] text-canvas-white/90 rounded-bl-sm shadow-elevation-1'
                 }`}>
                   {msg.role === 'assistant' && (
                     <div className="flex items-center gap-1.5 mb-2">
@@ -297,7 +297,7 @@ const ProjectChatAssistant = ({ projectId }) => {
           </div>
 
           {/* Input Area */}
-          <div className="shrink-0 border-t border-white/[0.05] bg-muted-surface/30 p-3">
+          <div className="shrink-0 border-t border-white/[0.06] bg-white/[0.02] p-3">
             <div className="flex items-end gap-2">
               <textarea
                 ref={inputRef}
@@ -306,13 +306,13 @@ const ProjectChatAssistant = ({ projectId }) => {
                 onKeyDown={handleKeyDown}
                 placeholder="Ask about your project..."
                 rows={1}
-                className="flex-1 resize-none bg-muted-surface border-none rounded-xl px-4 py-3 text-sm text-canvas-white placeholder:text-muted-steel focus:outline-none focus:ring-1 focus:ring-muted-cyan/50 transition-all max-h-[100px] overflow-y-auto"
+                className="flex-1 resize-none bg-white/[0.04] border border-white/[0.06] rounded-xl px-4 py-3 text-sm text-canvas-white placeholder:text-muted-steel/40 focus:outline-none focus:border-muted-cyan/40 focus:shadow-[0_0_15px_rgba(88,166,255,0.1)] transition-all duration-300 max-h-[100px] overflow-y-auto"
                 style={{ minHeight: '44px' }}
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || isThinking}
-                className="shrink-0 w-10 h-10 rounded-xl bg-muted-cyan text-charcoal-base flex items-center justify-center hover:bg-muted-cyan/80 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-r from-muted-cyan to-blue-400 text-bg-deep flex items-center justify-center hover:shadow-[0_0_15px_rgba(88,166,255,0.3)] disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300"
               >
                 <Send size={16} />
               </button>
