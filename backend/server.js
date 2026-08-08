@@ -11,6 +11,7 @@ import insightRoutes from './src/routes/insightRoutes.js';
 import roadmapRoutes from './src/routes/roadmapRoutes.js';
 import calendarRoutes from './src/routes/calendarRoutes.js';
 import analyticsRoutes from './src/routes/analyticsRoutes.js';
+import skillRoutes from './src/routes/skillRoutes.js';
 
 dotenv.config();
 
@@ -69,6 +70,7 @@ app.use('/api/insights', insightRoutes);
 app.use('/api/roadmaps', roadmapRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/skills', skillRoutes);
 
 // Start Server
 const PORT = process.env.PORT || 5000;

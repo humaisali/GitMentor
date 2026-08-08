@@ -13,23 +13,157 @@ const getAI = () => {
 };
 
 /**
+ * Generate a comprehensive AI skill assessment from GitHub data.
+ * @param {Object} analyticsData - Processed GitHub analytics (languages, contributions, repos, overview).
+ * @param {Array} trackedRepos - Tracked repositories from the database.
+ * @returns {Object} Structured skill assessment profile.
+ */
+export const generateSkillAssessment = async (analyticsData, trackedRepos = []) => {
+  const ai = getAI();
+
+  const repoSummary = (analyticsData.allRepos || []).map(repo => ({
+    name: repo.name,
+    description: repo.description || 'No description',
+    stars: repo.stargazerCount,
+    forks: repo.forkCount,
+    language: repo.primaryLanguage?.name || 'Unknown',
+    languages: (repo.languages?.edges || []).map(e => e.node.name),
+  }));
+
+  const trackedSummary = trackedRepos.map(repo => ({
+    name: repo.name,
+    fullName: repo.fullName,
+    branch: repo.branch,
+  }));
+
+  const prompt = `
+    You are an expert software engineering career mentor and technical assessor.
+    Analyze the following developer's complete GitHub profile data and provide a thorough skill assessment.
+
+    === GITHUB PROFILE DATA ===
+    
+    Overview:
+    - Followers: ${analyticsData.overview?.followers || 0}
+    - Following: ${analyticsData.overview?.following || 0}
+    - Pull Requests: ${analyticsData.overview?.pullRequests || 0}
+    - Issues: ${analyticsData.overview?.issues || 0}
+    - Total Stars: ${analyticsData.overview?.totalStars || 0}
+    - Total Forks: ${analyticsData.overview?.totalForks || 0}
+
+    Contribution Stats:
+    - Total Contributions (this year): ${analyticsData.contributions?.total || 0}
+    - Current Streak: ${analyticsData.contributions?.currentStreak || 0} days
+    - Longest Streak: ${analyticsData.contributions?.longestStreak || 0} days
+
+    Top Languages (by code volume):
+    ${(analyticsData.languages || []).map(l => `- ${l.name}: ${l.percentage}%`).join('\n    ')}
+
+    All Repositories (${repoSummary.length} total):
+    ${JSON.stringify(repoSummary.slice(0, 30), null, 2)}
+
+    Tracked Repositories (actively being worked on):
+    ${JSON.stringify(trackedSummary, null, 2)}
+    === END DATA ===
+
+    Based on this data, generate a complete skill assessment with:
+    1. An overall skill level (BEGINNER, INTERMEDIATE, or ADVANCED) and score (0-100).
+    2. A 2-3 sentence executive summary of the developer's profile.
+    3. An evaluation of exactly 7 skill categories: Frontend Development, Backend Development, Databases, Testing, Deployment, Architecture, DevOps & CI/CD.
+       For each category, infer the developer's competency from their repos, languages, and contribution patterns.
+       Identify specific strengths (technologies/practices they seem proficient in) and gaps (things they should learn).
+    4. Language proficiency for the developer's top languages (up to 6).
+    5. 4-5 actionable recommendations for growth.
+
+    Be realistic and evidence-based. If the developer has few repos or limited activity, reflect that honestly.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            overallLevel: { type: Type.STRING },
+            overallScore: { type: Type.NUMBER },
+            summary: { type: Type.STRING },
+            categories: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  name: { type: Type.STRING },
+                  slug: { type: Type.STRING },
+                  level: { type: Type.STRING },
+                  score: { type: Type.NUMBER },
+                  description: { type: Type.STRING },
+                  strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  gaps: { type: Type.ARRAY, items: { type: Type.STRING } },
+                },
+                required: ["name", "slug", "level", "score", "description", "strengths", "gaps"],
+              },
+            },
+            topLanguages: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  name: { type: Type.STRING },
+                  proficiency: { type: Type.STRING },
+                  projectCount: { type: Type.NUMBER },
+                },
+                required: ["name", "proficiency", "projectCount"],
+              },
+            },
+            recommendations: { type: Type.ARRAY, items: { type: Type.STRING } },
+          },
+          required: ["overallLevel", "overallScore", "summary", "categories", "topLanguages", "recommendations"],
+        },
+      },
+    });
+
+    return JSON.parse(response.text);
+  } catch (error) {
+    console.error('Error generating skill assessment:', error);
+    throw error;
+  }
+};
+
+/**
  * Generate a personalized learning roadmap based on user's GitHub repositories and an optional user prompt.
  * @param {Array} repositories - List of user's GitHub repositories.
  * @param {String} userPrompt - Optional custom goal from the user.
  * @returns {Array} List of project objects for the roadmap.
  */
-export const generateRoadmap = async (repositories, userPrompt = null) => {
+export const generateRoadmap = async (repositories, userPrompt = null, skillProfile = null) => {
   const ai = getAI();
 
   const customGoalSection = userPrompt
     ? `\n    The user has a specific goal: "${userPrompt}". 
-    Create a highly focused 5-step roadmap specifically to achieve this goal, taking their current skill level (inferred from their repositories) into account as a starting point.`
+    Create a highly focused 5-step roadmap specifically to achieve this goal, taking their current skill level into account as a starting point.`
     : `\n    Generate a progressive 5-step project roadmap to help them reach a "Full-Stack Mastery" or "Advanced Software Engineer" level.`;
+
+  const skillProfileSection = skillProfile
+    ? `\n    === ASSESSED SKILL PROFILE ===
+    Overall Level: ${skillProfile.overallLevel} (Score: ${skillProfile.overallScore}/100)
+    Summary: ${skillProfile.summary}
+    
+    Skill Categories:
+    ${skillProfile.categories.map(c => `- ${c.name}: ${c.level} (${c.score}/100) | Strengths: ${c.strengths.join(', ')} | Gaps: ${c.gaps.join(', ')}`).join('\n    ')}
+    
+    Top Languages: ${skillProfile.topLanguages.map(l => `${l.name} (${l.proficiency})`).join(', ')}
+    
+    Use this skill profile to create a highly targeted roadmap that addresses the identified gaps while building on existing strengths.
+    === END SKILL PROFILE ===`
+    : '';
 
   const prompt = `
     You are an expert software engineering mentor. 
     Analyze the following list of repositories belonging to a user, and infer their current skill level and missing competencies.
     ${customGoalSection}
+    ${skillProfileSection}
     
     User Repositories Data:
     ${JSON.stringify(repositories.map(repo => ({
