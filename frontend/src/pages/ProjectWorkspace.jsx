@@ -127,7 +127,7 @@ const ProjectWorkspace = () => {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
         <h2 className="text-2xl font-semibold text-canvas-white mb-2">Project Not Found</h2>
-        <Button variant="outline" onClick={() => navigate('/roadmap')}>Back to Roadmap</Button>
+        <Button variant="secondary" onClick={() => navigate('/roadmap')}>Back to Roadmap</Button>
       </div>
     );
   }
@@ -137,15 +137,15 @@ const ProjectWorkspace = () => {
       <header className="mb-2 shrink-0">
         <button 
           onClick={() => navigate(`/roadmaps/${projectId}`)}
-          className="flex items-center gap-2 text-sm text-muted-steel hover:text-canvas-white mb-6 transition-colors"
+          className="flex items-center gap-2 text-sm text-muted-steel hover:text-canvas-white mb-6 transition-all duration-300"
         >
           <ArrowLeft size={16} /> Back to Project Hub
         </button>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 animate-fade-in-up">
           {/* Project Header */}
-          <div className="bg-muted-surface rounded-2xl p-8 shadow-lg relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-muted-cyan/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+          <div className="glass-card p-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-muted-cyan/[0.04] rounded-full blur-[80px] pointer-events-none -translate-y-1/2 translate-x-1/2 animate-blob"></div>
             <Badge variant="primary" className="bg-muted-cyan/10 text-muted-cyan border-none mb-4">EXECUTION WORKSPACE</Badge>
             <h1 className="text-3xl font-semibold tracking-tight text-canvas-white mb-3">{project.title}</h1>
             <p className="text-[15px] text-muted-steel leading-relaxed max-w-4xl">{project.description}</p>
@@ -157,8 +157,8 @@ const ProjectWorkspace = () => {
         {/* Learning Materials Sidebar */}
         <div className="md:col-span-4 flex flex-col gap-5 self-start sticky top-4">
           {project.learningMaterials && project.learningMaterials.length > 0 && (
-            <div className="bg-muted-surface rounded-2xl p-7 shadow-lg relative overflow-hidden">
-              <div className="absolute bottom-0 left-0 w-40 h-40 bg-muted-cyan/5 rounded-full blur-3xl pointer-events-none translate-y-1/2 -translate-x-1/2"></div>
+            <div className="glass-card p-7 relative overflow-hidden animate-fade-in-up stagger-1">
+              <div className="absolute bottom-0 left-0 w-40 h-40 bg-muted-cyan/[0.04] rounded-full blur-[80px] pointer-events-none translate-y-1/2 -translate-x-1/2"></div>
               <h4 className="text-[11px] font-mono tracking-widest text-muted-steel mb-5 uppercase flex items-center gap-2">
                 <BookOpen size={14} className="text-muted-cyan" /> Learning Materials
               </h4>
@@ -169,17 +169,17 @@ const ProjectWorkspace = () => {
                     href={material.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex items-start gap-3 p-3 -mx-1 rounded-xl transition-all duration-200 hover:bg-white/[0.04]"
+                    className="group flex items-start gap-3 p-3 -mx-1 rounded-xl transition-all duration-300 hover:bg-white/[0.04]"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-canvas-white/90 leading-snug mb-1.5 group-hover:text-muted-cyan transition-colors line-clamp-2">
                         {material.title}
                       </p>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono tracking-wide bg-white/[0.06] border border-white/5 text-muted-steel">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono tracking-wide bg-white/[0.04] border border-white/[0.06] text-muted-steel">
                         {material.source}
                       </span>
                     </div>
-                    <div className="shrink-0 mt-0.5 p-1.5 rounded-lg bg-white/[0.04] border border-transparent group-hover:border-muted-cyan/30 group-hover:bg-muted-cyan/10 transition-all">
+                    <div className="shrink-0 mt-0.5 p-1.5 rounded-lg bg-white/[0.04] border border-transparent group-hover:border-muted-cyan/30 group-hover:bg-muted-cyan/10 group-hover:shadow-[0_0_10px_rgba(88,166,255,0.1)] transition-all duration-300">
                       <ExternalLink size={14} className="text-muted-steel group-hover:text-muted-cyan transition-colors" />
                     </div>
                   </a>
@@ -198,22 +198,22 @@ const ProjectWorkspace = () => {
             const isStarting = startingPhase === phase.phaseId;
 
             return (
-              <div key={phase.phaseId} className={`relative flex flex-col p-7 rounded-2xl border transition-all 
+              <div key={phase.phaseId} className={`relative flex flex-col p-7 glass-card transition-all duration-300 animate-fade-in-up stagger-${Math.min((idx % 6) + 1, 6)}
                 ${isCompleted 
-                  ? 'bg-muted-surface/50 border-transparent' 
+                  ? 'opacity-70' 
                   : isUnlocked 
-                    ? 'bg-muted-surface shadow-lg border-muted-cyan/10' 
-                    : 'bg-charcoal-base/30 border-transparent opacity-60 grayscale'}`}>
+                    ? 'border-muted-cyan/15 shadow-[0_0_20px_rgba(88,166,255,0.06)]' 
+                    : 'opacity-40 grayscale'}`}>
                 
                 <div className="flex gap-5 mb-2">
                   <div className="shrink-0 relative z-10 pt-1">
                     {isCompleted ? (
-                      <div className="w-11 h-11 rounded-full bg-muted-cyan/20 flex items-center justify-center border border-muted-cyan/30">
+                      <div className="w-11 h-11 rounded-full bg-muted-cyan/15 flex items-center justify-center border border-muted-cyan/30 shadow-[0_0_15px_rgba(88,166,255,0.15)]">
                         <CheckCircle2 size={22} className="text-muted-cyan" />
                       </div>
                     ) : (
-                      <div className={`w-11 h-11 rounded-full flex items-center justify-center border transition-colors
-                        ${isUnlocked ? 'bg-charcoal-base border-muted-cyan text-muted-cyan' : 'bg-charcoal-base border-whisper text-muted-steel'}`}>
+                      <div className={`w-11 h-11 rounded-full flex items-center justify-center border transition-all duration-300
+                        ${isUnlocked ? 'bg-white/[0.03] border-muted-cyan/30 text-muted-cyan shadow-[0_0_10px_rgba(88,166,255,0.1)]' : 'bg-white/[0.02] border-white/[0.08] text-muted-steel'}`}>
                         <Circle size={22} className={isUnlocked ? 'fill-muted-cyan/10' : ''} />
                       </div>
                     )}
@@ -224,7 +224,7 @@ const ProjectWorkspace = () => {
                       <h4 className={`text-xl font-medium pr-4 ${isCompleted ? 'text-muted-steel line-through' : 'text-canvas-white'}`}>
                         {phase.title}
                       </h4>
-                      <span className="shrink-0 inline-flex items-center px-3 py-1 rounded-full text-xs font-mono bg-charcoal-base border border-white/5 text-muted-steel">
+                      <span className="shrink-0 inline-flex items-center px-3 py-1 rounded-full text-xs font-mono bg-white/[0.04] border border-white/[0.06] text-muted-steel">
                         {phase.estimatedTime}
                       </span>
                     </div>
@@ -239,7 +239,7 @@ const ProjectWorkspace = () => {
                     {!phase.isStarted && !isStarting && !isCompleted && (
                       <Button 
                         variant="primary" 
-                        className="text-sm px-6 py-3 h-auto rounded-xl shadow-md gap-2"
+                        className="text-sm px-6 py-3 h-auto gap-2"
                         onClick={() => handleStartPhase(phase.phaseId)}
                       >
                         <Play size={16} /> Start this Phase
@@ -248,7 +248,7 @@ const ProjectWorkspace = () => {
 
                     {/* State 2: Starting (Generating) */}
                     {isStarting && (
-                      <div className="bg-charcoal-base border border-white/5 rounded-xl p-6 flex flex-col items-center justify-center text-center">
+                      <div className="glass-surface p-6 flex flex-col items-center justify-center text-center">
                          <div className="relative w-12 h-12 mb-4 flex items-center justify-center">
                           <div className="absolute inset-0 border-2 border-muted-cyan/20 rounded-full animate-[spin_3s_linear_infinite]"></div>
                           <div className="absolute inset-0 border-2 border-muted-cyan border-t-transparent rounded-full animate-[spin_1.5s_linear_infinite]"></div>
@@ -263,14 +263,14 @@ const ProjectWorkspace = () => {
 
                     {/* State 3: Started (Tasks rendered inline) */}
                     {phase.isStarted && phase.tasks && phase.tasks.length > 0 && (
-                      <div className="mt-4 border-t border-whisper/30 pt-6">
+                      <div className="mt-4 border-t border-white/[0.06] pt-6">
                         <h4 className="text-sm font-semibold text-canvas-white uppercase tracking-wider mb-4 flex items-center gap-2">
                            <ListTodo size={16} className="text-muted-cyan" /> Actionable Tasks
                         </h4>
                         
                         <div className="space-y-3">
                           {phase.tasks.map((task) => (
-                            <div key={task.taskId} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border transition-colors ${task.isCompleted ? 'bg-success/5 border-success/10' : 'bg-charcoal-base border-white/5 hover:border-white/10'}`}>
+                            <div key={task.taskId} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border transition-all duration-300 backdrop-blur-sm ${task.isCompleted ? 'bg-emerald-500/[0.04] border-emerald-500/10' : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.1] hover:bg-white/[0.03]'}`}>
                               <div className="flex items-center gap-3 flex-1 min-w-0">
                                 <p className={`text-[14px] leading-snug ${task.isCompleted ? 'text-muted-steel line-through' : 'text-canvas-white/90'}`}>
                                   {task.title}
@@ -279,15 +279,15 @@ const ProjectWorkspace = () => {
                               
                               <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                                 <Button
-                                  variant="outline"
-                                  className="h-8 px-3 text-xs border-white/10 text-muted-steel hover:text-canvas-white hover:border-muted-steel"
+                                  variant="secondary"
+                                  className="h-8 px-3 text-xs"
                                   onClick={() => setTaskModal({ isOpen: true, task })}
                                 >
                                   Details
                                 </Button>
                                 <Button
                                   variant="primary"
-                                  className={`h-8 px-4 text-xs gap-1.5 min-w-[85px] ${task.isCompleted ? 'bg-success text-charcoal-base hover:bg-success/90 border-none' : ''}`}
+                                  className={`h-8 px-4 text-xs gap-1.5 min-w-[85px] ${task.isCompleted ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)]' : ''}`}
                                   disabled={task.isCompleted || completingTask === task.taskId}
                                   onClick={() => handleCompleteTask(phase.phaseId, task.taskId)}
                                 >
@@ -303,7 +303,7 @@ const ProjectWorkspace = () => {
                           <div className="mt-6 flex justify-end">
                             <Button 
                               variant="primary" 
-                              className="gap-2 px-6 shadow-lg shadow-muted-cyan/20"
+                              className="gap-2 px-6"
                               onClick={() => handleCompletePhase(phase.phaseId)}
                               disabled={completingPhase === phase.phaseId}
                             >
@@ -325,10 +325,10 @@ const ProjectWorkspace = () => {
       {/* Task Details Modal */}
       {taskModal.isOpen && taskModal.task && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setTaskModal({ isOpen: false, task: null })}></div>
-          <Card className="relative w-full max-w-2xl max-h-[85vh] bg-muted-surface border-white/5 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setTaskModal({ isOpen: false, task: null })}></div>
+          <Card hover={false} className="relative w-full max-w-2xl max-h-[85vh] shadow-elevation-4 flex flex-col overflow-hidden animate-fade-in-up">
             {/* Modal Header */}
-            <div className="flex items-start justify-between p-6 border-b border-white/5 bg-charcoal-base/50 shrink-0">
+            <div className="flex items-start justify-between p-6 border-b border-white/[0.06] shrink-0">
               <div className="pr-8">
                 <div className="flex items-center gap-2 mb-2">
                   <Badge variant="primary" className="bg-muted-cyan/10 text-muted-cyan border-none">TASK DETAILS</Badge>
@@ -338,18 +338,18 @@ const ProjectWorkspace = () => {
               </div>
               <button 
                 onClick={() => setTaskModal({ isOpen: false, task: null })}
-                className="absolute top-6 right-6 p-2 rounded-lg text-muted-steel hover:text-canvas-white hover:bg-white/[0.05] transition-colors"
+                className="absolute top-6 right-6 p-2 rounded-xl text-muted-steel hover:text-canvas-white hover:bg-white/[0.06] transition-all duration-300"
               >
                 <X size={20} />
               </button>
             </div>
             
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-muted-surface">
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
               <div className="space-y-6">
                 <div>
                   <h4 className="text-xs font-mono text-muted-steel uppercase tracking-wider mb-3">Context & Goal</h4>
-                  <p className="text-sm text-canvas-white/80 leading-relaxed bg-charcoal-base p-4 rounded-xl border border-white/5">
+                  <p className="text-sm text-canvas-white/80 leading-relaxed glass-surface p-4">
                     {taskModal.task.description}
                   </p>
                 </div>
@@ -360,8 +360,8 @@ const ProjectWorkspace = () => {
                   </h4>
                   <div className="space-y-3">
                     {taskModal.task.steps && taskModal.task.steps.map((step, idx) => (
-                      <div key={idx} className="flex gap-4 p-4 rounded-xl bg-charcoal-base border border-white/5 relative overflow-hidden group">
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-muted-cyan/30 group-hover:bg-muted-cyan transition-colors"></div>
+                      <div key={idx} className="flex gap-4 p-4 glass-surface relative overflow-hidden group">
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-muted-cyan/20 group-hover:bg-muted-cyan/50 group-hover:shadow-[0_0_8px_rgba(88,166,255,0.2)] transition-all duration-300"></div>
                         <div className="flex flex-col gap-1 w-full pl-2">
                           <p className="text-sm text-canvas-white/90 leading-relaxed">{step}</p>
                         </div>
@@ -373,8 +373,8 @@ const ProjectWorkspace = () => {
             </div>
             
             {/* Modal Footer */}
-            <div className="p-5 border-t border-white/5 bg-charcoal-base/50 shrink-0 flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setTaskModal({ isOpen: false, task: null })}>
+            <div className="p-5 border-t border-white/[0.06] shrink-0 flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setTaskModal({ isOpen: false, task: null })}>
                 Close
               </Button>
             </div>
