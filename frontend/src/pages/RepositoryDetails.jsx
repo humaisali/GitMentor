@@ -28,8 +28,8 @@ const RepositoryDetails = () => {
         const el = document.getElementById(`insight-${state.highlightInsightId}`);
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          el.classList.add('ring-2', 'ring-muted-cyan', 'ring-offset-2', 'ring-offset-charcoal-base');
-          setTimeout(() => el.classList.remove('ring-2', 'ring-muted-cyan', 'ring-offset-2', 'ring-offset-charcoal-base'), 2500);
+          el.classList.add('ring-2', 'ring-muted-cyan', 'ring-offset-2', 'ring-offset-bg-deep');
+          setTimeout(() => el.classList.remove('ring-2', 'ring-muted-cyan', 'ring-offset-2', 'ring-offset-bg-deep'), 2500);
         }
       }, 100);
     }
@@ -75,12 +75,19 @@ const RepositoryDetails = () => {
     return <Info className="text-muted-steel" size={20} />;
   };
 
+  const getBorderGlowColor = (severity, isResolved) => {
+    if (isResolved) return 'rgba(107,114,128,0.4)';
+    if (severity === 'error') return 'rgba(239,68,68,0.5)';
+    if (severity === 'warning') return 'rgba(234,179,8,0.5)';
+    return 'rgba(59,130,246,0.5)';
+  };
+
   if (!repo) return null;
 
   return (
     <div className="flex flex-col gap-6 pb-8">
-      <header className="shrink-0 flex items-start gap-4">
-        <button onClick={() => navigate('/repositories')} className="mt-1 p-2 rounded-md hover:bg-whisper transition-colors">
+      <header className="shrink-0 flex items-start gap-4 animate-fade-in-up">
+        <button onClick={() => navigate('/repositories')} className="mt-1 p-2 rounded-xl hover:bg-white/[0.06] transition-all duration-300">
           <ArrowLeft size={20} className="text-muted-steel hover:text-canvas-white" />
         </button>
         <div>
@@ -93,7 +100,7 @@ const RepositoryDetails = () => {
       </header>
 
       <div className="flex-1 pr-2 pb-10">
-        <div className="mb-6">
+        <div className="mb-6 animate-fade-in-up stagger-1">
           <h2 className="text-xl font-medium text-canvas-white mb-2">Deep AI Repository Analysis</h2>
           <p className="text-muted-steel text-sm max-w-3xl">
             GitMentor AI has analyzed your repository's top-level structure, README, and recent commit history to provide hyper-specific architectural and security insights.
@@ -102,19 +109,32 @@ const RepositoryDetails = () => {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-muted-steel gap-4">
-             <Loader2 size={32} className="animate-spin text-muted-cyan" />
+             <div className="relative w-12 h-12 flex items-center justify-center">
+               <div className="absolute inset-0 border-2 border-muted-cyan/20 rounded-full animate-[spin_3s_linear_infinite]"></div>
+               <div className="absolute inset-0 border-2 border-muted-cyan border-t-transparent rounded-full animate-[spin_1.5s_linear_infinite]"></div>
+               <Loader2 size={20} className="text-muted-cyan absolute" />
+             </div>
              <p className="animate-pulse">AI is reading your codebase and generating insights...</p>
              <p className="text-xs font-mono opacity-50">This may take 5-10 seconds depending on repo size.</p>
           </div>
         ) : insights.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {insights.map(insight => (
-              <Card id={`insight-${insight._id}`} key={insight._id} className={`p-6 flex flex-col border-l-4 transition-all duration-500 h-full ${insight.isResolved ? 'bg-charcoal-base/50 opacity-60' : 'bg-charcoal-base shadow-md hover:-translate-y-0.5'}`} style={{ borderLeftColor: insight.isResolved ? '#6b7280' : insight.severity === 'error' ? '#ef4444' : insight.severity === 'warning' ? '#eab308' : '#3b82f6' }}>
+            {insights.map((insight, index) => (
+              <Card 
+                id={`insight-${insight._id}`} 
+                key={insight._id} 
+                hover={!insight.isResolved}
+                className={`p-6 flex flex-col border-l-4 transition-all duration-500 h-full animate-fade-in-up stagger-${Math.min((index % 6) + 1, 6)} ${insight.isResolved ? 'opacity-50' : 'hover:shadow-elevation-3'}`} 
+                style={{ 
+                  borderLeftColor: getBorderGlowColor(insight.severity, insight.isResolved),
+                  boxShadow: insight.isResolved ? undefined : `var(--elevation-2), -4px 0 15px ${getBorderGlowColor(insight.severity, insight.isResolved).replace('0.5', '0.1')}`
+                }}
+              >
                 <div className="flex items-start gap-3 mb-4 shrink-0">
                   <div className="mt-1 shrink-0">{getIcon(insight.type)}</div>
                   <div className="flex-1 w-full flex justify-between items-start gap-4">
                     <h3 className="text-base font-semibold text-canvas-white leading-snug line-clamp-2 h-[44px]">{insight.title}</h3>
-                    <Badge variant="outline" className="shrink-0 text-[10px] font-mono tracking-wider opacity-80 border-white/20 text-muted-steel mt-0.5">{insight.type}</Badge>
+                    <Badge variant="outline" className="shrink-0 text-[10px] font-mono tracking-wider">{insight.type}</Badge>
                   </div>
                 </div>
                 
@@ -122,7 +142,7 @@ const RepositoryDetails = () => {
                   <p className="text-muted-steel text-sm leading-relaxed mb-4 line-clamp-[8] h-[185px]">{insight.description}</p>
                   
                   {insight.suggestedSolution && (
-                    <div className="mt-auto bg-black/25 p-4 rounded-lg flex-1">
+                    <div className="mt-auto glass-surface p-4 flex-1">
                       <h4 className="text-canvas-white text-[11px] font-bold mb-2 uppercase tracking-wider flex items-center gap-1.5">
                         <Zap size={14} className="text-emerald-400" />
                         Suggested Solution
@@ -132,20 +152,20 @@ const RepositoryDetails = () => {
                   )}
                 </div>
                 
-                <div className="mt-5 pt-4 border-t border-white/5 flex justify-between items-center shrink-0">
+                <div className="mt-5 pt-4 border-t border-white/[0.06] flex justify-between items-center shrink-0">
                   <div className="text-xs font-mono text-muted-steel truncate pr-4">
                     Target: <span className="text-canvas-white">{insight.file}</span>
                   </div>
                   {!insight.isResolved ? (
                     <button 
                       onClick={() => handleResolve(insight._id)}
-                      className="shrink-0 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-1.5 rounded-md text-xs font-semibold transition-colors shadow-sm flex items-center gap-1.5"
+                      className="shrink-0 bg-gradient-to-r from-emerald-500 to-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] text-bg-deep px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 shadow-sm flex items-center gap-1.5"
                     >
                       <CheckCircle2 size={14} />
                       Solve Issue
                     </button>
                   ) : (
-                    <span className="shrink-0 text-xs font-semibold text-muted-steel flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-md">
+                    <span className="shrink-0 text-xs font-semibold text-muted-steel flex items-center gap-1.5 bg-white/[0.04] px-3 py-1.5 rounded-xl">
                       <CheckCircle2 size={14} />
                       Solved
                     </span>
