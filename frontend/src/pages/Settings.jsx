@@ -18,15 +18,19 @@ const Settings = () => {
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto h-full">
-      <header className="mb-2 shrink-0">
-        <h1 className="text-3xl font-semibold tracking-tight text-canvas-white">Settings</h1>
+      <header className="mb-2 shrink-0 animate-fade-in-up">
+        <h1 className="text-3xl font-semibold tracking-tight text-canvas-white">
+          <span className="bg-gradient-to-r from-muted-cyan to-blue-400 bg-clip-text text-transparent">Settings</span>
+        </h1>
         <p className="text-muted-steel mt-1 font-mono text-sm">Account and configuration.</p>
       </header>
 
       {/* Profile Section */}
-      <Card className="p-6">
+      <Card className="p-6 animate-fade-in-up stagger-1">
         <div className="flex items-center gap-2 mb-5">
-          <User size={16} className="text-muted-steel" />
+          <div className="w-7 h-7 rounded-lg bg-white/[0.04] flex items-center justify-center border border-white/[0.08]">
+            <User size={14} className="text-muted-steel" />
+          </div>
           <h2 className="text-sm font-medium text-muted-steel uppercase tracking-wider">Profile</h2>
         </div>
 
@@ -35,10 +39,10 @@ const Settings = () => {
             <img
               src={user.avatarUrl}
               alt={user.username}
-              className="w-16 h-16 rounded-full border border-whisper"
+              className="w-16 h-16 rounded-2xl border border-white/[0.08] shadow-elevation-2"
             />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-charcoal-base border border-whisper flex items-center justify-center text-lg font-mono text-muted-steel">
+            <div className="w-16 h-16 rounded-2xl bg-bg-base border border-white/[0.08] flex items-center justify-center text-lg font-mono text-muted-steel shadow-elevation-2">
               {user?.username?.substring(0, 2).toUpperCase() || 'US'}
             </div>
           )}
@@ -52,15 +56,17 @@ const Settings = () => {
       </Card>
 
       {/* Connected Accounts */}
-      <Card className="p-6">
+      <Card className="p-6 animate-fade-in-up stagger-2">
         <div className="flex items-center gap-2 mb-5">
-          <Link2 size={16} className="text-muted-steel" />
+          <div className="w-7 h-7 rounded-lg bg-white/[0.04] flex items-center justify-center border border-white/[0.08]">
+            <Link2 size={14} className="text-muted-steel" />
+          </div>
           <h2 className="text-sm font-medium text-muted-steel uppercase tracking-wider">Connected Accounts</h2>
         </div>
 
         <div className="space-y-3">
           {/* GitHub */}
-          <div className="flex items-center justify-between p-3 border border-whisper rounded-md bg-charcoal-base">
+          <div className="flex items-center justify-between p-4 glass-surface transition-all duration-300 hover:border-muted-cyan/15 hover:shadow-[0_0_12px_rgba(88,166,255,0.06)]">
             <div className="flex items-center gap-3">
               <FaGithub size={20} className="text-canvas-white" />
               <div className="flex flex-col">
@@ -72,7 +78,7 @@ const Settings = () => {
           </div>
 
           {/* Google */}
-          <div className={`flex items-center justify-between p-3 border border-whisper rounded-md bg-charcoal-base ${!user?.googleId ? 'opacity-60' : ''}`}>
+          <div className={`flex items-center justify-between p-4 glass-surface transition-all duration-300 ${!user?.googleId ? 'opacity-60' : 'hover:border-muted-cyan/15 hover:shadow-[0_0_12px_rgba(88,166,255,0.06)]'}`}>
             <div className="flex items-center gap-3">
               <FcGoogle size={20} />
               <div className="flex flex-col">
@@ -86,7 +92,7 @@ const Settings = () => {
               <Badge variant="success">CONNECTED</Badge>
             ) : (
               <Button
-                variant="outline"
+                variant="secondary"
                 className="text-xs h-7"
                 onClick={() => {
                   const token = localStorage.getItem('gitmentor_token');
@@ -101,7 +107,7 @@ const Settings = () => {
       </Card>
 
       {/* Danger Zone */}
-      <Card className="p-6 border-red-500/20">
+      <Card className="p-6 border-red-500/15 shadow-[0_0_20px_rgba(239,68,68,0.05)] animate-fade-in-up stagger-3">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-sm font-medium text-red-400">Danger Zone</h2>
@@ -109,7 +115,7 @@ const Settings = () => {
           </div>
           <Button
             variant="ghost"
-            className="gap-2 text-red-400 hover:bg-red-500/10 border border-red-500/20"
+            className="gap-2 text-red-400 hover:bg-red-500/10 border border-red-500/20 hover:border-red-500/30 hover:shadow-[0_0_15px_rgba(239,68,68,0.1)]"
             onClick={handleLogout}
           >
             <LogOut size={14} />
