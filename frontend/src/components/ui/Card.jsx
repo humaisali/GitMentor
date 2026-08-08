@@ -1,7 +1,7 @@
-export const Card = ({ children, className = '', ...props }) => {
+export const Card = ({ children, className = '', hover = true, ...props }) => {
   return (
     <div 
-      className={`bg-muted-surface border border-whisper rounded-lg ${className}`}
+      className={`glass-card ${hover ? 'hover:shadow-elevation-3 hover:border-[rgba(88,166,255,0.15)]' : ''} ${className}`}
       {...props}
     >
       {children}
