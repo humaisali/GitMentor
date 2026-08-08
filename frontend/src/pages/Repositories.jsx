@@ -123,13 +123,15 @@ const Repositories = () => {
 
   return (
     <div className="flex flex-col gap-6 pb-6">
-      <header className="shrink-0 flex justify-between items-end">
+      <header className="shrink-0 flex justify-between items-end animate-fade-in-up">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-canvas-white">Repositories</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-canvas-white">
+            <span className="bg-gradient-to-r from-muted-cyan to-blue-400 bg-clip-text text-transparent">Repositories</span>
+          </h1>
           <p className="text-muted-steel mt-1 font-mono text-sm">Your connected GitHub repositories.</p>
         </div>
         <Button 
-          variant="outline" 
+          variant="secondary" 
           className="gap-2" 
           onClick={handleRefresh}
           disabled={refreshing}
@@ -139,24 +141,24 @@ const Repositories = () => {
         </Button>
       </header>
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-whisper shrink-0">
+      {/* Tabs — Glass treatment */}
+      <div className="flex gap-1 border-b border-white/[0.06] shrink-0 animate-fade-in-up stagger-1">
         <button
           onClick={() => setActiveTab('github')}
-          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+          className={`px-4 py-2.5 text-sm font-medium transition-all duration-300 border-b-2 -mb-px rounded-t-lg ${
             activeTab === 'github'
-              ? 'border-muted-cyan text-muted-cyan'
-              : 'border-transparent text-muted-steel hover:text-canvas-white'
+              ? 'border-muted-cyan text-muted-cyan bg-muted-cyan/[0.05] shadow-[0_2px_10px_rgba(88,166,255,0.1)]'
+              : 'border-transparent text-muted-steel hover:text-canvas-white hover:bg-white/[0.03]'
           }`}
         >
           GitHub Repos
         </button>
         <button
           onClick={() => setActiveTab('tracked')}
-          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+          className={`px-4 py-2.5 text-sm font-medium transition-all duration-300 border-b-2 -mb-px rounded-t-lg ${
             activeTab === 'tracked'
-              ? 'border-muted-cyan text-muted-cyan'
-              : 'border-transparent text-muted-steel hover:text-canvas-white'
+              ? 'border-muted-cyan text-muted-cyan bg-muted-cyan/[0.05] shadow-[0_2px_10px_rgba(88,166,255,0.1)]'
+              : 'border-transparent text-muted-steel hover:text-canvas-white hover:bg-white/[0.03]'
           }`}
         >
           Tracked ({trackedRepos.length})
@@ -187,7 +189,7 @@ const Repositories = () => {
             {activeTab === 'github' ? 'No GitHub repositories found.' : 'No tracked repositories yet. Go to GitHub Repos to start tracking.'}
           </div>
         ) : (
-          repos.map(repo => (
+          repos.map((repo, index) => (
             <RepoCard
               key={repo.githubRepoId || repo._id}
               repo={repo}
@@ -197,6 +199,7 @@ const Repositories = () => {
               onUntrack={handleUntrack}
               formatDate={formatDate}
               onViewInsights={() => navigate(`/repositories/${repo._id}`, { state: { repo } })}
+              index={index}
             />
           ))
         )}
@@ -205,7 +208,7 @@ const Repositories = () => {
   );
 };
 
-const RepoCard = ({ repo, isTracked, showTrackButton, onTrack, onUntrack, formatDate, onViewInsights }) => {
+const RepoCard = ({ repo, isTracked, showTrackButton, onTrack, onUntrack, formatDate, onViewInsights, index }) => {
   // Normalize between GitHub API shape and our DB shape
   const name = repo.name;
   const fullName = repo.fullName || repo.fullName;
@@ -217,7 +220,7 @@ const RepoCard = ({ repo, isTracked, showTrackButton, onTrack, onUntrack, format
   const isPrivate = repo.isPrivate || false;
 
   return (
-    <Card className="p-5 group transition-colors hover:border-muted-steel/30">
+    <Card className={`p-5 group animate-fade-in-up stagger-${Math.min((index % 6) + 1, 6)}`}>
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
@@ -229,7 +232,7 @@ const RepoCard = ({ repo, isTracked, showTrackButton, onTrack, onUntrack, format
 
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-muted-cyan"></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-muted-cyan shadow-[0_0_6px_rgba(88,166,255,0.4)]"></span>
               <span className="text-xs text-muted-steel">{language}</span>
             </div>
             <div className="flex items-center gap-1 text-muted-steel">
