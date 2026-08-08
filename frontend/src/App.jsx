@@ -7,6 +7,7 @@ import Repositories from './pages/Repositories';
 import RepositoryDetails from './pages/RepositoryDetails';
 import ProjectDetails from './pages/ProjectDetails';
 import ProjectWorkspace from './pages/ProjectWorkspace';
+import SkillProfile from './pages/SkillProfile';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import AuthCallback from './pages/AuthCallback';
@@ -30,6 +31,7 @@ function App() {
       >
         <Route index element={<FocusWorkspace />} />
         <Route path="analytics" element={<Analytics />} />
+        <Route path="skills" element={<SkillProfile />} />
         <Route path="roadmap" element={<Roadmap />} />
         <Route path="roadmaps/:projectId" element={<ProjectDetails />} />
         <Route path="roadmaps/:projectId/workspace" element={<ProjectWorkspace />} />
