@@ -1,5 +1,6 @@
 import Project from '../models/Project.js';
 import Repository from '../models/Repository.js';
+import SkillProfile from '../models/SkillProfile.js';
 import { generateRoadmap, chatWithProjectAssistant } from '../utils/geminiApi.js';
 
 // @desc    Get user's roadmap projects
@@ -26,9 +27,12 @@ export const generateNewRoadmap = async (req, res) => {
       return res.status(400).json({ message: 'No repositories found to analyze.' });
     }
 
-    // 2. Generate Roadmap using Gemini
+    // 2. Fetch skill profile if available (for enhanced personalization)
+    const skillProfile = await SkillProfile.findOne({ user: req.user._id });
+
+    // 3. Generate Roadmap using Gemini
     const { prompt } = req.body || {};
-    const roadmapData = await generateRoadmap(repositories, prompt);
+    const roadmapData = await generateRoadmap(repositories, prompt, skillProfile);
 
     if (!Array.isArray(roadmapData)) {
       throw new Error(`Gemini did not return an array: ${JSON.stringify(roadmapData)}`);
