@@ -60,14 +60,18 @@ export const LiveActivityFeedWidget = () => {
   return (
     <Card className="flex flex-col p-6">
       <div className="flex items-center justify-between mb-6 shrink-0">
-        <h3 className="text-lg font-medium text-canvas-white flex items-center gap-2">
-          <Activity size={18} className="text-muted-cyan animate-pulse" /> Live Activity Feed
+        <h3 className="text-lg font-medium text-canvas-white flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-muted-cyan/10 flex items-center justify-center border border-muted-cyan/20">
+            <Activity size={16} className="text-muted-cyan animate-pulse" />
+          </div>
+          Live Activity Feed
         </h3>
-        <span className="text-xs text-muted-steel font-mono bg-charcoal-base px-2 py-1 rounded-md">Auto-sync: 60s</span>
+        <span className="text-xs text-muted-steel font-mono bg-white/[0.04] backdrop-blur-sm px-2.5 py-1 rounded-lg border border-white/[0.06]">Auto-sync: 60s</span>
       </div>
       
-      <div className="relative max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
-        <div className="absolute top-0 bottom-0 left-4 w-px bg-whisper/50 z-0"></div>
+      <div className="relative max-h-[320px] overflow-y-auto custom-scrollbar pr-2">
+        {/* Gradient timeline line */}
+        <div className="absolute top-0 bottom-0 left-4 w-px z-0 bg-gradient-to-b from-muted-cyan/30 via-muted-cyan/10 to-transparent"></div>
         {loading ? (
           <div className="flex flex-col gap-4">
             <Skeleton className="h-12 w-full" />
@@ -76,12 +80,12 @@ export const LiveActivityFeedWidget = () => {
           </div>
         ) : events.length > 0 ? (
           <div className="flex flex-col gap-5 relative z-10 pt-1">
-            {events.slice(0, 15).map(event => (
-              <div key={event.id} className="flex gap-4 items-start group">
-                <div className="shrink-0 w-8 h-8 rounded-full bg-charcoal-base border border-whisper flex items-center justify-center relative z-10 group-hover:border-muted-cyan/50 group-hover:bg-muted-cyan/10 transition-colors">
+            {events.slice(0, 15).map((event, index) => (
+              <div key={event.id} className={`flex gap-4 items-start group animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}>
+                <div className="shrink-0 w-8 h-8 rounded-full bg-bg-base border border-white/[0.08] flex items-center justify-center relative z-10 group-hover:border-muted-cyan/40 group-hover:shadow-[0_0_12px_rgba(88,166,255,0.2)] transition-all duration-300">
                   {getEventIcon(event.type)}
                 </div>
-                <div className="flex-1 bg-charcoal-base p-4 rounded-xl border border-transparent group-hover:border-muted-cyan/30 group-hover:bg-charcoal-base/80 transition-colors -mt-1 shadow-sm">
+                <div className="flex-1 glass-surface p-4 -mt-1 group-hover:border-muted-cyan/15 group-hover:shadow-[0_0_15px_rgba(88,166,255,0.06)] group-hover:-translate-y-0.5 transition-all duration-300">
                   <p className="text-sm text-canvas-white font-medium leading-tight mb-1.5">{getEventDescription(event)}</p>
                   <p className="text-[11px] font-mono text-muted-steel">{new Date(event.created_at).toLocaleString()}</p>
                 </div>
