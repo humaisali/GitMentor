@@ -3,7 +3,7 @@ import { Card } from '../ui/Card';
 import { Skeleton } from '../ui/Skeleton';
 import { Activity } from 'lucide-react';
 
-export const ContributionCalendarWidget = ({ initialData }) => {
+export const ContributionCalendarWidget = ({ initialData, className }) => {
   const [data, setData] = useState(initialData || null);
   const [loading, setLoading] = useState(!initialData);
 
@@ -34,11 +34,11 @@ export const ContributionCalendarWidget = ({ initialData }) => {
   };
 
   const getColorClass = (count) => {
-    if (count === 0) return 'bg-[#161b22] border-[#1b1f230f]'; 
-    if (count <= 2) return 'bg-[#003847] border-[#003847]/50';
-    if (count <= 5) return 'bg-[#005a73] border-[#005a73]/50';
-    if (count <= 8) return 'bg-[#007b9e] border-[#007b9e]/50';
-    return 'bg-[#009bc8] border-[#009bc8]/50'; // Using variations of muted-cyan
+    if (count === 0) return 'bg-white/[0.03] border-white/[0.04]'; 
+    if (count <= 2) return 'bg-[#003847] border-[#003847]/50 shadow-[inset_0_0_4px_rgba(88,166,255,0.1)]';
+    if (count <= 5) return 'bg-[#005a73] border-[#005a73]/50 shadow-[inset_0_0_4px_rgba(88,166,255,0.15)]';
+    if (count <= 8) return 'bg-[#007b9e] border-[#007b9e]/50 shadow-[inset_0_0_6px_rgba(88,166,255,0.2)]';
+    return 'bg-[#009bc8] border-[#009bc8]/50 shadow-[inset_0_0_8px_rgba(88,166,255,0.25)]';
   };
 
   const getMonthLabels = () => {
@@ -68,7 +68,7 @@ export const ContributionCalendarWidget = ({ initialData }) => {
   };
 
   return (
-    <Card className="p-6 h-full flex flex-col">
+    <Card className={`h-full flex flex-col ${className || 'p-6'}`}>
       <style>{`
         .hide-scrollbar::-webkit-scrollbar {
           display: none;
@@ -79,8 +79,10 @@ export const ContributionCalendarWidget = ({ initialData }) => {
         }
       `}</style>
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <Activity size={20} className="text-muted-cyan" />
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-muted-cyan/10 flex items-center justify-center border border-muted-cyan/20">
+            <Activity size={16} className="text-muted-cyan" />
+          </div>
           <h2 className="text-lg font-medium text-canvas-white tracking-tight">Contribution Consistency</h2>
         </div>
         {!loading && data && (
@@ -101,7 +103,7 @@ export const ContributionCalendarWidget = ({ initialData }) => {
                 <span 
                   key={i} 
                   className="absolute text-[12px] text-muted-steel font-medium font-sans"
-                  style={{ left: `calc(30px + ${label.index * 14}px)` }} // 10px box + 4px gap = 14px per column
+                  style={{ left: `calc(30px + ${label.index * 14}px)` }}
                 >
                   {label.month}
                 </span>
@@ -131,7 +133,7 @@ export const ContributionCalendarWidget = ({ initialData }) => {
                           <div
                             key={day.date}
                             title={`${day.contributionCount} contributions on ${day.date}`}
-                            className={`w-[10px] h-[10px] rounded-[2px] transition-all cursor-pointer border ${getColorClass(day.contributionCount)} hover:ring-1 hover:ring-muted-cyan hover:ring-offset-1 hover:ring-offset-charcoal-base`}
+                            className={`w-[10px] h-[10px] rounded-[3px] transition-all duration-200 cursor-pointer border ${getColorClass(day.contributionCount)} hover:ring-1 hover:ring-muted-cyan hover:ring-offset-1 hover:ring-offset-bg-deep hover:scale-150 hover:shadow-[0_0_8px_rgba(88,166,255,0.3)]`}
                           ></div>
                         );
                       } else {
@@ -147,11 +149,11 @@ export const ContributionCalendarWidget = ({ initialData }) => {
             <div className="flex justify-end items-center mt-3 font-sans w-full pr-1">
                <div className="flex items-center gap-1 text-[12px] text-muted-steel">
                  <span className="mr-1">Less</span>
-                 <div className="w-[10px] h-[10px] rounded-[2px] border border-[#1b1f230f] bg-[#161b22]"></div>
-                 <div className="w-[10px] h-[10px] rounded-[2px] border border-[#003847]/50 bg-[#003847]"></div>
-                 <div className="w-[10px] h-[10px] rounded-[2px] border border-[#005a73]/50 bg-[#005a73]"></div>
-                 <div className="w-[10px] h-[10px] rounded-[2px] border border-[#007b9e]/50 bg-[#007b9e]"></div>
-                 <div className="w-[10px] h-[10px] rounded-[2px] border border-[#009bc8]/50 bg-[#009bc8]"></div>
+                 <div className="w-[10px] h-[10px] rounded-[3px] border bg-white/[0.03] border-white/[0.04]"></div>
+                 <div className="w-[10px] h-[10px] rounded-[3px] border border-[#003847]/50 bg-[#003847]"></div>
+                 <div className="w-[10px] h-[10px] rounded-[3px] border border-[#005a73]/50 bg-[#005a73]"></div>
+                 <div className="w-[10px] h-[10px] rounded-[3px] border border-[#007b9e]/50 bg-[#007b9e]"></div>
+                 <div className="w-[10px] h-[10px] rounded-[3px] border border-[#009bc8]/50 bg-[#009bc8]"></div>
                  <span className="ml-1">More</span>
                </div>
             </div>
