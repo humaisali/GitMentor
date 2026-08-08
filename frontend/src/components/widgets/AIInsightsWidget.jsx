@@ -48,12 +48,12 @@ export const AIInsightsWidget = () => {
 
   return (
     <Card className="flex flex-col h-full p-6">
-      <div className="flex justify-between items-center mb-6 shrink-0">
+      <div className="flex justify-between items-center mb-4 shrink-0">
         <h2 className="text-lg font-medium text-canvas-white">Pending Fixes</h2>
         {!loading && <Badge variant="default">{insights.length} PENDING</Badge>}
       </div>
       
-      <div className="space-y-3 max-h-[320px] overflow-y-auto custom-scrollbar pr-2">
+      <div className="space-y-3 max-h-[320px] overflow-y-auto custom-scrollbar pr-2 py-2">
         {loading ? (
           [1, 2, 3].map(i => (
             <div key={i} className="p-4 rounded-xl glass-surface flex items-center justify-between">
