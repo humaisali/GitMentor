@@ -61,7 +61,6 @@ export const ContributionCalendarWidget = ({ initialData, className }) => {
 
   const calculateTotal = () => {
     if (!data || !data.weeks) return 0;
-    if (data.totalContributions !== undefined) return data.totalContributions;
     return data.weeks.reduce((acc, week) => {
       return acc + week.contributionDays.reduce((dAcc, day) => dAcc + day.contributionCount, 0);
     }, 0);

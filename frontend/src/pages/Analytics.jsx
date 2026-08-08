@@ -70,7 +70,7 @@ const Analytics = () => {
             </div>
 
             {/* ROW 2: Shape 2 & Shape 3 */}
-            <Card className="xl:col-span-1 md:col-span-1 col-span-1 p-6 h-full flex flex-col animate-fade-in-up stagger-2">
+            <Card className="xl:col-span-2 md:col-span-1 col-span-1 p-6 h-full flex flex-col animate-fade-in-up stagger-2">
               <h2 className="text-lg font-medium text-canvas-white tracking-tight mb-6 flex items-center gap-2.5 shrink-0">
                 <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
                   <GitBranch size={16} className="text-emerald-500" />
@@ -98,7 +98,7 @@ const Analytics = () => {
               </div>
             </Card>
 
-            <Card className="xl:col-span-2 md:col-span-1 col-span-1 p-6 flex flex-col justify-between h-full animate-fade-in-up stagger-3">
+            <Card className="xl:col-span-1 md:col-span-1 col-span-1 p-6 flex flex-col justify-between h-full animate-fade-in-up stagger-3">
               <h2 className="text-lg font-medium text-canvas-white tracking-tight mb-6 flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center border border-red-500/20">
                   <Activity size={16} className="text-red-500" />
