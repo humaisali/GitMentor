@@ -37,11 +37,10 @@ export const RepositoryOverviewWidget = () => {
       
       <div className="flex flex-col gap-3">
         {loading ? (
-          // Loading Skeletons
           [1, 2, 3].map((i) => (
-            <div key={i} className="p-4 rounded-xl bg-charcoal-base flex items-center justify-between">
+            <div key={i} className="p-4 rounded-xl glass-surface flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Skeleton className="w-8 h-8 rounded" />
+                <Skeleton className="w-8 h-8 rounded-lg" />
                 <div className="flex flex-col gap-2">
                   <Skeleton className="h-4 w-32" />
                   <Skeleton className="h-3 w-20" />
@@ -56,10 +55,13 @@ export const RepositoryOverviewWidget = () => {
         ) : repositories.length === 0 ? (
           <div className="p-8 text-center text-muted-steel text-sm">No repositories connected.</div>
         ) : (
-          repositories.map(repo => (
-            <div key={repo._id || repo.id} className="p-4 rounded-xl bg-charcoal-base border border-transparent hover:border-muted-cyan/30 hover:bg-charcoal-base/80 flex items-center justify-between transition-colors shadow-sm">
+          repositories.map((repo, index) => (
+            <div 
+              key={repo._id || repo.id} 
+              className={`p-4 rounded-xl glass-surface flex items-center justify-between transition-all duration-300 hover:border-muted-cyan/20 hover:shadow-[0_0_15px_rgba(88,166,255,0.08)] hover:-translate-y-0.5 animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}
+            >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded bg-charcoal-base border border-whisper flex items-center justify-center">
+                <div className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center">
                   <GitMerge size={16} className="text-muted-steel" />
                 </div>
                 <div className="flex flex-col">

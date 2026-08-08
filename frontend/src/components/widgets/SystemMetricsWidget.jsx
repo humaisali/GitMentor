@@ -28,24 +28,24 @@ export const SystemMetricsWidget = () => {
 
   return (
     <Card className="flex flex-col h-full">
-      <div className="p-5 border-b border-whisper shrink-0">
+      <div className="p-5 border-b border-white/[0.06] shrink-0">
         <h2 className="text-lg font-medium text-canvas-white">Developer Progress</h2>
       </div>
       
-      <div className="p-5 grid grid-cols-2 gap-4 flex-1 content-start">
+      <div className="p-5 grid grid-cols-2 gap-3 flex-1 content-start">
         {loading ? (
           <>
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
           </>
         ) : metrics ? (
           <>
-            <MetricCard label="Roadmaps Done" value={metrics.roadmapsCompleted} />
-            <MetricCard label="Tasks Completed" value={metrics.tasksCompleted} />
-            <MetricCard label="Insights Fixed" value={metrics.insightsFixed} />
-            <MetricCard label="Repos Tracked" value={metrics.reposTracked} />
+            <MetricCard label="Roadmaps Done" value={metrics.roadmapsCompleted} index={0} />
+            <MetricCard label="Tasks Completed" value={metrics.tasksCompleted} index={1} />
+            <MetricCard label="Insights Fixed" value={metrics.insightsFixed} index={2} />
+            <MetricCard label="Repos Tracked" value={metrics.reposTracked} index={3} />
           </>
         ) : (
           <div className="col-span-2 text-center text-sm text-muted-steel mt-4">Failed to load metrics.</div>
@@ -55,9 +55,9 @@ export const SystemMetricsWidget = () => {
   );
 };
 
-const MetricCard = ({ label, value }) => (
-  <div className="p-3 border border-whisper rounded bg-charcoal-base flex flex-col justify-center gap-1 transition-colors hover:border-muted-cyan/30">
-    <span className="text-[10px] text-muted-steel uppercase tracking-wider">{label}</span>
-    <span className="text-xl font-mono text-canvas-white">{value}</span>
+const MetricCard = ({ label, value, index }) => (
+  <div className={`p-4 glass-surface flex flex-col justify-center gap-1.5 transition-all duration-300 hover:border-muted-cyan/20 hover:shadow-[0_0_15px_rgba(88,166,255,0.08)] hover:-translate-y-0.5 animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}>
+    <span className="text-[10px] text-muted-steel uppercase tracking-wider font-mono">{label}</span>
+    <span className="text-2xl font-mono text-canvas-white font-semibold">{value}</span>
   </div>
 );
