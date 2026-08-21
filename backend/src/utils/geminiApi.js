@@ -78,7 +78,8 @@ export const generateSkillAssessment = async (analyticsData, trackedRepos = [], 
 
     Based on this data, generate a complete skill assessment with:
     1. An overall skill level (BEGINNER, INTERMEDIATE, or ADVANCED) and score (0-100).
-       Prefer the rule-based overall score as the anchor, but you may adjust it by up to 10 points if the evidence supports it.
+       The rule-based overall score is already weighted for the selected target role. Use it as the anchor.
+       Do not convert the overall score back into a broad average across every category.
        Include an overall confidence score (0-100), lowering it when data is sparse or indirect.
     2. A 2-3 sentence executive summary of the developer's profile.
     3. Evaluate every category in the provided taxonomy. Do not invent, remove, or rename category slugs.

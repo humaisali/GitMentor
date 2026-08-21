@@ -424,6 +424,26 @@ const buildReadinessScores = (categories, targetRole) => {
   ];
 };
 
+const buildOverallScores = (categories, targetRole) => {
+  const selectedTrack = getCareerTrack(targetRole);
+  const trackSlugSet = new Set(selectedTrack.slugs);
+  const trackCategories = categories.filter(category => trackSlugSet.has(category.slug));
+  const supportingCategories = categories.filter(category => !trackSlugSet.has(category.slug));
+  const average = (items) => items.length
+    ? items.reduce((sum, category) => sum + category.score, 0) / items.length
+    : 0;
+
+  const broadOverallScore = clamp(average(categories));
+  const targetRoleScore = clamp(average(trackCategories));
+  const supportingScore = supportingCategories.length ? average(supportingCategories) : broadOverallScore;
+
+  return {
+    broadOverallScore,
+    targetRoleScore,
+    overallScore: clamp((targetRoleScore * 0.75) + (supportingScore * 0.25)),
+  };
+};
+
 export const buildSkillAssessmentSignals = ({ analyticsData, trackedRepos = [], projects = [], insights = [], progressEvents = [], repoContexts = {}, targetRole = 'full-stack-developer' }) => {
   const allRepos = analyticsData.allRepos || [];
   const repoSkillMap = allRepos.map(repo => {
@@ -521,7 +541,7 @@ export const buildSkillAssessmentSignals = ({ analyticsData, trackedRepos = [], 
     insightStats,
   });
 
-  const overallScore = clamp(categories.reduce((sum, category) => sum + category.score, 0) / categories.length);
+  const { broadOverallScore, targetRoleScore, overallScore } = buildOverallScores(categories, targetRole);
   const confidence = clamp(categories.reduce((sum, category) => sum + category.confidence, 0) / categories.length);
 
   return {
@@ -536,6 +556,8 @@ export const buildSkillAssessmentSignals = ({ analyticsData, trackedRepos = [], 
       totalEvents: progressEvents.length,
       totalImpact: progressEvents.reduce((sum, event) => sum + (event.impactScore || 1), 0),
     },
+    broadOverallScore,
+    targetRoleScore,
     recentProgressEvents: progressEvents.slice(0, 8).map(event => ({
       categorySlug: event.categorySlug,
       categoryName: event.categoryName,

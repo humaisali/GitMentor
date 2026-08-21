@@ -225,7 +225,10 @@ const mergeAssessmentWithSignals = (assessment, signals, previousProfile) => {
     return normalizeCategory(categoriesBySlug.get(taxonomyItem.slug), fallback);
   });
 
-  const overallScore = clampScore(assessment?.overallScore, signals.overallScore);
+  const aiOverallScore = Number.isFinite(Number(assessment?.overallScore))
+    ? clampScore(assessment.overallScore, signals.overallScore)
+    : null;
+  const overallScore = signals.overallScore;
   const deltaResult = applyAssessmentDeltas(baseCategories, previousProfile);
   const overallScoreDelta = previousProfile ? overallScore - previousProfile.overallScore : 0;
   const history = previousProfile ? [
@@ -271,6 +274,10 @@ const mergeAssessmentWithSignals = (assessment, signals, previousProfile) => {
       insightStats: signals.insightStats,
       progressEventStats: signals.progressEventStats,
       careerTrack: signals.careerTrack,
+      broadOverallScore: signals.broadOverallScore,
+      targetRoleScore: signals.targetRoleScore,
+      roleWeightedOverallScore: signals.overallScore,
+      aiSuggestedOverallScore: aiOverallScore,
       taxonomyVersion: '2026-08-21',
     },
     history,
