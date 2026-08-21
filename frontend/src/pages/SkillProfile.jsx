@@ -31,6 +31,15 @@ import {
 
 const API_BASE = 'http://localhost:5000/api';
 
+const CAREER_TRACK_OPTIONS = [
+  { id: 'frontend-developer', label: 'Frontend Developer' },
+  { id: 'backend-developer', label: 'Backend Developer' },
+  { id: 'full-stack-developer', label: 'Full-Stack Developer' },
+  { id: 'ai-app-developer', label: 'AI App Developer' },
+  { id: 'devops-beginner', label: 'DevOps Beginner' },
+  { id: 'open-source-contributor', label: 'Open Source Contributor' },
+];
+
 // ── Category icon mapping ──
 const getCategoryIcon = (slug) => {
   const icons = {
@@ -179,7 +188,22 @@ const ConfidencePill = ({ value }) => {
 };
 
 // ── Empty State CTA ──
-const EmptyState = ({ onAssess, assessing }) => (
+const CareerTrackSelect = ({ value, onChange, disabled = false }) => (
+  <select
+    value={value}
+    onChange={(event) => onChange(event.target.value)}
+    disabled={disabled}
+    className="glass-surface px-4 py-2.5 text-sm text-canvas-white bg-bg-base/80 focus:outline-none focus:border-muted-cyan/30 disabled:opacity-50"
+  >
+    {CAREER_TRACK_OPTIONS.map(option => (
+      <option key={option.id} value={option.id} className="bg-bg-base text-canvas-white">
+        {option.label}
+      </option>
+    ))}
+  </select>
+);
+
+const EmptyState = ({ onAssess, assessing, targetRole, onTargetRoleChange }) => (
   <div className="flex-1 flex items-center justify-center py-20 animate-fade-in-up">
     <Card hover={false} className="max-w-lg w-full p-10 text-center relative overflow-hidden">
       {/* Background glow */}
@@ -196,6 +220,9 @@ const EmptyState = ({ onAssess, assessing }) => (
         <p className="text-muted-steel text-[15px] leading-relaxed mb-8 max-w-sm mx-auto">
           Let AI analyze your GitHub repositories, contribution patterns, and tech stack to generate a comprehensive skill profile with gap analysis.
         </p>
+        <div className="mb-5 flex justify-center">
+          <CareerTrackSelect value={targetRole} onChange={onTargetRoleChange} disabled={assessing} />
+        </div>
         <Button
           onClick={onAssess}
           disabled={assessing}
@@ -224,6 +251,7 @@ const SkillProfile = () => {
   const [loading, setLoading] = useState(true);
   const [assessing, setAssessing] = useState(false);
   const [error, setError] = useState(null);
+  const [targetRole, setTargetRole] = useState('full-stack-developer');
 
   const token = localStorage.getItem('gitmentor_token');
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
@@ -237,6 +265,7 @@ const SkillProfile = () => {
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
+        setTargetRole(data.targetRole || 'full-stack-developer');
       } else if (res.status === 404) {
         setProfile(null); // No profile yet
       } else {
@@ -255,7 +284,11 @@ const SkillProfile = () => {
     try {
       setAssessing(true);
       setError(null);
-      const res = await fetch(`${API_BASE}/skills/assess`, { method: 'POST', headers });
+      const res = await fetch(`${API_BASE}/skills/assess`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ targetRole }),
+      });
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
@@ -308,7 +341,12 @@ const SkillProfile = () => {
           </div>
         )}
 
-        <EmptyState onAssess={runAssessment} assessing={assessing} />
+        <EmptyState
+          onAssess={runAssessment}
+          assessing={assessing}
+          targetRole={targetRole}
+          onTargetRoleChange={setTargetRole}
+        />
       </div>
     );
   }
@@ -324,14 +362,17 @@ const SkillProfile = () => {
           </h1>
           <p className="text-muted-steel mt-1 font-mono text-sm">AI-powered skill assessment and gap analysis.</p>
         </div>
-        <button
-          onClick={runAssessment}
-          disabled={assessing}
-          className="flex items-center gap-2 px-4 py-2.5 glass-surface hover:border-muted-cyan/20 hover:shadow-[0_0_15px_rgba(88,166,255,0.1)] text-sm font-medium transition-all duration-300 disabled:opacity-50 rounded-xl"
-        >
-          <RefreshCcw size={16} className={assessing ? 'animate-spin' : ''} />
-          {assessing ? 'Re-Assessing...' : 'Re-Assess'}
-        </button>
+        <div className="flex items-center gap-3">
+          <CareerTrackSelect value={targetRole} onChange={setTargetRole} disabled={assessing} />
+          <button
+            onClick={runAssessment}
+            disabled={assessing}
+            className="flex items-center gap-2 px-4 py-2.5 glass-surface hover:border-muted-cyan/20 hover:shadow-[0_0_15px_rgba(88,166,255,0.1)] text-sm font-medium transition-all duration-300 disabled:opacity-50 rounded-xl"
+          >
+            <RefreshCcw size={16} className={assessing ? 'animate-spin' : ''} />
+            {assessing ? 'Re-Assessing...' : 'Re-Assess'}
+          </button>
+        </div>
       </header>
 
       {error && (
