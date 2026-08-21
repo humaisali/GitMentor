@@ -19,6 +19,7 @@ import {
   GitPullRequest,
   Gauge,
   Map,
+  Activity,
   Lightbulb,
   TrendingUp,
   ChevronRight,
@@ -433,6 +434,38 @@ const SkillProfile = () => {
             </Card>
           )}
         </div>
+      )}
+
+      {profile.recentProgressEvents?.length > 0 && (
+        <Card className="p-6 animate-fade-in-up stagger-3">
+          <h2 className="text-lg font-medium text-canvas-white tracking-tight mb-5 flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+              <Activity size={16} className="text-emerald-400" />
+            </div>
+            Recent Skill Progress
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {profile.recentProgressEvents.slice(0, 6).map((event, index) => (
+              <div key={`${event.title}-${index}`} className="glass-surface p-4 flex gap-3 items-start">
+                <div className="w-8 h-8 rounded-lg bg-muted-cyan/10 border border-muted-cyan/20 flex items-center justify-center shrink-0">
+                  <span className="text-xs font-bold text-muted-cyan">+{event.impactScore || 1}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h3 className="text-sm font-semibold text-canvas-white">{event.title}</h3>
+                    <Badge variant="default" className="text-[10px]">{event.categoryName}</Badge>
+                  </div>
+                  {event.description && <p className="text-xs text-muted-steel leading-relaxed">{event.description}</p>}
+                  {event.createdAt && (
+                    <p className="text-[10px] font-mono text-muted-steel/70 mt-2">
+                      {new Date(event.createdAt).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
       )}
 
       {/* ═══════════════════════════════════════════ */}
