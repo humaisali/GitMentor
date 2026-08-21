@@ -150,6 +150,7 @@ const normalizeCategory = (category, fallback) => {
     slug: fallback.slug,
     level: normalizeLevel(category?.level, score),
     score,
+    scoreDelta: clampScore(category?.scoreDelta, fallback.scoreDelta || 0),
     confidence: clampScore(category?.confidence, fallback.confidence),
     description: category?.description || fallback.description,
     strengths: Array.isArray(category?.strengths) && category.strengths.length > 0
@@ -175,19 +176,41 @@ const normalizeCategory = (category, fallback) => {
 const buildHistorySnapshot = (profile) => ({
   assessedAt: profile.assessedAt || profile.updatedAt || new Date(),
   overallScore: profile.overallScore,
+  scoreDelta: profile.scoreDelta || 0,
   overallLevel: profile.overallLevel,
   confidence: profile.confidence,
   categoryScores: (profile.categories || []).map(category => ({
     slug: category.slug,
     score: category.score,
+    delta: category.scoreDelta || 0,
   })),
 });
+
+const applyAssessmentDeltas = (categories, previousProfile) => {
+  if (!previousProfile) {
+    return {
+      scoreDelta: 0,
+      categories: categories.map(category => ({ ...category, scoreDelta: 0 })),
+    };
+  }
+
+  const previousCategories = new Map((previousProfile.categories || []).map(category => [category.slug, category.score]));
+  const nextCategories = categories.map(category => ({
+    ...category,
+    scoreDelta: category.score - (previousCategories.get(category.slug) ?? category.score),
+  }));
+
+  return {
+    scoreDelta: 0,
+    categories: nextCategories,
+  };
+};
 
 const mergeAssessmentWithSignals = (assessment, signals, previousProfile) => {
   const categoriesBySlug = new Map((assessment?.categories || []).map(category => [category.slug, category]));
   const fallbackBySlug = new Map((signals.categories || []).map(category => [category.slug, category]));
 
-  const categories = SKILL_TAXONOMY.map(taxonomyItem => {
+  const baseCategories = SKILL_TAXONOMY.map(taxonomyItem => {
     const fallback = fallbackBySlug.get(taxonomyItem.slug) || {
       ...taxonomyItem,
       score: 20,
@@ -203,6 +226,8 @@ const mergeAssessmentWithSignals = (assessment, signals, previousProfile) => {
   });
 
   const overallScore = clampScore(assessment?.overallScore, signals.overallScore);
+  const deltaResult = applyAssessmentDeltas(baseCategories, previousProfile);
+  const overallScoreDelta = previousProfile ? overallScore - previousProfile.overallScore : 0;
   const history = previousProfile ? [
     ...(previousProfile.history || []).slice(-5),
     buildHistorySnapshot(previousProfile),
@@ -211,10 +236,11 @@ const mergeAssessmentWithSignals = (assessment, signals, previousProfile) => {
   return {
     overallLevel: normalizeLevel(assessment?.overallLevel, overallScore),
     overallScore,
+    scoreDelta: overallScoreDelta,
     confidence: clampScore(assessment?.confidence, signals.confidence),
     summary: assessment?.summary || 'GitMentor analyzed your GitHub activity, tracked repositories, and in-app progress to build this skill profile.',
     targetRole: signals.targetRole,
-    categories,
+    categories: deltaResult.categories,
     topLanguages: (assessment?.topLanguages || []).length > 0 ? assessment.topLanguages.map(lang => ({
       name: lang.name,
       proficiency: normalizeLevel(lang.proficiency, 30),

@@ -10,6 +10,7 @@ const skillCategorySchema = new mongoose.Schema(
       required: true,
     },
     score: { type: Number, required: true, min: 0, max: 100 },
+    scoreDelta: { type: Number, default: 0 },
     confidence: { type: Number, default: 50, min: 0, max: 100 },
     description: { type: String, required: true },
     strengths: [{ type: String }],
@@ -63,6 +64,10 @@ const skillProfileSchema = new mongoose.Schema(
       min: 0,
       max: 100,
     },
+    scoreDelta: {
+      type: Number,
+      default: 0,
+    },
     summary: {
       type: String,
       required: true,
@@ -113,6 +118,7 @@ const skillProfileSchema = new mongoose.Schema(
     history: [{
       assessedAt: { type: Date, default: Date.now },
       overallScore: { type: Number, min: 0, max: 100 },
+      scoreDelta: { type: Number, default: 0 },
       overallLevel: {
         type: String,
         enum: ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'],
@@ -121,6 +127,7 @@ const skillProfileSchema = new mongoose.Schema(
       categoryScores: [{
         slug: { type: String },
         score: { type: Number, min: 0, max: 100 },
+        delta: { type: Number, default: 0 },
       }],
     }],
     repositoriesAnalyzed: {

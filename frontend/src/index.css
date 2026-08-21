@@ -97,6 +97,29 @@
   .shadow-elevation-2 { box-shadow: var(--elevation-2); }
   .shadow-elevation-3 { box-shadow: var(--elevation-3); }
   .shadow-elevation-4 { box-shadow: var(--elevation-4); }
+
+  .scroll-panel {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(6, 182, 212, 0.35) transparent;
+  }
+
+  .scroll-panel::-webkit-scrollbar {
+    display: block;
+    width: 8px;
+  }
+
+  .scroll-panel::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scroll-panel::-webkit-scrollbar-thumb {
+    background: rgba(6, 182, 212, 0.28);
+    border-radius: 999px;
+  }
+
+  .scroll-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(6, 182, 212, 0.45);
+  }
 }
 
 /* ── Keyframe Animations ── */
