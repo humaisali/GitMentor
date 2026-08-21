@@ -13,6 +13,12 @@ import {
   Rocket,
   Building2,
   Container,
+  ShieldCheck,
+  Network,
+  FileText,
+  GitPullRequest,
+  Gauge,
+  Map,
   Lightbulb,
   TrendingUp,
   ChevronRight,
@@ -30,10 +36,16 @@ const getCategoryIcon = (slug) => {
     frontend: Monitor,
     backend: Server,
     databases: Database,
+    'api-design': Network,
+    'auth-security': ShieldCheck,
     testing: TestTube,
     deployment: Rocket,
     architecture: Building2,
     devops: Container,
+    'code-quality': Sparkles,
+    documentation: FileText,
+    'open-source': GitPullRequest,
+    'product-thinking': Gauge,
   };
   return icons[slug] || Code2;
 };
@@ -44,10 +56,16 @@ const getCategoryColor = (slug) => {
     frontend: { bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-400', bar: 'from-blue-500 to-blue-400' },
     backend: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400', bar: 'from-emerald-500 to-emerald-400' },
     databases: { bg: 'bg-violet-500/10', border: 'border-violet-500/20', text: 'text-violet-400', bar: 'from-violet-500 to-violet-400' },
+    'api-design': { bg: 'bg-sky-500/10', border: 'border-sky-500/20', text: 'text-sky-400', bar: 'from-sky-500 to-sky-400' },
+    'auth-security': { bg: 'bg-red-500/10', border: 'border-red-500/20', text: 'text-red-400', bar: 'from-red-500 to-red-400' },
     testing: { bg: 'bg-amber-500/10', border: 'border-amber-500/20', text: 'text-amber-400', bar: 'from-amber-500 to-amber-400' },
     deployment: { bg: 'bg-rose-500/10', border: 'border-rose-500/20', text: 'text-rose-400', bar: 'from-rose-500 to-rose-400' },
     architecture: { bg: 'bg-cyan-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400', bar: 'from-cyan-500 to-cyan-400' },
     devops: { bg: 'bg-orange-500/10', border: 'border-orange-500/20', text: 'text-orange-400', bar: 'from-orange-500 to-orange-400' },
+    'code-quality': { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400', bar: 'from-emerald-500 to-emerald-400' },
+    documentation: { bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', text: 'text-indigo-400', bar: 'from-indigo-500 to-indigo-400' },
+    'open-source': { bg: 'bg-fuchsia-500/10', border: 'border-fuchsia-500/20', text: 'text-fuchsia-400', bar: 'from-fuchsia-500 to-fuchsia-400' },
+    'product-thinking': { bg: 'bg-lime-500/10', border: 'border-lime-500/20', text: 'text-lime-400', bar: 'from-lime-500 to-lime-400' },
   };
   return colors[slug] || colors.frontend;
 };
@@ -145,6 +163,17 @@ const ProgressBar = ({ score, gradient, delay = 0 }) => {
         }}
       />
     </div>
+  );
+};
+
+const ConfidencePill = ({ value }) => {
+  const score = Math.max(0, Math.min(100, Math.round(value ?? 50)));
+  const tone = score >= 70 ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' : score >= 45 ? 'text-muted-cyan border-muted-cyan/20 bg-muted-cyan/10' : 'text-amber-400 border-amber-500/20 bg-amber-500/10';
+
+  return (
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full border text-[11px] font-mono ${tone}`}>
+      {score}% confidence
+    </span>
   );
 };
 
@@ -331,6 +360,7 @@ const SkillProfile = () => {
               <Badge variant={getLevelVariant(profile.overallLevel)} className="text-sm px-3 py-1">
                 {profile.overallLevel}
               </Badge>
+              <ConfidencePill value={profile.confidence} />
             </div>
             <p className="text-muted-steel text-[15px] leading-relaxed max-w-xl mb-4">
               {profile.summary}
@@ -349,6 +379,61 @@ const SkillProfile = () => {
           </div>
         </div>
       </Card>
+
+      {(profile.nextBestActions?.length > 0 || profile.readinessScores?.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-up stagger-2">
+          {profile.nextBestActions?.length > 0 && (
+            <Card className="lg:col-span-7 p-6 relative overflow-hidden">
+              <div className="absolute -right-20 -top-20 w-56 h-56 bg-muted-cyan/[0.04] rounded-full blur-[70px] pointer-events-none" />
+              <h2 className="text-lg font-medium text-canvas-white tracking-tight mb-5 flex items-center gap-2.5 relative z-10">
+                <div className="w-8 h-8 rounded-lg bg-muted-cyan/10 flex items-center justify-center border border-muted-cyan/20">
+                  <Lightbulb size={16} className="text-muted-cyan" />
+                </div>
+                Next Best Actions
+              </h2>
+              <div className="space-y-3 relative z-10">
+                {profile.nextBestActions.map((action, index) => (
+                  <div key={`${action.title}-${index}`} className="glass-surface p-4 flex gap-4 items-start">
+                    <div className="w-8 h-8 rounded-lg bg-muted-cyan/10 border border-muted-cyan/20 flex items-center justify-center shrink-0">
+                      <ChevronRight size={16} className="text-muted-cyan" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <h3 className="text-sm font-semibold text-canvas-white">{action.title}</h3>
+                        <Badge variant={action.impact === 'HIGH' ? 'error' : 'primary'} className="text-[10px]">{action.impact || 'MEDIUM'} IMPACT</Badge>
+                      </div>
+                      <p className="text-sm text-muted-steel leading-relaxed">{action.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {profile.readinessScores?.length > 0 && (
+            <Card className="lg:col-span-5 p-6">
+              <h2 className="text-lg font-medium text-canvas-white tracking-tight mb-5 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                  <Gauge size={16} className="text-emerald-400" />
+                </div>
+                Readiness Scores
+              </h2>
+              <div className="space-y-4">
+                {profile.readinessScores.map((item, index) => (
+                  <div key={item.track} className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-canvas-white">{item.track}</span>
+                      <span className="text-sm font-mono text-muted-cyan">{Math.round(item.score)}%</span>
+                    </div>
+                    <ProgressBar score={item.score} gradient="from-emerald-500 to-muted-cyan" delay={index * 120} />
+                    {item.summary && <p className="text-xs text-muted-steel leading-relaxed mt-2">{item.summary}</p>}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════ */}
       {/* SECTION 2: Skill Categories Gap Analysis   */}
@@ -374,7 +459,10 @@ const SkillProfile = () => {
                     </div>
                     <div>
                       <h3 className="font-medium text-canvas-white text-sm">{cat.name}</h3>
-                      <Badge variant={getLevelVariant(cat.level)} className="mt-0.5 text-[10px]">{cat.level}</Badge>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                        <Badge variant={getLevelVariant(cat.level)} className="text-[10px]">{cat.level}</Badge>
+                        <ConfidencePill value={cat.confidence} />
+                      </div>
                     </div>
                   </div>
                   <span className="text-2xl font-bold text-canvas-white tabular-nums">{cat.score}</span>
@@ -388,7 +476,7 @@ const SkillProfile = () => {
 
                 {/* Strengths & Gaps */}
                 <div className="flex flex-col gap-2 mt-auto">
-                  {cat.strengths.length > 0 && (
+                  {(cat.strengths || []).length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                       {cat.strengths.slice(0, 4).map(s => (
                         <span key={s} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
@@ -397,7 +485,7 @@ const SkillProfile = () => {
                       ))}
                     </div>
                   )}
-                  {cat.gaps.length > 0 && (
+                  {(cat.gaps || []).length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                       {cat.gaps.slice(0, 4).map(g => (
                         <span key={g} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/10 border border-amber-500/20 text-amber-400">
@@ -407,6 +495,27 @@ const SkillProfile = () => {
                     </div>
                   )}
                 </div>
+
+                {(cat.evidence || []).length > 0 && (
+                  <div className="border-t border-white/[0.06] pt-3">
+                    <p className="text-[10px] font-mono text-muted-steel uppercase tracking-wider mb-2">Evidence</p>
+                    <div className="space-y-2">
+                      {cat.evidence.slice(0, 2).map((item, evidenceIndex) => (
+                        <div key={`${item.label}-${evidenceIndex}`} className="text-xs text-muted-steel leading-relaxed">
+                          <span className="text-canvas-white/80">{item.label}</span>
+                          {item.detail && <span> - {item.detail}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(cat.recommendedActions || []).length > 0 && (
+                  <div className="border-t border-white/[0.06] pt-3">
+                    <p className="text-[10px] font-mono text-muted-steel uppercase tracking-wider mb-2">Action</p>
+                    <p className="text-xs text-muted-cyan/90 leading-relaxed">{cat.recommendedActions[0]}</p>
+                  </div>
+                )}
               </Card>
             );
           })}
@@ -486,6 +595,82 @@ const SkillProfile = () => {
           </div>
         </Card>
       </div>
+
+      {(profile.repoSkillMap?.length > 0 || profile.history?.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-up stagger-5">
+          {profile.repoSkillMap?.length > 0 && (
+            <Card className="lg:col-span-7 p-6">
+              <h2 className="text-lg font-medium text-canvas-white tracking-tight mb-5 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center border border-sky-500/20">
+                  <Map size={16} className="text-sky-400" />
+                </div>
+                Repository Skill Map
+              </h2>
+              <div className="space-y-3 max-h-[420px] overflow-y-auto custom-scrollbar pr-1">
+                {profile.repoSkillMap.slice(0, 8).map((repo, index) => (
+                  <div key={`${repo.repoName}-${index}`} className="glass-surface p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                      <div>
+                        <h3 className="text-sm font-semibold text-canvas-white">{repo.repoName}</h3>
+                        <div className="mt-1"><ConfidencePill value={repo.confidence} /></div>
+                      </div>
+                      {repo.url && (
+                        <a href={repo.url} target="_blank" rel="noreferrer" className="text-xs text-muted-cyan hover:text-canvas-white transition-colors">
+                          View repo
+                        </a>
+                      )}
+                    </div>
+                    {(repo.detectedSkills || []).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        {repo.detectedSkills.slice(0, 6).map(skill => (
+                          <span key={skill} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-white/[0.04] border border-white/[0.06] text-canvas-white/80">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {(repo.missingSignals || []).length > 0 && (
+                      <div className="space-y-1">
+                        {repo.missingSignals.slice(0, 2).map(signal => (
+                          <p key={signal} className="text-xs text-amber-400/90 leading-relaxed">{signal}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {profile.history?.length > 0 && (
+            <Card className="lg:col-span-5 p-6">
+              <h2 className="text-lg font-medium text-canvas-white tracking-tight mb-5 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-muted-cyan/10 flex items-center justify-center border border-muted-cyan/20">
+                  <TrendingUp size={16} className="text-muted-cyan" />
+                </div>
+                Assessment History
+              </h2>
+              <div className="space-y-4">
+                {profile.history.slice(-5).reverse().map((item, index) => (
+                  <div key={`${item.assessedAt}-${index}`} className="glass-surface p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="text-sm font-medium text-canvas-white">{item.overallLevel}</p>
+                        <p className="text-[11px] text-muted-steel font-mono">{new Date(item.assessedAt).toLocaleDateString()}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xl font-bold text-muted-cyan">{Math.round(item.overallScore)}</p>
+                        <p className="text-[10px] text-muted-steel font-mono">score</p>
+                      </div>
+                    </div>
+                    <ProgressBar score={item.overallScore} gradient="from-muted-cyan to-blue-400" delay={index * 100} />
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+        </div>
+      )}
     </div>
   );
 };
