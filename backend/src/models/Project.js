@@ -37,6 +37,17 @@ const projectSchema = new mongoose.Schema(
       type: String,
       default: 'NONE',
     },
+    targetSkills: [{
+      name: { type: String },
+      slug: { type: String },
+    }],
+    addressedGaps: [{ type: String }],
+    skillRationale: {
+      type: String,
+    },
+    readinessTrack: {
+      type: String,
+    },
     order: {
       type: Number,
       required: true,
