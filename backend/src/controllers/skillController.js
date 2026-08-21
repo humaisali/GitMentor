@@ -1,7 +1,10 @@
 import SkillProfile from '../models/SkillProfile.js';
 import User from '../models/User.js';
 import Repository from '../models/Repository.js';
+import Project from '../models/Project.js';
+import Insight from '../models/Insight.js';
 import { generateSkillAssessment } from '../utils/geminiApi.js';
+import { buildSkillAssessmentSignals, levelFromScore, SKILL_TAXONOMY } from '../services/skillAnalysisService.js';
 
 const GITHUB_GRAPHQL_URL = 'https://api.github.com/graphql';
 
@@ -122,6 +125,126 @@ const processGitHubData = (viewer) => {
   };
 };
 
+const clampScore = (value, fallback = 0) => {
+  const numeric = Number.isFinite(Number(value)) ? Number(value) : fallback;
+  return Math.max(0, Math.min(100, Math.round(numeric)));
+};
+
+const normalizeLevel = (level, score) => {
+  const normalized = String(level || '').toUpperCase();
+  if (['BEGINNER', 'INTERMEDIATE', 'ADVANCED'].includes(normalized)) return normalized;
+  return levelFromScore(score);
+};
+
+const normalizeImpact = (impact) => {
+  const normalized = String(impact || '').toUpperCase();
+  return ['LOW', 'MEDIUM', 'HIGH'].includes(normalized) ? normalized : 'MEDIUM';
+};
+
+const normalizeCategory = (category, fallback) => {
+  const score = clampScore(category?.score, fallback.score);
+  return {
+    name: fallback.name,
+    slug: fallback.slug,
+    level: normalizeLevel(category?.level, score),
+    score,
+    confidence: clampScore(category?.confidence, fallback.confidence),
+    description: category?.description || fallback.description,
+    strengths: Array.isArray(category?.strengths) && category.strengths.length > 0
+      ? category.strengths.slice(0, 6)
+      : fallback.strengths || [],
+    gaps: Array.isArray(category?.gaps) && category.gaps.length > 0
+      ? category.gaps.slice(0, 6)
+      : fallback.gaps || [],
+    evidence: Array.isArray(category?.evidence) && category.evidence.length > 0
+      ? category.evidence.slice(0, 6).map(item => ({
+        source: item.source || 'ai',
+        label: item.label || fallback.name,
+        detail: item.detail || 'AI-refined assessment signal',
+        weight: Number.isFinite(Number(item.weight)) ? Number(item.weight) : 1,
+      }))
+      : fallback.evidence || [],
+    recommendedActions: Array.isArray(category?.recommendedActions) && category.recommendedActions.length > 0
+      ? category.recommendedActions.slice(0, 4)
+      : fallback.recommendedActions || [],
+  };
+};
+
+const buildHistorySnapshot = (profile) => ({
+  assessedAt: profile.assessedAt || profile.updatedAt || new Date(),
+  overallScore: profile.overallScore,
+  overallLevel: profile.overallLevel,
+  confidence: profile.confidence,
+  categoryScores: (profile.categories || []).map(category => ({
+    slug: category.slug,
+    score: category.score,
+  })),
+});
+
+const mergeAssessmentWithSignals = (assessment, signals, previousProfile) => {
+  const categoriesBySlug = new Map((assessment?.categories || []).map(category => [category.slug, category]));
+  const fallbackBySlug = new Map((signals.categories || []).map(category => [category.slug, category]));
+
+  const categories = SKILL_TAXONOMY.map(taxonomyItem => {
+    const fallback = fallbackBySlug.get(taxonomyItem.slug) || {
+      ...taxonomyItem,
+      score: 20,
+      confidence: 35,
+      level: 'BEGINNER',
+      description: `${taxonomyItem.name} needs more evidence.`,
+      strengths: [],
+      gaps: [`No clear ${taxonomyItem.name.toLowerCase()} evidence found yet`],
+      evidence: [],
+      recommendedActions: [],
+    };
+    return normalizeCategory(categoriesBySlug.get(taxonomyItem.slug), fallback);
+  });
+
+  const overallScore = clampScore(assessment?.overallScore, signals.overallScore);
+  const history = previousProfile ? [
+    ...(previousProfile.history || []).slice(-5),
+    buildHistorySnapshot(previousProfile),
+  ] : [];
+
+  return {
+    overallLevel: normalizeLevel(assessment?.overallLevel, overallScore),
+    overallScore,
+    confidence: clampScore(assessment?.confidence, signals.confidence),
+    summary: assessment?.summary || 'GitMentor analyzed your GitHub activity, tracked repositories, and in-app progress to build this skill profile.',
+    categories,
+    topLanguages: (assessment?.topLanguages || []).length > 0 ? assessment.topLanguages.map(lang => ({
+      name: lang.name,
+      proficiency: normalizeLevel(lang.proficiency, 30),
+      projectCount: Number.isFinite(Number(lang.projectCount)) ? Number(lang.projectCount) : 0,
+    })) : [],
+    recommendations: Array.isArray(assessment?.recommendations) && assessment.recommendations.length > 0
+      ? assessment.recommendations.slice(0, 6)
+      : signals.nextBestActions.map(action => action.description),
+    nextBestActions: Array.isArray(assessment?.nextBestActions) && assessment.nextBestActions.length > 0
+      ? assessment.nextBestActions.slice(0, 4).map(action => ({
+        title: action.title || 'Improve a priority skill',
+        description: action.description || 'Add stronger evidence through a real project change.',
+        categorySlug: action.categorySlug || '',
+        impact: normalizeImpact(action.impact),
+      }))
+      : signals.nextBestActions,
+    repoSkillMap: signals.repoSkillMap,
+    readinessScores: Array.isArray(assessment?.readinessScores) && assessment.readinessScores.length > 0
+      ? assessment.readinessScores.slice(0, 4).map(item => ({
+        track: item.track,
+        score: clampScore(item.score, 0),
+        summary: item.summary || '',
+      }))
+      : signals.readinessScores,
+    assessmentSignals: {
+      projectStats: signals.projectStats,
+      insightStats: signals.insightStats,
+      taxonomyVersion: '2026-08-21',
+    },
+    history,
+  };
+};
+
 // @desc    Get user's cached skill profile
 // @route   GET /api/skills/profile
 // @access  Private
@@ -174,35 +297,54 @@ export const assessSkills = async (req, res) => {
     // 3. Process GitHub data
     const analyticsData = processGitHubData(data.viewer);
 
-    // 4. Fetch tracked repos for additional context
+    // 4. Fetch tracked repos, project progress, and resolved insights for additional context
     const trackedRepos = await Repository.find({ user: req.user._id });
+    const projects = await Project.find({ user: req.user._id });
+    const trackedRepoIds = trackedRepos.map(repo => repo._id);
+    const insights = await Insight.find({ repository: { $in: trackedRepoIds } });
 
-    // 5. Generate AI assessment
-    const assessment = await generateSkillAssessment(analyticsData, trackedRepos);
+    // 5. Build deterministic rule-based evidence before asking AI to refine it
+    const skillSignals = buildSkillAssessmentSignals({
+      analyticsData,
+      trackedRepos,
+      projects,
+      insights,
+    });
 
-    // 6. Delete old profile and save new one (replace, don't keep history)
+    // 6. Generate AI assessment. If AI is unavailable, still return a useful rule-based profile.
+    let assessment = null;
+    try {
+      assessment = await generateSkillAssessment(analyticsData, trackedRepos, skillSignals);
+    } catch (aiError) {
+      console.warn('Gemini skill refinement failed; using rule-based assessment:', aiError.message);
+      assessment = {
+        overallLevel: skillSignals.overallLevel,
+        overallScore: skillSignals.overallScore,
+        confidence: skillSignals.confidence,
+        summary: 'GitMentor generated this profile from rule-based GitHub, repository, and project-progress signals. AI refinement was unavailable during this assessment.',
+        categories: skillSignals.categories,
+        topLanguages: analyticsData.languages.slice(0, 6).map(language => ({
+          name: language.name,
+          proficiency: levelFromScore(Number(language.percentage) >= 35 ? 70 : Number(language.percentage) >= 15 ? 50 : 30),
+          projectCount: analyticsData.allRepos.filter(repo => (
+            repo.primaryLanguage?.name === language.name ||
+            (repo.languages?.edges || []).some(edge => edge.node?.name === language.name)
+          )).length,
+        })),
+        recommendations: skillSignals.nextBestActions.map(action => action.description),
+        nextBestActions: skillSignals.nextBestActions,
+        readinessScores: skillSignals.readinessScores,
+      };
+    }
+    const previousProfile = await SkillProfile.findOne({ user: req.user._id });
+    const mergedAssessment = mergeAssessmentWithSignals(assessment, skillSignals, previousProfile);
+
+    // 7. Replace the active profile while preserving assessment history
     await SkillProfile.deleteOne({ user: req.user._id });
 
     const profile = await SkillProfile.create({
       user: req.user._id,
-      overallLevel: assessment.overallLevel,
-      overallScore: Math.round(assessment.overallScore),
-      summary: assessment.summary,
-      categories: assessment.categories.map(cat => ({
-        name: cat.name,
-        slug: cat.slug,
-        level: cat.level,
-        score: Math.round(cat.score),
-        description: cat.description,
-        strengths: cat.strengths || [],
-        gaps: cat.gaps || [],
-      })),
-      topLanguages: (assessment.topLanguages || []).map(lang => ({
-        name: lang.name,
-        proficiency: lang.proficiency,
-        projectCount: lang.projectCount || 0,
-      })),
-      recommendations: assessment.recommendations || [],
+      ...mergedAssessment,
       repositoriesAnalyzed: analyticsData.allRepos.length,
       assessedAt: new Date(),
     });
