@@ -3,6 +3,41 @@ import Repository from '../models/Repository.js';
 import SkillProfile from '../models/SkillProfile.js';
 import { generateRoadmap, chatWithProjectAssistant } from '../utils/geminiApi.js';
 
+const normalizeTargetSkills = (skills = [], skillProfile = null) => {
+  const fallbackSkills = (skillProfile?.categories || [])
+    .filter(category => category.score < 65)
+    .sort((a, b) => a.score - b.score)
+    .slice(0, 3)
+    .map(category => ({ name: category.name, slug: category.slug }));
+
+  const normalized = Array.isArray(skills) ? skills
+    .filter(skill => skill?.name || skill?.slug)
+    .map(skill => ({
+      name: skill.name || skill.slug || 'Skill',
+      slug: skill.slug || String(skill.name || 'skill').toLowerCase().replace(/\s+/g, '-'),
+    }))
+    .slice(0, 4) : [];
+
+  return normalized.length > 0 ? normalized : fallbackSkills;
+};
+
+const normalizeAddressedGaps = (gaps = [], targetSkills = [], skillProfile = null) => {
+  if (Array.isArray(gaps) && gaps.length > 0) return gaps.filter(Boolean).slice(0, 4);
+
+  const targetSlugs = new Set(targetSkills.map(skill => skill.slug));
+  return (skillProfile?.categories || [])
+    .filter(category => targetSlugs.has(category.slug))
+    .flatMap(category => category.gaps || [])
+    .filter(Boolean)
+    .slice(0, 4);
+};
+
+const getDefaultReadinessTrack = (skillProfile = null) => (
+  (skillProfile?.readinessScores || [])
+    .slice()
+    .sort((a, b) => a.score - b.score)[0]?.track || 'Full-Stack Builder Readiness'
+);
+
 // @desc    Get user's roadmap projects
 // @route   GET /api/roadmaps
 // @access  Private
@@ -61,6 +96,14 @@ export const generateNewRoadmap = async (req, res) => {
         difficulty: mappedDifficulty,
         estTime: item.estTime || '1 Week',
         prereq: item.prereq || 'NONE',
+        targetSkills: normalizeTargetSkills(item.targetSkills, skillProfile),
+        addressedGaps: normalizeAddressedGaps(
+          item.addressedGaps,
+          normalizeTargetSkills(item.targetSkills, skillProfile),
+          skillProfile
+        ),
+        skillRationale: item.skillRationale || 'This project was selected to strengthen priority gaps from your latest GitMentor skill assessment.',
+        readinessTrack: item.readinessTrack || getDefaultReadinessTrack(skillProfile),
         order: i + 1,
         status: i === 0 ? 'IN_PROGRESS' : 'LOCKED'
       });
@@ -87,7 +130,12 @@ export const generatePlan = async (req, res) => {
 
     // Generate from Gemini
     const { generateProjectPlan } = await import('../utils/geminiApi.js');
-    const planData = await generateProjectPlan(project.title, project.description);
+    const planData = await generateProjectPlan(project.title, project.description, {
+      targetSkills: project.targetSkills || [],
+      addressedGaps: project.addressedGaps || [],
+      readinessTrack: project.readinessTrack,
+      skillRationale: project.skillRationale,
+    });
 
     project.detailedPlan = {
       scope: planData.scope,
