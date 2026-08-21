@@ -4,7 +4,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { Badge } from '../components/ui/Badge';
-import { Sparkles, ArrowLeft, CheckCircle2, Circle, Clock, Check, ExternalLink, BookOpen, Layers, Compass, ListTodo, Info, X, Play } from 'lucide-react';
+import { Sparkles, ArrowLeft, CheckCircle2, Circle, Clock, Check, ExternalLink, BookOpen, Layers, Compass, ListTodo, Info, X, Play, Brain, Target, Gauge } from 'lucide-react';
 import ProjectChatAssistant from '../components/ProjectChatAssistant';
 
 const API_BASE = 'http://localhost:5000/api/roadmaps';
@@ -159,6 +159,50 @@ const ProjectDetails = () => {
           </div>
         </div>
       </header>
+
+      {(project.targetSkills?.length > 0 || project.addressedGaps?.length > 0 || project.skillRationale) && (
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 animate-fade-in-up stagger-1">
+          <div className="md:col-span-8 glass-card p-6">
+            <h3 className="text-lg font-medium text-canvas-white mb-4 flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-muted-cyan/10 flex items-center justify-center border border-muted-cyan/20">
+                <Brain size={16} className="text-muted-cyan" />
+              </div>
+              Skill Engine Targeting
+            </h3>
+            {project.skillRationale && (
+              <p className="text-sm text-muted-steel leading-relaxed mb-5">{project.skillRationale}</p>
+            )}
+            {project.targetSkills?.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {project.targetSkills.map(skill => (
+                  <Badge key={skill.slug || skill.name} variant="primary" className="text-xs">
+                    {skill.name}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="md:col-span-4 glass-card p-6">
+            <h4 className="text-[11px] font-mono tracking-widest text-muted-steel mb-4 uppercase flex items-center gap-2">
+              <Gauge size={14} className="text-emerald-400" /> Readiness Track
+            </h4>
+            <p className="text-sm font-medium text-canvas-white mb-5">{project.readinessTrack || 'Full-Stack Builder Readiness'}</p>
+            {project.addressedGaps?.length > 0 && (
+              <div>
+                <h4 className="text-[11px] font-mono tracking-widest text-muted-steel mb-3 uppercase flex items-center gap-2">
+                  <Target size={14} className="text-amber-400" /> Gaps Addressed
+                </h4>
+                <div className="space-y-2">
+                  {project.addressedGaps.slice(0, 3).map(gap => (
+                    <p key={gap} className="text-xs text-muted-steel leading-relaxed">{gap}</p>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {(!project.detailedPlan || !project.detailedPlan.scope) ? (
         <Card hover={false} className="p-10 flex flex-col items-center justify-center text-center shadow-elevation-3 animate-fade-in-up stagger-1">
