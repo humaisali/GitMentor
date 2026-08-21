@@ -108,11 +108,109 @@ const getRepoLanguages = (repo) => {
   return Array.from(languages);
 };
 
-const detectRepoSkills = (repo) => {
-  const text = normalizeText(repo.name, repo.description, repo.fullName);
+const getPackageDependencies = (packageJson = null) => {
+  if (!packageJson) return [];
+  return Object.keys({
+    ...(packageJson.dependencies || {}),
+    ...(packageJson.devDependencies || {}),
+  });
+};
+
+const detectContextSignals = (context = {}) => {
+  const detectedSkills = new Set();
+  const primaryCategories = new Set();
+  const evidenceDetails = [];
+  const files = context.detectedFiles || [];
+  const structureText = normalizeText(...(context.structure || []), ...(context.configFiles || []));
+  const readmeText = normalizeText(context.readme || '');
+  const commitsText = normalizeText(...(context.commits || []));
+  const dependencies = getPackageDependencies(context.packageJson);
+  const dependencyText = normalizeText(...dependencies);
+
+  const addSignal = (slug, skill, detail) => {
+    primaryCategories.add(slug);
+    detectedSkills.add(skill);
+    evidenceDetails.push({ slug, skill, detail });
+  };
+
+  if (dependencies.some(dep => ['react', 'react-dom', 'next', 'vite', '@vitejs/plugin-react', 'tailwindcss'].includes(dep))) {
+    addSignal('frontend', 'Modern frontend stack', 'Detected frontend dependencies in package.json');
+  }
+  if (dependencies.some(dep => ['express', 'fastify', 'koa', 'hono', 'apollo-server'].includes(dep))) {
+    addSignal('backend', 'Node API framework', 'Detected backend framework dependency');
+    addSignal('api-design', 'HTTP API design', 'Detected API server dependency');
+  }
+  if (dependencies.some(dep => ['mongoose', 'mongodb', 'prisma', 'sequelize', 'pg', 'mysql2', 'redis'].includes(dep))) {
+    addSignal('databases', 'Database integration', 'Detected database dependency');
+  }
+  if (dependencies.some(dep => ['passport', 'jsonwebtoken', 'bcrypt', 'bcryptjs', 'helmet', 'express-session'].includes(dep))) {
+    addSignal('auth-security', 'Authentication and security', 'Detected auth/security dependency');
+  }
+  if (dependencies.some(dep => ['jest', 'vitest', 'mocha', 'cypress', '@playwright/test', 'supertest'].includes(dep))) {
+    addSignal('testing', 'Automated testing', 'Detected testing dependency');
+  }
+  if (dependencies.some(dep => ['eslint', 'prettier', 'typescript'].includes(dep))) {
+    addSignal('code-quality', 'Code quality tooling', 'Detected linting, formatting, or typing dependency');
+  }
+
+  if ((context.workflows || []).length > 0) {
+    addSignal('devops', 'GitHub Actions', `Detected ${context.workflows.length} workflow file(s)`);
+  }
+  if (/dockerfile|docker-compose/.test(structureText)) {
+    addSignal('devops', 'Containerization', 'Detected Docker configuration');
+    addSignal('deployment', 'Container-ready deployment', 'Detected Docker deployment signal');
+  }
+  if (/render\.ya?ml|vercel\.json|netlify\.toml|railway/.test(structureText)) {
+    addSignal('deployment', 'Deployment configuration', 'Detected hosting provider configuration');
+  }
+  if (/__tests__|\/tests\/|\.test\.|\.spec\./.test(structureText)) {
+    addSignal('testing', 'Test files', 'Detected test files or test directories');
+  }
+  if (/readme|documentation|getting started|installation|usage|architecture/.test(readmeText)) {
+    addSignal('documentation', 'Project documentation', 'README includes setup, usage, or architecture signals');
+  }
+  if (/src\/controllers|src\/models|src\/routes|services\/|middlewares\/|context\//.test(structureText)) {
+    addSignal('architecture', 'Modular architecture', 'Detected separated routes, models, controllers, services, or context layers');
+  }
+  if (/auth|oauth|jwt|session|permission/.test(structureText) || /auth|oauth|jwt|session|permission/.test(readmeText)) {
+    addSignal('auth-security', 'Auth implementation', 'Detected auth-related files or documentation');
+  }
+  if (/fix|refactor|review|lint|test|secure|deploy/.test(commitsText)) {
+    addSignal('code-quality', 'Maintenance activity', 'Recent commits mention quality, fixes, tests, security, or deployment');
+  }
+  if (/dashboard|analytics|roadmap|workspace|user|feature|mentor/.test(readmeText)) {
+    addSignal('product-thinking', 'Product workflow clarity', 'README describes user-facing workflows or product concepts');
+  }
+
+  dependencies.slice(0, 8).forEach(dep => detectedSkills.add(dep));
+
+  return {
+    detectedSkills: Array.from(detectedSkills),
+    primaryCategories: Array.from(primaryCategories),
+    evidenceDetails,
+    missingSignals: [
+      dependencies.length === 0 ? 'No package dependency signal detected' : null,
+      !/test|spec|__tests__|\/tests\//.test(structureText + dependencyText) ? 'No testing signal detected' : null,
+      !/docker|render|vercel|netlify|workflow/.test(structureText) ? 'No deployment or CI signal detected' : null,
+      !context.readme || context.readme === 'No README found.' ? 'README documentation is missing' : null,
+    ].filter(Boolean),
+    confidenceBoost: clamp(
+      (files.length > 0 ? 12 : 0) +
+      (dependencies.length > 0 ? 12 : 0) +
+      ((context.workflows || []).length > 0 ? 10 : 0) +
+      ((context.configFiles || []).length > 0 ? 8 : 0),
+      0,
+      35
+    ),
+  };
+};
+
+const detectRepoSkills = (repo, context = null) => {
+  const text = normalizeText(repo.name, repo.description, repo.fullName, context?.readme);
   const languages = getRepoLanguages(repo);
   const detectedSkills = new Set(languages);
   const primaryCategories = new Set();
+  const evidenceDetails = [];
 
   languages.forEach(language => {
     (LANGUAGE_CATEGORY_MAP[language] || []).forEach(slug => primaryCategories.add(slug));
@@ -126,20 +224,35 @@ const detectRepoSkills = (repo) => {
     }
   });
 
-  const missingSignals = [];
+  const contextSignals = context ? detectContextSignals(context) : null;
+  (contextSignals?.detectedSkills || []).forEach(skill => detectedSkills.add(skill));
+  (contextSignals?.primaryCategories || []).forEach(slug => primaryCategories.add(slug));
+  (contextSignals?.evidenceDetails || []).forEach(detail => evidenceDetails.push(detail));
+
+  let missingSignals = [];
   if (!text.includes('test') && !text.includes('spec')) missingSignals.push('No testing signal detected');
   if (!text.includes('deploy') && !text.includes('docker') && !text.includes('vercel') && !text.includes('render')) {
     missingSignals.push('No deployment signal detected');
   }
   if (!repo.description) missingSignals.push('Repository description is missing');
+  if (contextSignals) {
+    missingSignals = contextSignals.missingSignals;
+  }
 
   return {
     repoName: repo.name || repo.fullName || 'Unknown repository',
-    url: repo.url || repo.htmlUrl,
+    url: repo.url || repo.htmlUrl || (repo.fullName ? `https://github.com/${repo.fullName}` : undefined),
     detectedSkills: Array.from(detectedSkills).slice(0, 10),
     primaryCategories: Array.from(primaryCategories).slice(0, 5),
+    evidenceDetails: evidenceDetails.slice(0, 8),
     missingSignals: missingSignals.slice(0, 4),
-    confidence: clamp(45 + (languages.length * 8) + (primaryCategories.size * 6) - (missingSignals.length * 4)),
+    confidence: clamp(
+      45 +
+      (languages.length * 8) +
+      (primaryCategories.size * 6) +
+      (contextSignals?.confidenceBoost || 0) -
+      (missingSignals.length * 4)
+    ),
   };
 };
 
@@ -311,18 +424,22 @@ const buildReadinessScores = (categories, targetRole) => {
   ];
 };
 
-export const buildSkillAssessmentSignals = ({ analyticsData, trackedRepos = [], projects = [], insights = [], progressEvents = [], targetRole = 'full-stack-developer' }) => {
+export const buildSkillAssessmentSignals = ({ analyticsData, trackedRepos = [], projects = [], insights = [], progressEvents = [], repoContexts = {}, targetRole = 'full-stack-developer' }) => {
   const allRepos = analyticsData.allRepos || [];
-  const repoSkillMap = allRepos.map(detectRepoSkills);
+  const repoSkillMap = allRepos.map(repo => {
+    const context = repoContexts[repo.name] || repoContexts[repo.fullName] || null;
+    return detectRepoSkills(repo, context);
+  });
   const evidenceByCategory = {};
 
   repoSkillMap.forEach(repoMap => {
     repoMap.primaryCategories.forEach(slug => {
+      const detail = repoMap.evidenceDetails?.find(item => item.slug === slug);
       addEvidence(evidenceByCategory, slug, {
-        source: 'repository',
+        source: detail ? 'deep-repository' : 'repository',
         label: repoMap.repoName,
-        detail: `Detected ${repoMap.detectedSkills.slice(0, 4).join(', ')}`,
-        weight: 2,
+        detail: detail?.detail || `Detected ${repoMap.detectedSkills.slice(0, 4).join(', ')}`,
+        weight: detail ? 3 : 2,
       });
     });
   });

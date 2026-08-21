@@ -2,6 +2,22 @@
 
 const GITHUB_API_BASE = 'https://api.github.com';
 
+const encodePath = (path) => path.split('/').map(encodeURIComponent).join('/');
+
+const fetchRepoTextFile = async (headers, fullName, path, branch) => {
+  const response = await fetch(
+    `${GITHUB_API_BASE}/repos/${fullName}/contents/${encodePath(path)}?ref=${encodeURIComponent(branch)}`,
+    { headers }
+  );
+
+  if (!response.ok) return null;
+
+  const data = await response.json();
+  if (!data.content) return null;
+
+  return Buffer.from(data.content, 'base64').toString('utf8');
+};
+
 /**
  * Fetches the authenticated user's public repositories from GitHub.
  * @param {string} accessToken - The user's GitHub OAuth access token.
@@ -60,13 +76,36 @@ export const fetchRepoContext = async (accessToken, fullName, branch = 'main') =
       readme = Buffer.from(readmeData.content, 'base64').toString('utf8');
     }
 
-    // 2. Fetch Structure (Top Level)
-    const treeRes = await fetch(`${GITHUB_API_BASE}/repos/${fullName}/git/trees/${branch}`, { headers });
+    // 2. Fetch Structure (Recursive)
+    const treeRes = await fetch(`${GITHUB_API_BASE}/repos/${fullName}/git/trees/${encodeURIComponent(branch)}?recursive=1`, { headers });
     let structure = [];
+    let rawTree = [];
     if (treeRes.ok) {
       const treeData = await treeRes.json();
-      structure = treeData.tree ? treeData.tree.map(t => `${t.type === 'tree' ? '📁' : '📄'} ${t.path}`) : [];
+      rawTree = treeData.tree || [];
+      structure = rawTree
+        .slice(0, 250)
+        .map(t => `${t.type === 'tree' ? 'dir' : 'file'} ${t.path}`);
     }
+
+    const filePaths = rawTree.filter(item => item.type === 'blob').map(item => item.path);
+    const packageJsonPath = filePaths.find(path => path === 'package.json');
+    const packageJsonText = packageJsonPath ? await fetchRepoTextFile(headers, fullName, packageJsonPath, branch) : null;
+    let packageJson = null;
+    try {
+      packageJson = packageJsonText ? JSON.parse(packageJsonText) : null;
+    } catch {
+      packageJson = null;
+    }
+
+    const workflows = filePaths.filter(path => path.startsWith('.github/workflows/'));
+    const configFiles = filePaths.filter(path => (
+      /(^|\/)(dockerfile|docker-compose\.ya?ml|render\.ya?ml|vercel\.json|netlify\.toml|eslint\.config\.js|\.eslintrc|tsconfig\.json|vite\.config\.js|next\.config\.js|jest\.config\.js|vitest\.config\.js)$/i.test(path) ||
+      path.includes('/__tests__/') ||
+      path.includes('/tests/') ||
+      /\.test\.[jt]sx?$/.test(path) ||
+      /\.spec\.[jt]sx?$/.test(path)
+    ));
 
     // 3. Fetch Recent Commits
     const commitsRes = await fetch(`${GITHUB_API_BASE}/repos/${fullName}/commits?per_page=10`, { headers });
@@ -76,7 +115,15 @@ export const fetchRepoContext = async (accessToken, fullName, branch = 'main') =
       commits = commitsData.map(c => `- ${c.commit.message.split('\n')[0]} (${c.commit.author.name})`);
     }
 
-    return { readme, structure, commits };
+    return {
+      readme,
+      structure,
+      commits,
+      packageJson,
+      workflows,
+      configFiles,
+      detectedFiles: filePaths.slice(0, 250),
+    };
   } catch (error) {
     console.error(`Error fetching repo context for ${fullName}:`, error);
     throw error;

@@ -5,6 +5,7 @@ import Project from '../models/Project.js';
 import Insight from '../models/Insight.js';
 import SkillProgressEvent from '../models/SkillProgressEvent.js';
 import { generateSkillAssessment } from '../utils/geminiApi.js';
+import { fetchRepoContext } from '../utils/githubApi.js';
 import { buildSkillAssessmentSignals, levelFromScore, SKILL_TAXONOMY, getCareerTrack } from '../services/skillAnalysisService.js';
 
 const GITHUB_GRAPHQL_URL = 'https://api.github.com/graphql';
@@ -250,6 +251,24 @@ const mergeAssessmentWithSignals = (assessment, signals, previousProfile) => {
   };
 };
 
+const fetchTrackedRepoContexts = async (accessToken, trackedRepos) => {
+  const reposToInspect = trackedRepos.slice(0, 5);
+  const results = await Promise.allSettled(
+    reposToInspect.map(async repo => {
+      const context = await fetchRepoContext(accessToken, repo.fullName, repo.branch || 'main');
+      return { repo, context };
+    })
+  );
+
+  return results.reduce((contexts, result) => {
+    if (result.status !== 'fulfilled') return contexts;
+    const { repo, context } = result.value;
+    contexts[repo.name] = context;
+    contexts[repo.fullName] = context;
+    return contexts;
+  }, {});
+};
+
 // @desc    Get user's cached skill profile
 // @route   GET /api/skills/profile
 // @access  Private
@@ -311,6 +330,7 @@ export const assessSkills = async (req, res) => {
     const trackedRepoIds = trackedRepos.map(repo => repo._id);
     const insights = await Insight.find({ repository: { $in: trackedRepoIds } });
     const progressEvents = await SkillProgressEvent.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(50);
+    const repoContexts = await fetchTrackedRepoContexts(user.accessToken, trackedRepos);
 
     // 5. Build deterministic rule-based evidence before asking AI to refine it
     const skillSignals = buildSkillAssessmentSignals({
@@ -319,6 +339,7 @@ export const assessSkills = async (req, res) => {
       projects,
       insights,
       progressEvents,
+      repoContexts,
       targetRole: careerTrack.id,
     });
 
