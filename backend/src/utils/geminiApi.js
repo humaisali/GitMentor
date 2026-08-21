@@ -207,14 +207,22 @@ export const generateRoadmap = async (repositories, userPrompt = null, skillProf
   const skillProfileSection = skillProfile
     ? `\n    === ASSESSED SKILL PROFILE ===
     Overall Level: ${skillProfile.overallLevel} (Score: ${skillProfile.overallScore}/100)
+    Confidence: ${skillProfile.confidence || 50}/100
     Summary: ${skillProfile.summary}
     
     Skill Categories:
-    ${skillProfile.categories.map(c => `- ${c.name}: ${c.level} (${c.score}/100) | Strengths: ${c.strengths.join(', ')} | Gaps: ${c.gaps.join(', ')}`).join('\n    ')}
+    ${skillProfile.categories.map(c => `- ${c.name} [${c.slug}]: ${c.level} (${c.score}/100, confidence ${c.confidence || 50}/100) | Strengths: ${(c.strengths || []).join(', ')} | Gaps: ${(c.gaps || []).join(', ')} | Suggested actions: ${(c.recommendedActions || []).join(', ')}`).join('\n    ')}
+    
+    Next Best Actions:
+    ${(skillProfile.nextBestActions || []).map(a => `- ${a.title} (${a.categorySlug}, ${a.impact} impact): ${a.description}`).join('\n    ')}
+    
+    Readiness Scores:
+    ${(skillProfile.readinessScores || []).map(r => `- ${r.track}: ${r.score}/100 - ${r.summary}`).join('\n    ')}
     
     Top Languages: ${skillProfile.topLanguages.map(l => `${l.name} (${l.proficiency})`).join(', ')}
     
     Use this skill profile to create a highly targeted roadmap that addresses the identified gaps while building on existing strengths.
+    Every roadmap project MUST include targetSkills, addressedGaps, skillRationale, and readinessTrack.
     === END SKILL PROFILE ===`
     : '';
 
@@ -241,6 +249,10 @@ export const generateRoadmap = async (repositories, userPrompt = null, skillProf
     - difficulty: string (must be 'BEGINNER', 'INTERMEDIATE', or 'ADVANCED')
     - estTime: string (e.g., '4 HOURS', '2 WEEKS')
     - prereq: string (The projectId of the prerequisite, or 'NONE' for the first project)
+    - targetSkills: array of 2-4 objects with keys { name, slug }. Use slugs from the skill profile taxonomy when available.
+    - addressedGaps: array of 2-4 concrete gaps this project is designed to improve.
+    - skillRationale: string explaining why this project is the right next step for the user's assessed skill profile.
+    - readinessTrack: string naming the readiness score or career track this project improves.
   `;
 
   try {
@@ -260,8 +272,22 @@ export const generateRoadmap = async (repositories, userPrompt = null, skillProf
               difficulty: { type: Type.STRING },
               estTime: { type: Type.STRING },
               prereq: { type: Type.STRING },
+              targetSkills: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING },
+                    slug: { type: Type.STRING },
+                  },
+                  required: ["name", "slug"],
+                },
+              },
+              addressedGaps: { type: Type.ARRAY, items: { type: Type.STRING } },
+              skillRationale: { type: Type.STRING },
+              readinessTrack: { type: Type.STRING },
             },
-            required: ["projectId", "title", "description", "difficulty", "estTime", "prereq"],
+            required: ["projectId", "title", "description", "difficulty", "estTime", "prereq", "targetSkills", "addressedGaps", "skillRationale", "readinessTrack"],
           },
         },
       },
@@ -349,12 +375,18 @@ export const generateRepoInsights = async (repository, context = {}) => {
 /**
  * Generate a detailed project plan and 3 timeline options.
  */
-export const generateProjectPlan = async (projectTitle, projectDescription) => {
+export const generateProjectPlan = async (projectTitle, projectDescription, skillTargeting = {}) => {
   const ai = getAI();
 
   const prompt = `
     You are an expert tech lead. A user is starting a project: "${projectTitle}".
     Description: "${projectDescription}"
+    
+    Skill Engine Targeting:
+    - Target Skills: ${(skillTargeting.targetSkills || []).map(skill => `${skill.name} (${skill.slug})`).join(', ') || 'Not provided'}
+    - Addressed Gaps: ${(skillTargeting.addressedGaps || []).join('; ') || 'Not provided'}
+    - Readiness Track: ${skillTargeting.readinessTrack || 'Not provided'}
+    - Rationale: ${skillTargeting.skillRationale || 'Not provided'}
     
     Provide a detailed project plan including:
     - scope: A string summarizing the project boundaries.
@@ -362,6 +394,7 @@ export const generateProjectPlan = async (projectTitle, projectDescription) => {
     - methodologies: An array of 2-3 development methodologies (e.g. "TDD", "Agile sprint").
     - techStack: An array of 3-6 recommended technologies. Return ONLY the short technology name (e.g. "React", "Node.js", "PostgreSQL", "Docker", "AWS", "OAuth2/JWT"). Do NOT add descriptions, parenthetical notes, or explanations after the name.
     - timelineOptions: Exactly 3 options (e.g. 1 week, 2 weeks, 4 weeks), each with an 'id', 'title', 'duration', and 'description'.
+    Make the objectives and methodologies explicitly help the user improve the target skills and addressed gaps.
   `;
 
   try {
@@ -606,6 +639,8 @@ ${taskList ? `    Tasks:\n${taskList}` : '    Tasks: Not yet generated'}`;
   const methodologiesStr = (projectData.detailedPlan?.methodologies || []).join(', ');
   const objectivesStr = (projectData.detailedPlan?.objectives || []).map(o => `  - ${o}`).join('\n');
   const learningStr = (projectData.learningMaterials || []).map(m => `  - ${m.title} (${m.source}): ${m.url}`).join('\n');
+  const targetSkillsStr = (projectData.targetSkills || []).map(skill => `  - ${skill.name} (${skill.slug})`).join('\n');
+  const addressedGapsStr = (projectData.addressedGaps || []).map(gap => `  - ${gap}`).join('\n');
 
   const systemInstruction = `You are "Project Mentor", a focused, expert AI assistant dedicated exclusively to the project described below. You are embedded inside the GitMentor platform.
 
@@ -614,6 +649,14 @@ Project Title: "${projectData.title}"
 Description: ${projectData.description}
 Difficulty: ${projectData.difficulty}
 Estimated Time: ${projectData.estTime}
+
+Skill Engine Targeting:
+  Readiness Track: ${projectData.readinessTrack || 'Not provided'}
+  Rationale: ${projectData.skillRationale || 'Not provided'}
+  Target Skills:
+${targetSkillsStr || '  Not provided'}
+  Addressed Gaps:
+${addressedGapsStr || '  Not provided'}
 
 Detailed Plan:
   Scope: ${projectData.detailedPlan?.scope || 'Not yet generated'}
