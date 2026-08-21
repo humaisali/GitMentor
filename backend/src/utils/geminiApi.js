@@ -18,7 +18,7 @@ const getAI = () => {
  * @param {Array} trackedRepos - Tracked repositories from the database.
  * @returns {Object} Structured skill assessment profile.
  */
-export const generateSkillAssessment = async (analyticsData, trackedRepos = [], skillSignals = null) => {
+export const generateSkillAssessment = async (analyticsData, trackedRepos = [], skillSignals = null, careerTrack = null) => {
   const ai = getAI();
 
   const repoSummary = (analyticsData.allRepos || []).map(repo => ({
@@ -40,6 +40,8 @@ export const generateSkillAssessment = async (analyticsData, trackedRepos = [], 
     You are an expert software engineering career mentor and technical assessor.
     Analyze the following developer's GitHub profile data and GitMentor's rule-based evidence signals.
     Your job is to refine the assessment, keep it evidence-based, and make the output useful for mentorship.
+    The user's selected target role is: ${careerTrack?.label || 'Full-Stack Developer'}.
+    Prioritize the skills in this target role when writing readiness summaries and next best actions.
 
     === GITHUB PROFILE DATA ===
     
@@ -69,6 +71,10 @@ export const generateSkillAssessment = async (analyticsData, trackedRepos = [], 
     === GITMENTOR RULE-BASED SIGNALS ===
     ${JSON.stringify(skillSignals || {}, null, 2)}
     === END SIGNALS ===
+
+    === TARGET CAREER TRACK ===
+    ${JSON.stringify(careerTrack || {}, null, 2)}
+    === END CAREER TRACK ===
 
     Based on this data, generate a complete skill assessment with:
     1. An overall skill level (BEGINNER, INTERMEDIATE, or ADVANCED) and score (0-100).
@@ -206,6 +212,7 @@ export const generateRoadmap = async (repositories, userPrompt = null, skillProf
 
   const skillProfileSection = skillProfile
     ? `\n    === ASSESSED SKILL PROFILE ===
+    Target Role: ${skillProfile.targetRole || 'full-stack-developer'}
     Overall Level: ${skillProfile.overallLevel} (Score: ${skillProfile.overallScore}/100)
     Confidence: ${skillProfile.confidence || 50}/100
     Summary: ${skillProfile.summary}
@@ -221,7 +228,8 @@ export const generateRoadmap = async (repositories, userPrompt = null, skillProf
     
     Top Languages: ${skillProfile.topLanguages.map(l => `${l.name} (${l.proficiency})`).join(', ')}
     
-    Use this skill profile to create a highly targeted roadmap that addresses the identified gaps while building on existing strengths.
+    Use this skill profile to create a highly targeted roadmap for the user's selected target role.
+    Prefer projects that improve the lowest-scoring skills that matter most to this role, while building on existing strengths.
     Every roadmap project MUST include targetSkills, addressedGaps, skillRationale, and readinessTrack.
     === END SKILL PROFILE ===`
     : '';

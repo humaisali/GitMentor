@@ -16,6 +16,43 @@ export const SKILL_TAXONOMY = [
   { slug: 'product-thinking', name: 'Product Thinking' },
 ];
 
+export const CAREER_TRACKS = [
+  {
+    id: 'frontend-developer',
+    label: 'Frontend Developer',
+    slugs: ['frontend', 'testing', 'deployment', 'documentation', 'product-thinking', 'code-quality'],
+  },
+  {
+    id: 'backend-developer',
+    label: 'Backend Developer',
+    slugs: ['backend', 'api-design', 'databases', 'auth-security', 'testing', 'architecture'],
+  },
+  {
+    id: 'full-stack-developer',
+    label: 'Full-Stack Developer',
+    slugs: ['frontend', 'backend', 'databases', 'api-design', 'auth-security', 'deployment', 'testing'],
+  },
+  {
+    id: 'ai-app-developer',
+    label: 'AI App Developer',
+    slugs: ['frontend', 'backend', 'api-design', 'architecture', 'product-thinking', 'code-quality'],
+  },
+  {
+    id: 'devops-beginner',
+    label: 'DevOps Beginner',
+    slugs: ['deployment', 'devops', 'backend', 'testing', 'documentation', 'architecture'],
+  },
+  {
+    id: 'open-source-contributor',
+    label: 'Open Source Contributor',
+    slugs: ['open-source', 'documentation', 'code-quality', 'testing', 'architecture'],
+  },
+];
+
+export const getCareerTrack = (targetRole = 'full-stack-developer') => (
+  CAREER_TRACKS.find(track => track.id === targetRole) || CAREER_TRACKS[2]
+);
+
 const CATEGORY_RULES = {
   frontend: ['react', 'vite', 'next', 'vue', 'angular', 'svelte', 'tailwind', 'css', 'html', 'jsx', 'tsx', 'frontend', 'ui', 'dashboard'],
   backend: ['node', 'express', 'server', 'api', 'backend', 'django', 'flask', 'fastapi', 'spring', 'laravel'],
@@ -225,24 +262,37 @@ const buildRecommendedActions = (slug, gaps = []) => {
   return [...(actionMap[slug] || []), ...gaps.slice(0, 1)].slice(0, 3);
 };
 
-const buildNextBestActions = (categories) => (
-  categories
+const buildNextBestActions = (categories, targetRole) => {
+  const track = getCareerTrack(targetRole);
+  const trackSlugSet = new Set(track.slugs);
+
+  return categories
     .filter(category => category.score < 65)
-    .sort((a, b) => a.score - b.score)
+    .sort((a, b) => {
+      const aPriority = trackSlugSet.has(a.slug) ? -20 : 0;
+      const bPriority = trackSlugSet.has(b.slug) ? -20 : 0;
+      return (a.score + aPriority) - (b.score + bPriority);
+    })
     .slice(0, 3)
     .map(category => ({
       title: `Improve ${category.name}`,
       description: category.recommendedActions[0] || `Add stronger evidence for ${category.name.toLowerCase()}.`,
       categorySlug: category.slug,
       impact: category.score < 35 ? 'HIGH' : 'MEDIUM',
-    }))
-);
+    }));
+};
 
-const buildReadinessScores = (categories) => {
+const buildReadinessScores = (categories, targetRole) => {
   const get = (slug) => categories.find(category => category.slug === slug)?.score || 0;
   const average = (slugs) => clamp(slugs.reduce((sum, slug) => sum + get(slug), 0) / slugs.length);
+  const selectedTrack = getCareerTrack(targetRole);
 
   return [
+    {
+      track: `${selectedTrack.label} Readiness`,
+      score: average(selectedTrack.slugs),
+      summary: `Measures the most important visible skills for the selected ${selectedTrack.label} path.`,
+    },
     {
       track: 'Junior Frontend Readiness',
       score: average(['frontend', 'testing', 'deployment', 'documentation', 'product-thinking']),
@@ -261,7 +311,7 @@ const buildReadinessScores = (categories) => {
   ];
 };
 
-export const buildSkillAssessmentSignals = ({ analyticsData, trackedRepos = [], projects = [], insights = [], progressEvents = [] }) => {
+export const buildSkillAssessmentSignals = ({ analyticsData, trackedRepos = [], projects = [], insights = [], progressEvents = [], targetRole = 'full-stack-developer' }) => {
   const allRepos = analyticsData.allRepos || [];
   const repoSkillMap = allRepos.map(detectRepoSkills);
   const evidenceByCategory = {};
@@ -359,6 +409,8 @@ export const buildSkillAssessmentSignals = ({ analyticsData, trackedRepos = [], 
 
   return {
     taxonomy: SKILL_TAXONOMY,
+    careerTrack: getCareerTrack(targetRole),
+    targetRole,
     categories,
     repoSkillMap,
     projectStats,
@@ -376,8 +428,8 @@ export const buildSkillAssessmentSignals = ({ analyticsData, trackedRepos = [], 
       impactScore: event.impactScore,
       createdAt: event.createdAt,
     })),
-    nextBestActions: buildNextBestActions(categories),
-    readinessScores: buildReadinessScores(categories),
+    nextBestActions: buildNextBestActions(categories, targetRole),
+    readinessScores: buildReadinessScores(categories, targetRole),
     overallScore,
     overallLevel: levelFromScore(overallScore),
     confidence,

@@ -5,7 +5,7 @@ import Project from '../models/Project.js';
 import Insight from '../models/Insight.js';
 import SkillProgressEvent from '../models/SkillProgressEvent.js';
 import { generateSkillAssessment } from '../utils/geminiApi.js';
-import { buildSkillAssessmentSignals, levelFromScore, SKILL_TAXONOMY } from '../services/skillAnalysisService.js';
+import { buildSkillAssessmentSignals, levelFromScore, SKILL_TAXONOMY, getCareerTrack } from '../services/skillAnalysisService.js';
 
 const GITHUB_GRAPHQL_URL = 'https://api.github.com/graphql';
 
@@ -212,6 +212,7 @@ const mergeAssessmentWithSignals = (assessment, signals, previousProfile) => {
     overallScore,
     confidence: clampScore(assessment?.confidence, signals.confidence),
     summary: assessment?.summary || 'GitMentor analyzed your GitHub activity, tracked repositories, and in-app progress to build this skill profile.',
+    targetRole: signals.targetRole,
     categories,
     topLanguages: (assessment?.topLanguages || []).length > 0 ? assessment.topLanguages.map(lang => ({
       name: lang.name,
@@ -242,6 +243,7 @@ const mergeAssessmentWithSignals = (assessment, signals, previousProfile) => {
       projectStats: signals.projectStats,
       insightStats: signals.insightStats,
       progressEventStats: signals.progressEventStats,
+      careerTrack: signals.careerTrack,
       taxonomyVersion: '2026-08-21',
     },
     history,
@@ -271,6 +273,9 @@ export const getSkillProfile = async (req, res) => {
 // @access  Private
 export const assessSkills = async (req, res) => {
   try {
+    const { targetRole = 'full-stack-developer' } = req.body || {};
+    const careerTrack = getCareerTrack(targetRole);
+
     // 1. Get user and verify access token
     const user = await User.findById(req.user._id);
     if (!user || !user.accessToken) {
@@ -314,12 +319,13 @@ export const assessSkills = async (req, res) => {
       projects,
       insights,
       progressEvents,
+      targetRole: careerTrack.id,
     });
 
     // 6. Generate AI assessment. If AI is unavailable, still return a useful rule-based profile.
     let assessment = null;
     try {
-      assessment = await generateSkillAssessment(analyticsData, trackedRepos, skillSignals);
+      assessment = await generateSkillAssessment(analyticsData, trackedRepos, skillSignals, careerTrack);
     } catch (aiError) {
       console.warn('Gemini skill refinement failed; using rule-based assessment:', aiError.message);
       assessment = {

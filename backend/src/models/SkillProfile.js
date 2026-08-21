@@ -67,6 +67,10 @@ const skillProfileSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    targetRole: {
+      type: String,
+      default: 'full-stack-developer',
+    },
     categories: [skillCategorySchema],
     topLanguages: [languageProficiencySchema],
     recommendations: [{ type: String }],
