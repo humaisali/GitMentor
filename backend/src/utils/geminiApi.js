@@ -18,7 +18,7 @@ const getAI = () => {
  * @param {Array} trackedRepos - Tracked repositories from the database.
  * @returns {Object} Structured skill assessment profile.
  */
-export const generateSkillAssessment = async (analyticsData, trackedRepos = []) => {
+export const generateSkillAssessment = async (analyticsData, trackedRepos = [], skillSignals = null) => {
   const ai = getAI();
 
   const repoSummary = (analyticsData.allRepos || []).map(repo => ({
@@ -38,7 +38,8 @@ export const generateSkillAssessment = async (analyticsData, trackedRepos = []) 
 
   const prompt = `
     You are an expert software engineering career mentor and technical assessor.
-    Analyze the following developer's complete GitHub profile data and provide a thorough skill assessment.
+    Analyze the following developer's GitHub profile data and GitMentor's rule-based evidence signals.
+    Your job is to refine the assessment, keep it evidence-based, and make the output useful for mentorship.
 
     === GITHUB PROFILE DATA ===
     
@@ -65,16 +66,25 @@ export const generateSkillAssessment = async (analyticsData, trackedRepos = []) 
     ${JSON.stringify(trackedSummary, null, 2)}
     === END DATA ===
 
+    === GITMENTOR RULE-BASED SIGNALS ===
+    ${JSON.stringify(skillSignals || {}, null, 2)}
+    === END SIGNALS ===
+
     Based on this data, generate a complete skill assessment with:
     1. An overall skill level (BEGINNER, INTERMEDIATE, or ADVANCED) and score (0-100).
+       Prefer the rule-based overall score as the anchor, but you may adjust it by up to 10 points if the evidence supports it.
+       Include an overall confidence score (0-100), lowering it when data is sparse or indirect.
     2. A 2-3 sentence executive summary of the developer's profile.
-    3. An evaluation of exactly 7 skill categories: Frontend Development, Backend Development, Databases, Testing, Deployment, Architecture, DevOps & CI/CD.
+    3. Evaluate every category in the provided taxonomy. Do not invent, remove, or rename category slugs.
        For each category, infer the developer's competency from their repos, languages, and contribution patterns.
        Identify specific strengths (technologies/practices they seem proficient in) and gaps (things they should learn).
        CRITICAL: The 'level' for EACH category MUST be exactly one of these strings: "BEGINNER", "INTERMEDIATE", or "ADVANCED". Do not use NOVICE.
+       Include concise evidence items and 1-3 recommended actions per category.
     4. Language proficiency for the developer's top languages (up to 6).
        CRITICAL: The 'proficiency' for EACH language MUST be exactly one of: "BEGINNER", "INTERMEDIATE", or "ADVANCED".
     5. 4-5 actionable recommendations for growth.
+    6. 2-3 nextBestActions for the lowest or highest-impact gaps.
+    7. Readiness scores for Junior Frontend Readiness, Full-Stack Builder Readiness, and Open Source Readiness.
 
     Be realistic and evidence-based. If the developer has few repos or limited activity, reflect that honestly.
   `;
@@ -90,6 +100,7 @@ export const generateSkillAssessment = async (analyticsData, trackedRepos = []) 
           properties: {
             overallLevel: { type: Type.STRING },
             overallScore: { type: Type.NUMBER },
+            confidence: { type: Type.NUMBER },
             summary: { type: Type.STRING },
             categories: {
               type: Type.ARRAY,
@@ -103,11 +114,26 @@ export const generateSkillAssessment = async (analyticsData, trackedRepos = []) 
                     description: "Must be exactly 'BEGINNER', 'INTERMEDIATE', or 'ADVANCED'"
                   },
                   score: { type: Type.NUMBER },
+                  confidence: { type: Type.NUMBER },
                   description: { type: Type.STRING },
                   strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
                   gaps: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  evidence: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        source: { type: Type.STRING },
+                        label: { type: Type.STRING },
+                        detail: { type: Type.STRING },
+                        weight: { type: Type.NUMBER },
+                      },
+                      required: ["source", "label", "detail"],
+                    },
+                  },
+                  recommendedActions: { type: Type.ARRAY, items: { type: Type.STRING } },
                 },
-                required: ["name", "slug", "level", "score", "description", "strengths", "gaps"],
+                required: ["name", "slug", "level", "score", "confidence", "description", "strengths", "gaps", "evidence", "recommendedActions"],
               },
             },
             topLanguages: {
@@ -126,8 +152,33 @@ export const generateSkillAssessment = async (analyticsData, trackedRepos = []) 
               },
             },
             recommendations: { type: Type.ARRAY, items: { type: Type.STRING } },
+            nextBestActions: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING },
+                  description: { type: Type.STRING },
+                  categorySlug: { type: Type.STRING },
+                  impact: { type: Type.STRING },
+                },
+                required: ["title", "description", "categorySlug", "impact"],
+              },
+            },
+            readinessScores: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  track: { type: Type.STRING },
+                  score: { type: Type.NUMBER },
+                  summary: { type: Type.STRING },
+                },
+                required: ["track", "score", "summary"],
+              },
+            },
           },
-          required: ["overallLevel", "overallScore", "summary", "categories", "topLanguages", "recommendations"],
+          required: ["overallLevel", "overallScore", "confidence", "summary", "categories", "topLanguages", "recommendations", "nextBestActions", "readinessScores"],
         },
       },
     });
