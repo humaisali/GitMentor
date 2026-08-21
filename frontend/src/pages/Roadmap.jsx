@@ -5,7 +5,7 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { Input } from '../components/ui/Input';
-import { CheckCircle2, Circle, Lock, Sparkles, X } from 'lucide-react';
+import { CheckCircle2, Circle, Lock, Sparkles, X, Brain, Target } from 'lucide-react';
 
 const API_BASE = 'http://localhost:5000/api/roadmaps';
 
@@ -203,6 +203,38 @@ const RoadmapNode = ({ node, index }) => {
             <p className="text-muted-steel text-sm leading-relaxed mb-6">
               {node.description}
             </p>
+
+            {(node.targetSkills?.length > 0 || node.addressedGaps?.length > 0) && (
+              <div className="glass-surface p-4 mb-5">
+                {node.targetSkills?.length > 0 && (
+                  <div className="mb-3">
+                    <div className="flex items-center gap-2 text-[10px] font-mono tracking-wider text-muted-steel uppercase mb-2">
+                      <Brain size={13} className="text-muted-cyan" /> Target Skills
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {node.targetSkills.slice(0, 4).map(skill => (
+                        <span key={skill.slug || skill.name} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-muted-cyan/10 border border-muted-cyan/20 text-muted-cyan">
+                          {skill.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {node.addressedGaps?.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 text-[10px] font-mono tracking-wider text-muted-steel uppercase mb-2">
+                      <Target size={13} className="text-amber-400" /> Skill Gaps
+                    </div>
+                    <div className="space-y-1">
+                      {node.addressedGaps.slice(0, 2).map(gap => (
+                        <p key={gap} className="text-xs text-muted-steel leading-relaxed">{gap}</p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             
             <div className="flex flex-wrap items-center gap-4 border-t border-white/[0.06] pt-4">
               <div className="flex flex-col gap-1">
@@ -219,6 +251,15 @@ const RoadmapNode = ({ node, index }) => {
                 <span className="text-[10px] text-muted-steel/70 font-mono tracking-wider">SYSTEM ID</span>
                 <span className="text-xs font-mono text-muted-steel">{node.projectId}</span>
               </div>
+              {node.readinessTrack && (
+                <>
+                  <div className="w-px h-8 bg-white/[0.06] hidden md:block"></div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] text-muted-steel/70 font-mono tracking-wider">IMPROVES</span>
+                    <span className="text-xs font-mono text-canvas-white">{node.readinessTrack}</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
