@@ -1,31 +1,37 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import {
-  Brain,
-  RefreshCcw,
-  Monitor,
-  Server,
-  Database,
-  TestTube,
-  Rocket,
-  Building2,
-  Container,
-  ShieldCheck,
-  Network,
-  FileText,
-  GitPullRequest,
-  Gauge,
-  Map,
   Activity,
-  Lightbulb,
-  TrendingUp,
-  ChevronRight,
-  Sparkles,
   AlertCircle,
+  ArrowUpRight,
+  BarChart3,
+  Brain,
+  Building2,
+  ChevronDown,
+  CheckCircle2,
   Code2,
+  Container,
+  Database,
+  FileText,
+  Gauge,
+  GitPullRequest,
+  Layers,
+  Lightbulb,
+  ListChecks,
+  Map,
+  Monitor,
+  Network,
+  RefreshCcw,
+  Rocket,
+  Server,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  TestTube,
+  TrendingUp,
   Zap,
 } from 'lucide-react';
 
@@ -40,212 +46,422 @@ const CAREER_TRACK_OPTIONS = [
   { id: 'open-source-contributor', label: 'Open Source Contributor' },
 ];
 
-// ── Category icon mapping ──
-const getCategoryIcon = (slug) => {
-  const icons = {
-    frontend: Monitor,
-    backend: Server,
-    databases: Database,
-    'api-design': Network,
-    'auth-security': ShieldCheck,
-    testing: TestTube,
-    deployment: Rocket,
-    architecture: Building2,
-    devops: Container,
-    'code-quality': Sparkles,
-    documentation: FileText,
-    'open-source': GitPullRequest,
-    'product-thinking': Gauge,
-  };
-  return icons[slug] || Code2;
+const CATEGORY_META = {
+  frontend: { icon: Monitor, tone: 'text-sky-400', surface: 'bg-sky-500/10 border-sky-500/20', bar: 'from-sky-500 to-cyan-400' },
+  backend: { icon: Server, tone: 'text-emerald-400', surface: 'bg-emerald-500/10 border-emerald-500/20', bar: 'from-emerald-500 to-teal-400' },
+  databases: { icon: Database, tone: 'text-violet-400', surface: 'bg-violet-500/10 border-violet-500/20', bar: 'from-violet-500 to-indigo-400' },
+  'api-design': { icon: Network, tone: 'text-cyan-400', surface: 'bg-cyan-500/10 border-cyan-500/20', bar: 'from-cyan-500 to-sky-400' },
+  'auth-security': { icon: ShieldCheck, tone: 'text-rose-400', surface: 'bg-rose-500/10 border-rose-500/20', bar: 'from-rose-500 to-red-400' },
+  testing: { icon: TestTube, tone: 'text-amber-400', surface: 'bg-amber-500/10 border-amber-500/20', bar: 'from-amber-500 to-yellow-400' },
+  deployment: { icon: Rocket, tone: 'text-fuchsia-400', surface: 'bg-fuchsia-500/10 border-fuchsia-500/20', bar: 'from-fuchsia-500 to-rose-400' },
+  architecture: { icon: Building2, tone: 'text-teal-400', surface: 'bg-teal-500/10 border-teal-500/20', bar: 'from-teal-500 to-emerald-400' },
+  devops: { icon: Container, tone: 'text-orange-400', surface: 'bg-orange-500/10 border-orange-500/20', bar: 'from-orange-500 to-amber-400' },
+  'code-quality': { icon: Sparkles, tone: 'text-lime-400', surface: 'bg-lime-500/10 border-lime-500/20', bar: 'from-lime-500 to-emerald-400' },
+  documentation: { icon: FileText, tone: 'text-indigo-400', surface: 'bg-indigo-500/10 border-indigo-500/20', bar: 'from-indigo-500 to-sky-400' },
+  'open-source': { icon: GitPullRequest, tone: 'text-pink-400', surface: 'bg-pink-500/10 border-pink-500/20', bar: 'from-pink-500 to-fuchsia-400' },
+  'product-thinking': { icon: Gauge, tone: 'text-green-400', surface: 'bg-green-500/10 border-green-500/20', bar: 'from-green-500 to-lime-400' },
 };
 
-// ── Category accent color mapping ──
-const getCategoryColor = (slug) => {
-  const colors = {
-    frontend: { bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-400', bar: 'from-blue-500 to-blue-400' },
-    backend: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400', bar: 'from-emerald-500 to-emerald-400' },
-    databases: { bg: 'bg-violet-500/10', border: 'border-violet-500/20', text: 'text-violet-400', bar: 'from-violet-500 to-violet-400' },
-    'api-design': { bg: 'bg-sky-500/10', border: 'border-sky-500/20', text: 'text-sky-400', bar: 'from-sky-500 to-sky-400' },
-    'auth-security': { bg: 'bg-red-500/10', border: 'border-red-500/20', text: 'text-red-400', bar: 'from-red-500 to-red-400' },
-    testing: { bg: 'bg-amber-500/10', border: 'border-amber-500/20', text: 'text-amber-400', bar: 'from-amber-500 to-amber-400' },
-    deployment: { bg: 'bg-rose-500/10', border: 'border-rose-500/20', text: 'text-rose-400', bar: 'from-rose-500 to-rose-400' },
-    architecture: { bg: 'bg-cyan-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400', bar: 'from-cyan-500 to-cyan-400' },
-    devops: { bg: 'bg-orange-500/10', border: 'border-orange-500/20', text: 'text-orange-400', bar: 'from-orange-500 to-orange-400' },
-    'code-quality': { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400', bar: 'from-emerald-500 to-emerald-400' },
-    documentation: { bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', text: 'text-indigo-400', bar: 'from-indigo-500 to-indigo-400' },
-    'open-source': { bg: 'bg-fuchsia-500/10', border: 'border-fuchsia-500/20', text: 'text-fuchsia-400', bar: 'from-fuchsia-500 to-fuchsia-400' },
-    'product-thinking': { bg: 'bg-lime-500/10', border: 'border-lime-500/20', text: 'text-lime-400', bar: 'from-lime-500 to-lime-400' },
-  };
-  return colors[slug] || colors.frontend;
+const LANGUAGE_COLORS = {
+  JavaScript: '#F7DF1E',
+  TypeScript: '#3178C6',
+  Python: '#3776AB',
+  Java: '#ED8B00',
+  'C#': '#239120',
+  'C++': '#00599C',
+  Go: '#00ADD8',
+  Rust: '#DEA584',
+  Ruby: '#CC342D',
+  PHP: '#777BB4',
+  Swift: '#FA7343',
+  Kotlin: '#7F52FF',
+  HTML: '#E34F26',
+  CSS: '#1572B6',
+  Shell: '#89E051',
+  Dart: '#0175C2',
 };
 
-// ── Level badge variant mapping ──
+const DEFAULT_CATEGORY_META = {
+  icon: Code2,
+  tone: 'text-muted-cyan',
+  surface: 'bg-muted-cyan/10 border-muted-cyan/20',
+  bar: 'from-muted-cyan to-blue-400',
+};
+
+const clampScore = (score) => Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
+
+const formatDate = (date) => {
+  if (!date) return 'Not assessed';
+  return new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
 const getLevelVariant = (level) => {
   switch (level) {
-    case 'ADVANCED': return 'success';
-    case 'INTERMEDIATE': return 'primary';
-    case 'BEGINNER': return 'warning';
-    default: return 'default';
+    case 'ADVANCED':
+      return 'success';
+    case 'INTERMEDIATE':
+      return 'primary';
+    case 'BEGINNER':
+      return 'warning';
+    default:
+      return 'default';
   }
 };
 
-// ── Language color mapping ──
-const getLanguageColor = (name) => {
-  const colors = {
-    JavaScript: '#F7DF1E', TypeScript: '#3178C6', Python: '#3776AB', Java: '#ED8B00',
-    'C#': '#239120', 'C++': '#00599C', Go: '#00ADD8', Rust: '#DEA584',
-    Ruby: '#CC342D', PHP: '#777BB4', Swift: '#FA7343', Kotlin: '#7F52FF',
-    HTML: '#E34F26', CSS: '#1572B6', Shell: '#89E051', Dart: '#0175C2',
-  };
-  return colors[name] || '#94A3B8';
+const getProficiencyWidth = (level) => {
+  if (level === 'ADVANCED') return 90;
+  if (level === 'INTERMEDIATE') return 62;
+  return 34;
 };
 
-// ── Animated Score Ring (SVG) ──
-const ScoreRing = ({ score, size = 160, strokeWidth = 10 }) => {
+const getLanguageColor = (name) => LANGUAGE_COLORS[name] || '#94A3B8';
+
+const ScoreRing = ({ score, size = 144, strokeWidth = 10 }) => {
+  const value = clampScore(score);
   const [animatedScore, setAnimatedScore] = useState(0);
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (animatedScore / 100) * circumference;
+  const stroke = animatedScore >= 70 ? '#10B981' : animatedScore >= 45 ? '#06B6D4' : '#F59E0B';
 
   useEffect(() => {
-    const timer = setTimeout(() => setAnimatedScore(score), 100);
+    const timer = setTimeout(() => setAnimatedScore(value), 120);
     return () => clearTimeout(timer);
-  }, [score]);
-
-  const strokeDashoffset = circumference - (animatedScore / 100) * circumference;
-
-  const getScoreColor = (s) => {
-    if (s >= 70) return { stroke: '#10B981', glow: 'rgba(16,185,129,0.3)' };
-    if (s >= 40) return { stroke: '#06B6D4', glow: 'rgba(6,182,212,0.3)' };
-    return { stroke: '#F59E0B', glow: 'rgba(245,158,11,0.3)' };
-  };
-
-  const color = getScoreColor(animatedScore);
+  }, [value]);
 
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="transform -rotate-90">
-        {/* Background ring */}
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(148,163,184,0.12)" strokeWidth={strokeWidth} />
         <circle
-          cx={size / 2} cy={size / 2} r={radius}
-          fill="none" stroke="rgba(148,163,184,0.08)" strokeWidth={strokeWidth}
-        />
-        {/* Animated progress ring */}
-        <circle
-          cx={size / 2} cy={size / 2} r={radius}
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
           fill="none"
-          stroke={color.stroke}
+          stroke={stroke}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
-          style={{
-            transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
-            filter: `drop-shadow(0 0 8px ${color.glow})`,
-          }}
+          className="transition-[stroke-dashoffset] duration-1000 ease-out"
         />
       </svg>
-      {/* Center score */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-4xl font-bold text-canvas-white tabular-nums">{animatedScore}</span>
-        <span className="text-xs text-muted-steel font-mono tracking-widest mt-0.5">/ 100</span>
+        <span className="text-4xl font-semibold tabular-nums text-canvas-white">{animatedScore}</span>
+        <span className="mt-0.5 text-[11px] font-mono text-muted-steel">overall</span>
       </div>
     </div>
   );
 };
 
-// ── Animated Progress Bar ──
-const ProgressBar = ({ score, gradient, delay = 0 }) => {
-  const [width, setWidth] = useState(0);
+const ProgressBar = ({ score, gradient = 'from-muted-cyan to-blue-400' }) => (
+  <div className="h-2 overflow-hidden rounded-full bg-white/[0.05]">
+    <div className={`h-full rounded-full bg-gradient-to-r ${gradient}`} style={{ width: `${clampScore(score)}%` }} />
+  </div>
+);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setWidth(score), 200 + delay);
-    return () => clearTimeout(timer);
-  }, [score, delay]);
-
-  return (
-    <div className="h-2 rounded-full bg-white/[0.04] overflow-hidden">
-      <div
-        className={`h-full rounded-full bg-gradient-to-r ${gradient}`}
-        style={{
-          width: `${width}%`,
-          transition: 'width 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
-      />
-    </div>
-  );
-};
+const CareerTrackSelect = ({ value, onChange, disabled = false }) => (
+  <label className="flex min-w-[220px] flex-col gap-1.5">
+    <span className="text-[10px] font-mono uppercase tracking-wider text-muted-steel">Target role</span>
+    <select
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      disabled={disabled}
+      className="glass-surface h-10 rounded-lg bg-bg-base/80 px-3 text-sm text-canvas-white outline-none transition-colors focus:border-muted-cyan/30 disabled:opacity-50"
+    >
+      {CAREER_TRACK_OPTIONS.map((option) => (
+        <option key={option.id} value={option.id} className="bg-bg-base text-canvas-white">
+          {option.label}
+        </option>
+      ))}
+    </select>
+  </label>
+);
 
 const ConfidencePill = ({ value }) => {
-  const score = Math.max(0, Math.min(100, Math.round(value ?? 50)));
-  const tone = score >= 70 ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' : score >= 45 ? 'text-muted-cyan border-muted-cyan/20 bg-muted-cyan/10' : 'text-amber-400 border-amber-500/20 bg-amber-500/10';
+  const score = clampScore(value ?? 50);
+  const tone = score >= 70
+    ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+    : score >= 45
+      ? 'border-muted-cyan/20 bg-muted-cyan/10 text-muted-cyan'
+      : 'border-amber-500/20 bg-amber-500/10 text-amber-400';
+
+  return <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-mono ${tone}`}>{score}% confidence</span>;
+};
+
+const DeltaPill = ({ value, compact = false }) => {
+  const delta = Math.round(Number(value) || 0);
+  const copy = delta === 0 ? 'no change' : `${delta > 0 ? '+' : ''}${delta}`;
+  const tone = delta > 0
+    ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+    : delta < 0
+      ? 'border-rose-500/20 bg-rose-500/10 text-rose-400'
+      : 'border-white/[0.08] bg-white/[0.04] text-muted-steel';
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full border text-[11px] font-mono ${tone}`}>
-      {score}% confidence
+    <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-mono ${tone}`}>
+      {compact || delta === 0 ? copy : `${copy} since last`}
     </span>
   );
 };
 
-// ── Empty State CTA ──
-const CareerTrackSelect = ({ value, onChange, disabled = false }) => (
-  <select
-    value={value}
-    onChange={(event) => onChange(event.target.value)}
-    disabled={disabled}
-    className="glass-surface px-4 py-2.5 text-sm text-canvas-white bg-bg-base/80 focus:outline-none focus:border-muted-cyan/30 disabled:opacity-50"
-  >
-    {CAREER_TRACK_OPTIONS.map(option => (
-      <option key={option.id} value={option.id} className="bg-bg-base text-canvas-white">
-        {option.label}
-      </option>
-    ))}
-  </select>
+const SectionTitle = ({ icon: Icon, title, aside }) => (
+  <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-5 py-4">
+    <div className="flex min-w-0 items-center gap-2.5">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04]">
+        <Icon size={16} className="text-muted-cyan" />
+      </div>
+      <h2 className="truncate text-base font-medium tracking-tight text-canvas-white">{title}</h2>
+    </div>
+    {aside}
+  </div>
+);
+
+const MetricTile = ({ label, value, icon: Icon, tone = 'text-canvas-white' }) => (
+  <div className="min-w-0 rounded-lg border border-white/[0.06] bg-white/[0.025] px-3 py-3 xl:px-4">
+    <div className="mb-2 flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-muted-steel">
+      <Icon size={13} className="shrink-0" />
+      <span>{label}</span>
+    </div>
+    <div className={`text-base font-semibold leading-snug tabular-nums sm:text-lg ${tone}`}>{value}</div>
+  </div>
 );
 
 const EmptyState = ({ onAssess, assessing, targetRole, onTargetRoleChange }) => (
-  <div className="flex-1 flex items-center justify-center py-20 animate-fade-in-up">
-    <Card hover={false} className="max-w-lg w-full p-10 text-center relative overflow-hidden">
-      {/* Background glow */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-muted-cyan/[0.06] rounded-full blur-[80px] pointer-events-none -translate-y-1/2 translate-x-1/3" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/[0.06] rounded-full blur-[80px] pointer-events-none translate-y-1/2 -translate-x-1/3" />
-
-      <div className="relative z-10">
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-muted-cyan to-blue-400 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(6,182,212,0.3)] animate-pulse-glow">
-          <Brain size={36} className="text-bg-deep" />
-        </div>
-        <h2 className="text-2xl font-semibold text-canvas-white mb-3 tracking-tight">
-          Discover Your Developer DNA
-        </h2>
-        <p className="text-muted-steel text-[15px] leading-relaxed mb-8 max-w-sm mx-auto">
-          Let AI analyze your GitHub repositories, contribution patterns, and tech stack to generate a comprehensive skill profile with gap analysis.
-        </p>
-        <div className="mb-5 flex justify-center">
-          <CareerTrackSelect value={targetRole} onChange={onTargetRoleChange} disabled={assessing} />
-        </div>
-        <Button
-          onClick={onAssess}
-          disabled={assessing}
-          className="px-6 py-3 bg-gradient-to-r from-muted-cyan to-blue-400 text-bg-deep font-semibold rounded-xl hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {assessing ? (
-            <>
-              <RefreshCcw size={18} className="animate-spin mr-2" />
-              Analyzing Your Profile...
-            </>
-          ) : (
-            <>
-              <Sparkles size={18} className="mr-2" />
-              Analyze My Skills
-            </>
-          )}
+  <div className="flex flex-1 items-center justify-center py-20">
+    <Card hover={false} className="w-full max-w-xl p-8">
+      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl border border-muted-cyan/20 bg-muted-cyan/10">
+        <Brain size={26} className="text-muted-cyan" />
+      </div>
+      <h2 className="mb-2 text-2xl font-semibold tracking-tight text-canvas-white">Create your skill profile</h2>
+      <p className="mb-6 max-w-lg text-sm leading-relaxed text-muted-steel">
+        GitMentor will analyze your repositories, progress events, and career target to build a skill profile with strengths, gaps, readiness, and suggested next moves.
+      </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <CareerTrackSelect value={targetRole} onChange={onTargetRoleChange} disabled={assessing} />
+        <Button onClick={onAssess} disabled={assessing} className="h-10 gap-2 disabled:cursor-not-allowed disabled:opacity-50">
+          <RefreshCcw size={16} className={assessing ? 'animate-spin' : ''} />
+          {assessing ? 'Analyzing' : 'Analyze skills'}
         </Button>
       </div>
     </Card>
   </div>
 );
 
-// ── Main Page Component ──
+const EmptyPanel = ({ children }) => (
+  <div className="px-5 py-8 text-center text-sm text-muted-steel">{children}</div>
+);
+
+const TagList = ({ items = [], variant = 'default', limit = 3 }) => {
+  if (!items.length) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {items.slice(0, limit).map((item) => (
+        <Badge key={item} variant={variant} className="max-w-[180px] overflow-hidden text-ellipsis text-[10px] sm:max-w-[240px]">
+          {item}
+        </Badge>
+      ))}
+    </div>
+  );
+};
+
+const BulletList = ({ items = [], limit = 4, dotClassName = 'bg-amber-400' }) => {
+  if (!items.length) return null;
+  return (
+    <ul className="space-y-1.5">
+      {items.slice(0, limit).map((item) => (
+        <li key={item} className="flex gap-2 text-xs leading-relaxed text-muted-steel">
+          <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${dotClassName}`} />
+          <span className="break-words">{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+const SkillRow = ({ category }) => {
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const meta = CATEGORY_META[category.slug] || DEFAULT_CATEGORY_META;
+  const Icon = meta.icon;
+  const score = clampScore(category.score);
+  const priority = (category.gaps || []).length > 0 && score < 70;
+
+  return (
+    <div className="border-t border-white/[0.06] px-4 py-5 sm:px-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex min-w-0 gap-3">
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border ${meta.surface}`}>
+            <Icon size={18} className={meta.tone} />
+          </div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="break-words font-medium text-canvas-white">{category.name}</h3>
+              {priority && <Badge variant="warning" className="text-[10px]">focus</Badge>}
+            </div>
+            <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted-steel">{category.description || 'No assessment note available.'}</p>
+            <button
+              type="button"
+              onClick={() => setDetailsOpen((current) => !current)}
+              aria-expanded={detailsOpen}
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-muted-cyan transition-colors hover:text-canvas-white"
+            >
+              Details
+              <ChevronDown size={14} className={`transition-transform duration-200 ${detailsOpen ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
+        </div>
+
+        <div className="w-full rounded-lg border border-white/[0.06] bg-white/[0.025] p-3 lg:w-[240px] lg:shrink-0">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="text-2xl font-semibold tabular-nums text-canvas-white">{score}</span>
+            <Badge variant={getLevelVariant(category.level)} className="text-[10px]">{category.level || 'UNKNOWN'}</Badge>
+          </div>
+          <ProgressBar score={score} gradient={meta.bar} />
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <ConfidencePill value={category.confidence} />
+            <DeltaPill value={category.scoreDelta} compact />
+          </div>
+        </div>
+      </div>
+
+      {detailsOpen && (
+        <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <div className="min-w-0 rounded-lg border border-white/[0.06] bg-white/[0.02] p-3">
+            <p className="mb-2 text-[10px] font-mono uppercase tracking-wider text-muted-steel">Strengths</p>
+            <BulletList items={category.strengths || []} limit={4} dotClassName="bg-emerald-400" />
+            {!(category.strengths || []).length && <p className="text-xs text-muted-steel">Needs more evidence.</p>}
+          </div>
+
+          <div className="min-w-0 rounded-lg border border-white/[0.06] bg-white/[0.02] p-3">
+            <p className="mb-2 text-[10px] font-mono uppercase tracking-wider text-muted-steel">Gaps and evidence</p>
+            <BulletList items={category.gaps || []} limit={4} />
+            <div className="mt-2 space-y-1.5">
+              {(category.evidence || []).slice(0, 2).map((item, index) => (
+                <p key={`${item.label}-${index}`} className="break-words text-xs leading-relaxed text-muted-steel">
+                  <span className="text-canvas-white/80">{item.label}</span>
+                  {item.detail ? <span> - {item.detail}</span> : null}
+                </p>
+              ))}
+              {(category.recommendedActions || []).length > 0 && (
+                <p className="break-words text-xs leading-relaxed text-muted-cyan">{category.recommendedActions[0]}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ActionItem = ({ action, index }) => (
+  <div className="border-t border-white/[0.06] px-5 py-4 first:border-t-0">
+    <div className="mb-2 flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-muted-cyan/20 bg-muted-cyan/10 text-xs font-semibold text-muted-cyan">
+          {index + 1}
+        </span>
+        <h3 className="min-w-0 text-sm font-medium leading-snug text-canvas-white">{action.title}</h3>
+      </div>
+      <Badge variant={action.impact === 'HIGH' ? 'error' : action.impact === 'LOW' ? 'default' : 'primary'} className="text-[10px]">
+        {action.impact || 'MEDIUM'}
+      </Badge>
+    </div>
+    <p className="pl-9 text-sm leading-relaxed text-muted-steel">{action.description}</p>
+  </div>
+);
+
+const ReadinessItem = ({ item }) => (
+  <div className="border-t border-white/[0.06] px-5 py-4 first:border-t-0">
+    <div className="mb-2 flex items-center justify-between gap-3">
+      <h3 className="min-w-0 text-sm font-medium text-canvas-white">{item.track}</h3>
+      <span className="text-sm font-mono tabular-nums text-muted-cyan">{clampScore(item.score)}%</span>
+    </div>
+    <ProgressBar score={item.score} gradient="from-emerald-500 to-cyan-400" />
+    {item.summary && <p className="mt-2 text-xs leading-relaxed text-muted-steel">{item.summary}</p>}
+  </div>
+);
+
+const LanguageItem = ({ language }) => (
+  <div className="min-w-0 border-t border-white/[0.06] px-5 py-[21px] first:border-t-0 md:[&:nth-child(2)]:border-t-0 xl:[&:nth-child(2)]:border-t-0">
+    <div className="mb-2 flex items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: getLanguageColor(language.name) }} />
+        <span className="truncate text-sm font-medium text-canvas-white">{language.name}</span>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <span className="text-[11px] font-mono text-muted-steel">{language.projectCount || 0} repos</span>
+        <Badge variant={getLevelVariant(language.proficiency)} className="text-[10px]">{language.proficiency || 'BEGINNER'}</Badge>
+      </div>
+    </div>
+    <div className="h-2 overflow-hidden rounded-full bg-white/[0.05]">
+      <div
+        className="h-full rounded-full"
+        style={{ width: `${getProficiencyWidth(language.proficiency)}%`, backgroundColor: getLanguageColor(language.name) }}
+      />
+    </div>
+  </div>
+);
+
+const RepositoryItem = ({ repo }) => (
+  <div className="border-t border-white/[0.06] px-5 py-4 first:border-t-0">
+    <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+      <div className="min-w-0">
+        <h3 className="truncate text-sm font-medium text-canvas-white">{repo.repoName}</h3>
+        <div className="mt-1">
+          <ConfidencePill value={repo.confidence} />
+        </div>
+      </div>
+      {repo.url && (
+        <a href={repo.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-muted-cyan transition-colors hover:text-canvas-white">
+          View <ArrowUpRight size={12} />
+        </a>
+      )}
+    </div>
+    <TagList items={repo.detectedSkills || []} limit={6} />
+    {(repo.missingSignals || []).length > 0 && (
+      <div className="mt-3 space-y-1">
+        {repo.missingSignals.slice(0, 2).map((signal) => (
+          <p key={signal} className="text-xs leading-relaxed text-amber-400/90">{signal}</p>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
+const ProgressItem = ({ event }) => (
+  <div className="border-t border-white/[0.06] px-5 py-4 first:border-t-0">
+    <div className="mb-1 flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-start gap-3">
+        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-xs font-semibold text-emerald-400">
+          +{event.impactScore || 1}
+        </span>
+        <div className="min-w-0">
+          <h3 className="text-sm font-medium leading-snug text-canvas-white">{event.title}</h3>
+          {event.description && <p className="mt-1 text-xs leading-relaxed text-muted-steel">{event.description}</p>}
+        </div>
+      </div>
+      <Badge variant="default" className="text-[10px]">{event.categoryName || 'Skill'}</Badge>
+    </div>
+    {event.createdAt && <p className="pl-10 text-[10px] font-mono text-muted-steel">{formatDate(event.createdAt)}</p>}
+  </div>
+);
+
+const HistoryItem = ({ item }) => (
+  <div className="border-t border-white/[0.06] px-5 py-4 first:border-t-0">
+    <div className="mb-2 flex items-center justify-between gap-3">
+      <div>
+        <p className="text-sm font-medium text-canvas-white">{item.overallLevel}</p>
+        <p className="text-[11px] font-mono text-muted-steel">{formatDate(item.assessedAt)}</p>
+      </div>
+      <div className="text-right">
+        <p className="text-xl font-semibold tabular-nums text-muted-cyan">{clampScore(item.overallScore)}</p>
+        <DeltaPill value={item.scoreDelta} compact />
+      </div>
+    </div>
+    <ProgressBar score={item.overallScore} />
+  </div>
+);
+
 const SkillProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -254,20 +470,20 @@ const SkillProfile = () => {
   const [targetRole, setTargetRole] = useState('full-stack-developer');
 
   const token = localStorage.getItem('gitmentor_token');
-  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const headers = useMemo(() => ({ Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }), [token]);
 
-  // ── Fetch existing profile ──
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const res = await fetch(`${API_BASE}/skills/profile`, { headers });
+
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
         setTargetRole(data.targetRole || 'full-stack-developer');
       } else if (res.status === 404) {
-        setProfile(null); // No profile yet
+        setProfile(null);
       } else {
         throw new Error('Failed to load skill profile');
       }
@@ -277,9 +493,8 @@ const SkillProfile = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [headers]);
 
-  // ── Run new assessment ──
   const runAssessment = async () => {
     try {
       setAssessing(true);
@@ -289,6 +504,7 @@ const SkillProfile = () => {
         headers,
         body: JSON.stringify({ targetRole }),
       });
+
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
@@ -306,445 +522,246 @@ const SkillProfile = () => {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [fetchProfile]);
 
-  // ── Loading State ──
+  const sortedCategories = useMemo(() => {
+    return [...(profile?.categories || [])].sort((a, b) => {
+      return clampScore(b.score) - clampScore(a.score);
+    });
+  }, [profile]);
+
+  const focusCategories = sortedCategories.filter((category) => clampScore(category.score) < 70).slice(0, 3);
+  const topCategories = [...(profile?.categories || [])].sort((a, b) => clampScore(b.score) - clampScore(a.score)).slice(0, 3);
+  const selectedTrackLabel = CAREER_TRACK_OPTIONS.find((option) => option.id === targetRole)?.label || 'Full-Stack Developer';
+
   if (loading) {
     return (
       <div className="flex flex-col gap-6 pb-8">
-        <header className="mb-2 shrink-0 animate-fade-in-up">
-          <Skeleton className="h-9 w-56 mb-2" />
-          <Skeleton className="h-5 w-80" />
+        <header className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
+          <div>
+            <Skeleton className="mb-3 h-9 w-64" />
+            <Skeleton className="h-5 w-96 max-w-full" />
+          </div>
+          <Skeleton className="h-10 w-72" />
         </header>
-        <Skeleton className="h-48 w-full" />
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-52" />)}
+        <Skeleton className="h-56 w-full" />
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <Skeleton className="h-[520px]" />
+          <Skeleton className="h-[520px]" />
         </div>
       </div>
     );
   }
 
-  // ── Empty State (no profile) ──
   if (!profile) {
     return (
       <div className="flex flex-col gap-6 pb-8">
-        <header className="mb-2 shrink-0 animate-fade-in-up">
-          <h1 className="text-3xl font-semibold tracking-tight text-canvas-white">
-            Skill <span className="bg-gradient-to-r from-muted-cyan to-blue-400 bg-clip-text text-transparent">Profile</span>
-          </h1>
-          <p className="text-muted-steel mt-1 font-mono text-sm">AI-powered skill assessment and gap analysis.</p>
+        <header className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-canvas-white">
+              Skill <span className="bg-gradient-to-r from-muted-cyan to-blue-400 bg-clip-text text-transparent">Profile</span>
+            </h1>
+            <p className="mt-1 text-sm font-mono text-muted-steel">AI-powered skill assessment and gap analysis.</p>
+          </div>
         </header>
 
         {error && (
-          <div className="flex items-center gap-2 p-4 glass-surface border-red-500/20 text-red-400 text-sm rounded-xl animate-fade-in-up">
+          <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
             <AlertCircle size={16} /> {error}
           </div>
         )}
 
-        <EmptyState
-          onAssess={runAssessment}
-          assessing={assessing}
-          targetRole={targetRole}
-          onTargetRoleChange={setTargetRole}
-        />
+        <EmptyState onAssess={runAssessment} assessing={assessing} targetRole={targetRole} onTargetRoleChange={setTargetRole} />
       </div>
     );
   }
 
-  // ── Profile Loaded ──
   return (
     <div className="flex flex-col gap-6 pb-8">
-      {/* Header */}
-      <header className="flex justify-between items-end mb-2 shrink-0 animate-fade-in-up">
+      <header className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-canvas-white">
             Skill <span className="bg-gradient-to-r from-muted-cyan to-blue-400 bg-clip-text text-transparent">Profile</span>
           </h1>
-          <p className="text-muted-steel mt-1 font-mono text-sm">AI-powered skill assessment and gap analysis.</p>
+          <p className="mt-1 text-sm font-mono text-muted-steel">AI-powered skill assessment and gap analysis.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <CareerTrackSelect value={targetRole} onChange={setTargetRole} disabled={assessing} />
-          <button
-            onClick={runAssessment}
-            disabled={assessing}
-            className="flex items-center gap-2 px-4 py-2.5 glass-surface hover:border-muted-cyan/20 hover:shadow-[0_0_15px_rgba(88,166,255,0.1)] text-sm font-medium transition-all duration-300 disabled:opacity-50 rounded-xl"
-          >
+          <Button onClick={runAssessment} disabled={assessing} variant="secondary" className="h-10 gap-2 disabled:cursor-not-allowed disabled:opacity-50">
             <RefreshCcw size={16} className={assessing ? 'animate-spin' : ''} />
-            {assessing ? 'Re-Assessing...' : 'Re-Assess'}
-          </button>
+            {assessing ? 'Re-assessing' : 'Re-assess'}
+          </Button>
         </div>
       </header>
 
       {error && (
-        <div className="flex items-center gap-2 p-4 glass-surface border-red-500/20 text-red-400 text-sm rounded-xl animate-fade-in-up">
+        <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
           <AlertCircle size={16} /> {error}
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════ */}
-      {/* SECTION 1: Hero — Overall Assessment       */}
-      {/* ═══════════════════════════════════════════ */}
-      <Card hover={false} className="p-8 relative overflow-hidden animate-fade-in-up stagger-1">
-        {/* Ambient blobs */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-muted-cyan/[0.05] rounded-full blur-[100px] pointer-events-none -translate-y-1/2 translate-x-1/3 animate-blob" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-purple-500/[0.05] rounded-full blur-[100px] pointer-events-none translate-y-1/2 -translate-x-1/3 animate-blob-delay-2" />
-
-        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-          {/* Score Ring */}
-          <div className="shrink-0">
-            <ScoreRing score={profile.overallScore} />
-          </div>
-
-          {/* Info */}
-          <div className="flex-1 text-center md:text-left">
-            <div className="flex items-center gap-3 justify-center md:justify-start mb-3">
-              <h2 className="text-2xl font-semibold text-canvas-white tracking-tight">Overall Assessment</h2>
-              <Badge variant={getLevelVariant(profile.overallLevel)} className="text-sm px-3 py-1">
-                {profile.overallLevel}
-              </Badge>
-              <ConfidencePill value={profile.confidence} />
-            </div>
-            <p className="text-muted-steel text-[15px] leading-relaxed max-w-xl mb-4">
-              {profile.summary}
-            </p>
-            <div className="flex items-center gap-4 text-xs text-muted-steel font-mono justify-center md:justify-start">
-              <span className="flex items-center gap-1.5">
-                <Code2 size={13} /> {profile.repositoriesAnalyzed} repos analyzed
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Zap size={13} /> {profile.categories?.length || 0} categories
-              </span>
-              <span className="flex items-center gap-1.5">
-                Assessed {new Date(profile.assessedAt).toLocaleDateString()}
-              </span>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {(profile.nextBestActions?.length > 0 || profile.readinessScores?.length > 0) && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-up stagger-2">
-          {profile.nextBestActions?.length > 0 && (
-            <Card className="lg:col-span-7 p-6 relative overflow-hidden">
-              <div className="absolute -right-20 -top-20 w-56 h-56 bg-muted-cyan/[0.04] rounded-full blur-[70px] pointer-events-none" />
-              <h2 className="text-lg font-medium text-canvas-white tracking-tight mb-5 flex items-center gap-2.5 relative z-10">
-                <div className="w-8 h-8 rounded-lg bg-muted-cyan/10 flex items-center justify-center border border-muted-cyan/20">
-                  <Lightbulb size={16} className="text-muted-cyan" />
-                </div>
-                Next Best Actions
-              </h2>
-              <div className="space-y-3 relative z-10">
-                {profile.nextBestActions.map((action, index) => (
-                  <div key={`${action.title}-${index}`} className="glass-surface p-4 flex gap-4 items-start">
-                    <div className="w-8 h-8 rounded-lg bg-muted-cyan/10 border border-muted-cyan/20 flex items-center justify-center shrink-0">
-                      <ChevronRight size={16} className="text-muted-cyan" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <h3 className="text-sm font-semibold text-canvas-white">{action.title}</h3>
-                        <Badge variant={action.impact === 'HIGH' ? 'error' : 'primary'} className="text-[10px]">{action.impact || 'MEDIUM'} IMPACT</Badge>
-                      </div>
-                      <p className="text-sm text-muted-steel leading-relaxed">{action.description}</p>
-                    </div>
-                  </div>
-                ))}
+      <section className="grid min-w-0 grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
+        <Card hover={false} className="min-w-0 p-6">
+          <div className="grid gap-6">
+            <div className="grid gap-6 lg:grid-cols-[180px_minmax(0,1fr)]">
+              <div className="flex justify-center lg:justify-start">
+                <ScoreRing score={profile.overallScore} />
               </div>
-            </Card>
-          )}
-
-          {profile.readinessScores?.length > 0 && (
-            <Card className="lg:col-span-5 p-6">
-              <h2 className="text-lg font-medium text-canvas-white tracking-tight mb-5 flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                  <Gauge size={16} className="text-emerald-400" />
+              <div className="min-w-0">
+                <div className="mb-4 flex flex-wrap items-center gap-2">
+                  <Badge variant={getLevelVariant(profile.overallLevel)}>{profile.overallLevel}</Badge>
+                  <ConfidencePill value={profile.confidence} />
+                  <DeltaPill value={profile.scoreDelta} />
                 </div>
-                Readiness Scores
-              </h2>
-              <div className="space-y-4">
-                {profile.readinessScores.map((item, index) => (
-                  <div key={item.track} className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-canvas-white">{item.track}</span>
-                      <span className="text-sm font-mono text-muted-cyan">{Math.round(item.score)}%</span>
-                    </div>
-                    <ProgressBar score={item.score} gradient="from-emerald-500 to-muted-cyan" delay={index * 120} />
-                    {item.summary && <p className="text-xs text-muted-steel leading-relaxed mt-2">{item.summary}</p>}
-                  </div>
-                ))}
+                <h2 className="mb-3 text-2xl font-semibold tracking-tight text-canvas-white">{selectedTrackLabel} readiness snapshot</h2>
+                <p className="max-w-3xl text-sm leading-relaxed text-muted-steel">{profile.summary}</p>
               </div>
-            </Card>
-          )}
-        </div>
-      )}
-
-      {profile.recentProgressEvents?.length > 0 && (
-        <Card className="p-6 animate-fade-in-up stagger-3">
-          <h2 className="text-lg font-medium text-canvas-white tracking-tight mb-5 flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-              <Activity size={16} className="text-emerald-400" />
             </div>
-            Recent Skill Progress
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {profile.recentProgressEvents.slice(0, 6).map((event, index) => (
-              <div key={`${event.title}-${index}`} className="glass-surface p-4 flex gap-3 items-start">
-                <div className="w-8 h-8 rounded-lg bg-muted-cyan/10 border border-muted-cyan/20 flex items-center justify-center shrink-0">
-                  <span className="text-xs font-bold text-muted-cyan">+{event.impactScore || 1}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <h3 className="text-sm font-semibold text-canvas-white">{event.title}</h3>
-                    <Badge variant="default" className="text-[10px]">{event.categoryName}</Badge>
-                  </div>
-                  {event.description && <p className="text-xs text-muted-steel leading-relaxed">{event.description}</p>}
-                  {event.createdAt && (
-                    <p className="text-[10px] font-mono text-muted-steel/70 mt-2">
-                      {new Date(event.createdAt).toLocaleDateString()}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <MetricTile label="Repos analyzed" value={profile.repositoriesAnalyzed || 0} icon={Code2} />
+              <MetricTile label="Categories" value={profile.categories?.length || 0} icon={Layers} />
+              <MetricTile label="Last assessed" value={formatDate(profile.assessedAt)} icon={Activity} />
+              <MetricTile label="Target role" value={selectedTrackLabel} icon={Target} tone="text-muted-cyan" />
+            </div>
           </div>
         </Card>
-      )}
 
-      {/* ═══════════════════════════════════════════ */}
-      {/* SECTION 2: Skill Categories Gap Analysis   */}
-      {/* ═══════════════════════════════════════════ */}
-      <div className="animate-fade-in-up stagger-2">
-        <h2 className="text-lg font-medium text-canvas-white tracking-tight mb-4 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-muted-cyan/10 flex items-center justify-center border border-muted-cyan/20">
-            <TrendingUp size={16} className="text-muted-cyan" />
-          </div>
-          Skill Breakdown
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {(profile.categories || []).map((cat, index) => {
-            const Icon = getCategoryIcon(cat.slug);
-            const color = getCategoryColor(cat.slug);
-            return (
-              <Card key={cat.slug} className={`p-5 flex flex-col gap-4 animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}>
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl ${color.bg} flex items-center justify-center border ${color.border}`}>
-                      <Icon size={20} className={color.text} />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-canvas-white text-sm">{cat.name}</h3>
-                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                        <Badge variant={getLevelVariant(cat.level)} className="text-[10px]">{cat.level}</Badge>
-                        <ConfidencePill value={cat.confidence} />
-                      </div>
-                    </div>
+        <Card className="min-w-0 overflow-hidden">
+          <SectionTitle icon={CheckCircle2} title="Current Standing" />
+          <div className="grid grid-cols-1 divide-y divide-white/[0.06]">
+            <div className="px-5 py-4">
+              <p className="mb-3 text-[10px] font-mono uppercase tracking-wider text-muted-steel">Strongest signals</p>
+              <div className="space-y-3">
+                {topCategories.map((category) => (
+                  <div key={category.slug} className="flex items-center justify-between gap-3">
+                    <span className="truncate text-sm text-canvas-white">{category.name}</span>
+                    <span className="font-mono text-sm tabular-nums text-emerald-400">{clampScore(category.score)}</span>
                   </div>
-                  <span className="text-2xl font-bold text-canvas-white tabular-nums">{cat.score}</span>
-                </div>
-
-                {/* Progress Bar */}
-                <ProgressBar score={cat.score} gradient={color.bar} delay={index * 100} />
-
-                {/* Description */}
-                <p className="text-xs text-muted-steel leading-relaxed line-clamp-3">{cat.description}</p>
-
-                {/* Strengths & Gaps */}
-                <div className="flex flex-col gap-2 mt-auto">
-                  {(cat.strengths || []).length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {cat.strengths.slice(0, 4).map(s => (
-                        <span key={s} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {(cat.gaps || []).length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {cat.gaps.slice(0, 4).map(g => (
-                        <span key={g} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/10 border border-amber-500/20 text-amber-400">
-                          {g}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {(cat.evidence || []).length > 0 && (
-                  <div className="border-t border-white/[0.06] pt-3">
-                    <p className="text-[10px] font-mono text-muted-steel uppercase tracking-wider mb-2">Evidence</p>
-                    <div className="space-y-2">
-                      {cat.evidence.slice(0, 2).map((item, evidenceIndex) => (
-                        <div key={`${item.label}-${evidenceIndex}`} className="text-xs text-muted-steel leading-relaxed">
-                          <span className="text-canvas-white/80">{item.label}</span>
-                          {item.detail && <span> - {item.detail}</span>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {(cat.recommendedActions || []).length > 0 && (
-                  <div className="border-t border-white/[0.06] pt-3">
-                    <p className="text-[10px] font-mono text-muted-steel uppercase tracking-wider mb-2">Action</p>
-                    <p className="text-xs text-muted-cyan/90 leading-relaxed">{cat.recommendedActions[0]}</p>
-                  </div>
-                )}
-              </Card>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ═══════════════════════════════════════════ */}
-      {/* SECTION 3 & 4: Languages + Recommendations */}
-      {/* ═══════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up stagger-4">
-        {/* Language Proficiency */}
-        <Card className="p-6 flex flex-col">
-          <h2 className="text-lg font-medium text-canvas-white tracking-tight mb-5 flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center border border-violet-500/20">
-              <Code2 size={16} className="text-violet-400" />
-            </div>
-            Language Proficiency
-          </h2>
-          <div className="flex flex-col gap-4 flex-1">
-            {(profile.topLanguages || []).map((lang, index) => (
-              <div key={lang.name} className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}>
-                <div className="flex justify-between items-center mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: getLanguageColor(lang.name) }} />
-                    <span className="text-sm font-medium text-canvas-white">{lang.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-mono text-muted-steel">{lang.projectCount} projects</span>
-                    <Badge variant={getLevelVariant(lang.proficiency)} className="text-[10px]">{lang.proficiency}</Badge>
-                  </div>
-                </div>
-                <div className="h-2 rounded-full bg-white/[0.04] overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-1000 ease-out"
-                    style={{
-                      width: `${lang.proficiency === 'ADVANCED' ? 90 : lang.proficiency === 'INTERMEDIATE' ? 60 : 30}%`,
-                      backgroundColor: getLanguageColor(lang.name),
-                      opacity: 0.8,
-                      transitionDelay: `${index * 100 + 300}ms`,
-                    }}
-                  />
-                </div>
+                ))}
+                {!topCategories.length && <p className="text-sm text-muted-steel">No strengths available yet.</p>}
               </div>
-            ))}
-            {(!profile.topLanguages || profile.topLanguages.length === 0) && (
-              <div className="text-sm text-muted-steel text-center py-4">No language data available.</div>
+            </div>
+            <div className="px-5 py-4">
+              <p className="mb-3 text-[10px] font-mono uppercase tracking-wider text-muted-steel">Highest leverage focus</p>
+              <div className="space-y-3">
+                {focusCategories.map((category) => (
+                  <div key={category.slug} className="flex items-center justify-between gap-3">
+                    <span className="truncate text-sm text-canvas-white">{category.name}</span>
+                    <span className="font-mono text-sm tabular-nums text-amber-400">{clampScore(category.score)}</span>
+                  </div>
+                ))}
+                {!focusCategories.length && <p className="text-sm text-muted-steel">No major gap detected.</p>}
+              </div>
+            </div>
+          </div>
+        </Card>
+      </section>
+
+      <section className="grid min-w-0 grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="flex min-w-0 flex-col gap-6">
+          <Card className="min-w-0 overflow-hidden">
+            <SectionTitle
+              icon={BarChart3}
+              title="Skill Matrix"
+              aside={<span className="hidden text-[11px] font-mono text-muted-steel sm:inline">Sorted by score</span>}
+            />
+            {sortedCategories.length > 0 ? (
+              <div className="scroll-panel max-h-[570px] overflow-y-auto overscroll-contain pr-1">
+                {sortedCategories.map((category) => <SkillRow key={category.slug} category={category} />)}
+              </div>
+            ) : (
+              <EmptyPanel>No skill categories available.</EmptyPanel>
             )}
-          </div>
-        </Card>
+          </Card>
 
-        {/* AI Recommendations */}
-        <Card className="p-6 flex flex-col relative overflow-hidden">
-          {/* Subtle glow */}
-          <div className="absolute -bottom-20 -right-20 w-56 h-56 bg-muted-cyan/[0.04] rounded-full blur-[60px] pointer-events-none animate-blob-delay-4" />
-
-          <h2 className="text-lg font-medium text-canvas-white tracking-tight mb-5 flex items-center gap-2.5 relative z-10">
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-              <Lightbulb size={16} className="text-amber-400" />
-            </div>
-            Growth Recommendations
-          </h2>
-          <div className="flex flex-col gap-3 flex-1 relative z-10">
-            {(profile.recommendations || []).map((rec, index) => (
-              <div
-                key={index}
-                className={`flex gap-3 p-4 glass-surface hover:border-muted-cyan/20 hover:shadow-[0_0_15px_rgba(88,166,255,0.08)] hover:-translate-y-0.5 transition-all duration-300 animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}
-              >
-                <div className="w-7 h-7 rounded-lg bg-muted-cyan/10 flex items-center justify-center border border-muted-cyan/20 shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-muted-cyan">{index + 1}</span>
-                </div>
-                <p className="text-sm text-muted-steel leading-relaxed flex-1">{rec}</p>
+          <Card className="min-w-0 overflow-hidden">
+            <SectionTitle icon={Code2} title="Languages" />
+            {profile.topLanguages?.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2">
+                {profile.topLanguages.map((language) => <LanguageItem key={language.name} language={language} />)}
               </div>
-            ))}
-            {(!profile.recommendations || profile.recommendations.length === 0) && (
-              <div className="text-sm text-muted-steel text-center py-4">No recommendations available.</div>
+            ) : (
+              <EmptyPanel>No language data available.</EmptyPanel>
             )}
-          </div>
-        </Card>
-      </div>
-
-      {(profile.repoSkillMap?.length > 0 || profile.history?.length > 0) && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-up stagger-5">
-          {profile.repoSkillMap?.length > 0 && (
-            <Card className="lg:col-span-7 p-6">
-              <h2 className="text-lg font-medium text-canvas-white tracking-tight mb-5 flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center border border-sky-500/20">
-                  <Map size={16} className="text-sky-400" />
-                </div>
-                Repository Skill Map
-              </h2>
-              <div className="space-y-3 max-h-[420px] overflow-y-auto custom-scrollbar pr-1">
-                {profile.repoSkillMap.slice(0, 8).map((repo, index) => (
-                  <div key={`${repo.repoName}-${index}`} className="glass-surface p-4">
-                    <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-                      <div>
-                        <h3 className="text-sm font-semibold text-canvas-white">{repo.repoName}</h3>
-                        <div className="mt-1"><ConfidencePill value={repo.confidence} /></div>
-                      </div>
-                      {repo.url && (
-                        <a href={repo.url} target="_blank" rel="noreferrer" className="text-xs text-muted-cyan hover:text-canvas-white transition-colors">
-                          View repo
-                        </a>
-                      )}
-                    </div>
-                    {(repo.detectedSkills || []).length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-3">
-                        {repo.detectedSkills.slice(0, 6).map(skill => (
-                          <span key={skill} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-white/[0.04] border border-white/[0.06] text-canvas-white/80">
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {(repo.missingSignals || []).length > 0 && (
-                      <div className="space-y-1">
-                        {repo.missingSignals.slice(0, 2).map(signal => (
-                          <p key={signal} className="text-xs text-amber-400/90 leading-relaxed">{signal}</p>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {profile.history?.length > 0 && (
-            <Card className="lg:col-span-5 p-6">
-              <h2 className="text-lg font-medium text-canvas-white tracking-tight mb-5 flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-muted-cyan/10 flex items-center justify-center border border-muted-cyan/20">
-                  <TrendingUp size={16} className="text-muted-cyan" />
-                </div>
-                Assessment History
-              </h2>
-              <div className="space-y-4">
-                {profile.history.slice(-5).reverse().map((item, index) => (
-                  <div key={`${item.assessedAt}-${index}`} className="glass-surface p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <p className="text-sm font-medium text-canvas-white">{item.overallLevel}</p>
-                        <p className="text-[11px] text-muted-steel font-mono">{new Date(item.assessedAt).toLocaleDateString()}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-bold text-muted-cyan">{Math.round(item.overallScore)}</p>
-                        <p className="text-[10px] text-muted-steel font-mono">score</p>
-                      </div>
-                    </div>
-                    <ProgressBar score={item.overallScore} gradient="from-muted-cyan to-blue-400" delay={index * 100} />
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
+          </Card>
         </div>
-      )}
+
+        <div className="flex min-w-0 flex-col gap-6">
+          <Card className="min-w-0 overflow-hidden">
+            <SectionTitle icon={Lightbulb} title="Priority Actions" />
+            {profile.nextBestActions?.length > 0 ? (
+              profile.nextBestActions.slice(0, 4).map((action, index) => <ActionItem key={`${action.title}-${index}`} action={action} index={index} />)
+            ) : (
+              <EmptyPanel>No priority actions generated.</EmptyPanel>
+            )}
+          </Card>
+
+          <Card className="min-w-0 overflow-hidden">
+            <SectionTitle icon={Gauge} title="Role Readiness" />
+            {profile.readinessScores?.length > 0 ? (
+              profile.readinessScores.slice(0, 4).map((item) => <ReadinessItem key={item.track} item={item} />)
+            ) : (
+              <EmptyPanel>No readiness scores available.</EmptyPanel>
+            )}
+          </Card>
+        </div>
+      </section>
+
+      <section className="grid min-w-0 grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
+        <Card className="min-w-0 overflow-hidden">
+          <SectionTitle icon={Map} title="Repository Evidence" />
+          {profile.repoSkillMap?.length > 0 ? (
+            <div className="scroll-panel max-h-[480px] overflow-y-auto overscroll-contain">
+              {profile.repoSkillMap.slice(0, 8).map((repo, index) => <RepositoryItem key={`${repo.repoName}-${index}`} repo={repo} />)}
+            </div>
+          ) : (
+            <EmptyPanel>No repository skill evidence available.</EmptyPanel>
+          )}
+        </Card>
+
+        <Card className="min-w-0 overflow-hidden">
+          <SectionTitle icon={Zap} title="Growth Recommendations" />
+          {profile.recommendations?.length > 0 ? (
+            <div className="scroll-panel max-h-[460px] overflow-y-auto overscroll-contain">
+              {profile.recommendations.slice(0, 6).map((recommendation, index) => (
+                <div key={`${recommendation}-${index}`} className="border-t border-white/[0.06] px-5 py-4 first:border-t-0">
+                  <div className="mb-3 flex h-7 w-7 items-center justify-center rounded-lg border border-muted-cyan/20 bg-muted-cyan/10 text-xs font-semibold text-muted-cyan">
+                    {index + 1}
+                  </div>
+                  <p className="text-sm leading-relaxed text-muted-steel">{recommendation}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyPanel>No growth recommendations available.</EmptyPanel>
+          )}
+        </Card>
+      </section>
+
+      <section className="grid min-w-0 grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
+        <Card className="min-w-0 overflow-hidden">
+          <SectionTitle icon={ListChecks} title="Recent Skill Progress" />
+          {profile.recentProgressEvents?.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2">
+              {profile.recentProgressEvents.slice(0, 6).map((event, index) => (
+                <ProgressItem key={`${event.title}-${index}`} event={event} />
+              ))}
+            </div>
+          ) : (
+            <EmptyPanel>No recent skill progress has been recorded.</EmptyPanel>
+          )}
+        </Card>
+
+        <Card className="min-w-0 overflow-hidden">
+          <SectionTitle icon={TrendingUp} title="Assessment History" />
+          {profile.history?.length > 0 ? (
+            profile.history.slice(-5).reverse().map((item, index) => <HistoryItem key={`${item.assessedAt}-${index}`} item={item} />)
+          ) : (
+            <EmptyPanel>No previous assessments yet.</EmptyPanel>
+          )}
+        </Card>
+      </section>
     </div>
   );
 };
