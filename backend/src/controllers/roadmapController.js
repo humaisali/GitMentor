@@ -1,6 +1,7 @@
 import Project from '../models/Project.js';
 import Repository from '../models/Repository.js';
 import SkillProfile from '../models/SkillProfile.js';
+import SkillProgressEvent from '../models/SkillProgressEvent.js';
 import { generateRoadmap, chatWithProjectAssistant } from '../utils/geminiApi.js';
 
 const normalizeTargetSkills = (skills = [], skillProfile = null) => {
@@ -37,6 +38,25 @@ const getDefaultReadinessTrack = (skillProfile = null) => (
     .slice()
     .sort((a, b) => a.score - b.score)[0]?.track || 'Full-Stack Builder Readiness'
 );
+
+const recordSkillProgressEvents = async ({ userId, project, eventType, title, description, impactScore }) => {
+  const targetSkills = project.targetSkills?.length > 0
+    ? project.targetSkills
+    : [{ name: 'Product Thinking', slug: 'product-thinking' }];
+
+  const events = targetSkills.map(skill => ({
+    user: userId,
+    project: project._id,
+    categorySlug: skill.slug || String(skill.name || 'skill').toLowerCase().replace(/\s+/g, '-'),
+    categoryName: skill.name || skill.slug || 'Skill',
+    eventType,
+    title,
+    description,
+    impactScore,
+  }));
+
+  await SkillProgressEvent.insertMany(events);
+};
 
 // @desc    Get user's roadmap projects
 // @route   GET /api/roadmaps
@@ -247,9 +267,21 @@ export const completeTask = async (req, res) => {
     const task = phase.tasks.find(t => t.taskId === taskId);
     if (!task) return res.status(404).json({ message: 'Task not found' });
 
+    if (task.isCompleted) {
+      return res.status(200).json(project);
+    }
+
     task.isCompleted = true;
 
     await project.save();
+    await recordSkillProgressEvents({
+      userId: req.user._id,
+      project,
+      eventType: 'TASK_COMPLETED',
+      title: `Completed task: ${task.title}`,
+      description: `Completed a GitMentor task in "${project.title}" targeting ${project.readinessTrack || 'skill growth'}.`,
+      impactScore: 1,
+    });
     res.status(200).json(project);
   } catch (error) {
     res.status(500).json({ message: 'Error completing task', error: error.message });
@@ -269,12 +301,32 @@ export const completePhase = async (req, res) => {
     const phase = project.phases.find(p => p.phaseId === phaseId);
     if (!phase) return res.status(404).json({ message: 'Phase not found' });
 
+    if (phase.isCompleted) {
+      return res.status(200).json(project);
+    }
+
     phase.isCompleted = true;
+    await recordSkillProgressEvents({
+      userId: req.user._id,
+      project,
+      eventType: 'PHASE_COMPLETED',
+      title: `Completed phase: ${phase.title}`,
+      description: `Finished a project phase in "${project.title}" and strengthened its target skills.`,
+      impactScore: 3,
+    });
     
     // Check if all phases are completed
     const allCompleted = project.phases.every(p => p.isCompleted);
     if (allCompleted) {
       project.status = 'COMPLETED';
+      await recordSkillProgressEvents({
+        userId: req.user._id,
+        project,
+        eventType: 'PROJECT_COMPLETED',
+        title: `Completed project: ${project.title}`,
+        description: `Completed the full GitMentor project for ${project.readinessTrack || 'skill growth'}.`,
+        impactScore: 6,
+      });
       
       // Unlock next project
       const nextProject = await Project.findOne({ user: req.user._id, order: project.order + 1 });

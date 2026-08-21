@@ -93,6 +93,15 @@ const skillProfileSchema = new mongoose.Schema(
       score: { type: Number, required: true, min: 0, max: 100 },
       summary: { type: String },
     }],
+    recentProgressEvents: [{
+      categorySlug: { type: String },
+      categoryName: { type: String },
+      eventType: { type: String },
+      title: { type: String },
+      description: { type: String },
+      impactScore: { type: Number },
+      createdAt: { type: Date },
+    }],
     assessmentSignals: {
       type: Object,
       default: {},

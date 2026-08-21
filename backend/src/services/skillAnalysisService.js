@@ -261,7 +261,7 @@ const buildReadinessScores = (categories) => {
   ];
 };
 
-export const buildSkillAssessmentSignals = ({ analyticsData, trackedRepos = [], projects = [], insights = [] }) => {
+export const buildSkillAssessmentSignals = ({ analyticsData, trackedRepos = [], projects = [], insights = [], progressEvents = [] }) => {
   const allRepos = analyticsData.allRepos || [];
   const repoSkillMap = allRepos.map(detectRepoSkills);
   const evidenceByCategory = {};
@@ -328,6 +328,15 @@ export const buildSkillAssessmentSignals = ({ analyticsData, trackedRepos = [], 
     });
   }
 
+  progressEvents.forEach(event => {
+    addEvidence(evidenceByCategory, event.categorySlug, {
+      source: 'progress-event',
+      label: event.title,
+      detail: event.description || `${event.eventType} recorded in GitMentor`,
+      weight: event.impactScore || 1,
+    });
+  });
+
   trackedRepos.forEach(repo => {
     addEvidence(evidenceByCategory, 'product-thinking', {
       source: 'tracked-repo',
@@ -354,6 +363,19 @@ export const buildSkillAssessmentSignals = ({ analyticsData, trackedRepos = [], 
     repoSkillMap,
     projectStats,
     insightStats,
+    progressEventStats: {
+      totalEvents: progressEvents.length,
+      totalImpact: progressEvents.reduce((sum, event) => sum + (event.impactScore || 1), 0),
+    },
+    recentProgressEvents: progressEvents.slice(0, 8).map(event => ({
+      categorySlug: event.categorySlug,
+      categoryName: event.categoryName,
+      eventType: event.eventType,
+      title: event.title,
+      description: event.description,
+      impactScore: event.impactScore,
+      createdAt: event.createdAt,
+    })),
     nextBestActions: buildNextBestActions(categories),
     readinessScores: buildReadinessScores(categories),
     overallScore,

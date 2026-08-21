@@ -1,8 +1,16 @@
 import Insight from '../models/Insight.js';
 import Repository from '../models/Repository.js';
 import User from '../models/User.js';
+import SkillProgressEvent from '../models/SkillProgressEvent.js';
 import { generateRepoInsights } from '../utils/geminiApi.js';
 import { fetchRepoContext } from '../utils/githubApi.js';
+
+const insightSkillMap = {
+  VULNERABILITY: { categorySlug: 'auth-security', categoryName: 'Authentication & Security', impactScore: 4 },
+  PERFORMANCE: { categorySlug: 'code-quality', categoryName: 'Code Quality', impactScore: 3 },
+  ARCHITECTURE: { categorySlug: 'architecture', categoryName: 'Architecture', impactScore: 3 },
+  BEST_PRACTICE: { categorySlug: 'code-quality', categoryName: 'Code Quality', impactScore: 2 },
+};
 
 // @desc    Get insights for a specific repository
 // @route   GET /api/insights/:repoId
@@ -109,8 +117,25 @@ export const resolveInsight = async (req, res) => {
       return res.status(404).json({ message: 'Insight not found' });
     }
 
+    if (insight.isResolved) {
+      return res.status(200).json(insight);
+    }
+
     insight.isResolved = true;
     await insight.save();
+
+    const repo = await Repository.findOne({ _id: insight.repository, user: req.user._id });
+    if (repo) {
+      const mappedSkill = insightSkillMap[insight.type] || insightSkillMap.BEST_PRACTICE;
+      await SkillProgressEvent.create({
+        user: req.user._id,
+        repository: repo._id,
+        ...mappedSkill,
+        eventType: 'INSIGHT_RESOLVED',
+        title: `Resolved insight: ${insight.title}`,
+        description: `Marked an AI repository insight as solved in ${repo.fullName || repo.name}.`,
+      });
+    }
 
     res.status(200).json(insight);
   } catch (error) {

@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import Repository from '../models/Repository.js';
 import Project from '../models/Project.js';
 import Insight from '../models/Insight.js';
+import SkillProgressEvent from '../models/SkillProgressEvent.js';
 import { generateSkillAssessment } from '../utils/geminiApi.js';
 import { buildSkillAssessmentSignals, levelFromScore, SKILL_TAXONOMY } from '../services/skillAnalysisService.js';
 
@@ -236,9 +237,11 @@ const mergeAssessmentWithSignals = (assessment, signals, previousProfile) => {
         summary: item.summary || '',
       }))
       : signals.readinessScores,
+    recentProgressEvents: signals.recentProgressEvents || [],
     assessmentSignals: {
       projectStats: signals.projectStats,
       insightStats: signals.insightStats,
+      progressEventStats: signals.progressEventStats,
       taxonomyVersion: '2026-08-21',
     },
     history,
@@ -302,6 +305,7 @@ export const assessSkills = async (req, res) => {
     const projects = await Project.find({ user: req.user._id });
     const trackedRepoIds = trackedRepos.map(repo => repo._id);
     const insights = await Insight.find({ repository: { $in: trackedRepoIds } });
+    const progressEvents = await SkillProgressEvent.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(50);
 
     // 5. Build deterministic rule-based evidence before asking AI to refine it
     const skillSignals = buildSkillAssessmentSignals({
@@ -309,6 +313,7 @@ export const assessSkills = async (req, res) => {
       trackedRepos,
       projects,
       insights,
+      progressEvents,
     });
 
     // 6. Generate AI assessment. If AI is unavailable, still return a useful rule-based profile.
