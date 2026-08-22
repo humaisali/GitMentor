@@ -30,7 +30,7 @@
 
 GitMentor is a full-stack web application that helps developers, especially those starting out, build strong GitHub portfolios through real mentorship instead of fake activity generation.
 
-It connects to your GitHub account, analyzes what you've built so far, figures out where the gaps are, and then generates personalized project roadmaps using Google Gemini. You can sync those roadmaps to Google Calendar, get AI-powered code reviews on your repos, and track your progress through a gamification system with 12 achievement badges.
+It connects to your GitHub account, analyzes what you've built so far, figures out where the gaps are, and then generates personalized project roadmaps using Gemini and Groq-hosted Qwen with automatic failover. You can sync those roadmaps to Google Calendar, get AI-powered code reviews on your repos, and track your progress through a gamification system with 12 achievement badges.
 
 The whole idea is simple: stop watching tutorials and start shipping real projects, with an AI mentor guiding you through the process.
 
@@ -182,7 +182,8 @@ A persistent, floating AI chat assistant is available throughout the application
 | Mongoose | 9.6 | MongoDB ODM |
 | Passport.js | 0.7 | OAuth strategies |
 | JWT | 9.0 | Token-based auth |
-| Google GenAI SDK | 2.10 | Gemini Flash integration |
+| Google GenAI SDK | 2.10 | Gemini 3.6 Flash integration |
+| Groq SDK | 1.x | Qwen 3.6 routing and failover |
 | Google APIs | 173.0 | Calendar API |
 
 ---
@@ -211,7 +212,7 @@ graph TB
 
     subgraph Ext["External Services"]
         direction LR
-        GH["GitHub API"] ~~~ GM["Gemini Flash"] ~~~ GC["Calendar API"]
+        GH["GitHub API"] ~~~ GM["Gemini 3.6"] ~~~ GQ["Groq Qwen 3.6"] ~~~ GC["Calendar API"]
     end
 
     Client -- "REST API" --> Server
@@ -226,7 +227,7 @@ graph TB
 | Frontend | React 19, Vite 8, Tailwind CSS 4 | Dashboard rendering, roadmap visualization, user interaction, analytics display |
 | Backend | Node.js, Express.js 5 | API handling, authentication, repository processing, AI request management |
 | Database | MongoDB, Mongoose 9 | Stores users, projects, progress data, AI feedback, and roadmap information |
-| AI | Google Gemini Flash SDK | Skill assessment, roadmap generation, mentorship, code reviews |
+| AI | Gemini 3.6 Flash + Groq Qwen 3.6 | Skill assessment, roadmap generation, mentorship, code reviews, and provider failover |
 | External | GitHub API, Google Calendar API | Repository data, contribution tracking, Build Day scheduling |
 
 ### Project Structure
@@ -255,10 +256,11 @@ GitMentor/
 │   └── src/
 │       ├── config/              # Passport OAuth strategies (GitHub, Google)
 │       ├── controllers/         # Business logic (auth, repos, roadmaps, insights, calendar, analytics)
+│       ├── ai/                  # Provider adapters, schemas, routing, retry, and failover
 │       ├── middlewares/         # JWT verification
 │       ├── models/              # Mongoose schemas (User, Repository, Project, Insight, Analytics, BuildSession)
 │       ├── routes/              # Express route definitions for each API domain
-│       └── utils/               # GitHub API client, Gemini AI client, badge evaluation rules
+│       └── utils/               # GitHub API client, AI feature prompts, badge evaluation rules
 │
 └── Documentation/               # SRS document and progress tracker
 ```
@@ -309,6 +311,17 @@ GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
 GOOGLE_TOKEN_ENCRYPTION_KEY=your_separate_long_random_secret
 
 GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-3.6-flash
+GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=qwen/qwen3.6-27b
+
+# Gemini/Groq task routing and automatic failover
+AI_ROUTING_ENABLED=true
+AI_REQUEST_TIMEOUT_MS=30000
+AI_MAX_RETRIES=1
+AI_CIRCUIT_FAILURE_THRESHOLD=3
+AI_CIRCUIT_COOLDOWN_MS=60000
+AI_CHAT_HISTORY_LIMIT=12
 
 CLIENT_URL=http://localhost:5173
 
