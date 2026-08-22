@@ -2,6 +2,7 @@ import Project from '../models/Project.js';
 import Repository from '../models/Repository.js';
 import SkillProfile from '../models/SkillProfile.js';
 import SkillProgressEvent from '../models/SkillProgressEvent.js';
+import BuildSession from '../models/BuildSession.js';
 import { generateRoadmap, chatWithProjectAssistant } from '../utils/geminiApi.js';
 
 const normalizeTargetSkills = (skills = [], skillProfile = null) => {
@@ -75,6 +76,18 @@ export const getRoadmap = async (req, res) => {
 // @access  Private
 export const generateNewRoadmap = async (req, res) => {
   try {
+    const upcomingBuildDays = await BuildSession.countDocuments({
+      user: req.user._id,
+      status: 'SCHEDULED',
+      startAt: { $gte: new Date() },
+    });
+    if (upcomingBuildDays > 0) {
+      return res.status(409).json({
+        message: `Cancel or complete your ${upcomingBuildDays} upcoming Build Day${upcomingBuildDays === 1 ? '' : 's'} before regenerating the roadmap.`,
+        code: 'UPCOMING_BUILD_DAYS_EXIST',
+      });
+    }
+
     // 1. Fetch user's repos to feed into AI
     const repositories = await Repository.find({ user: req.user._id });
 
@@ -203,6 +216,8 @@ export const selectTimeline = async (req, res) => {
       title: p.title,
       description: p.description,
       estimatedTime: p.estimatedTime,
+      estimatedHours: Math.max(1, Number(p.estimatedHours) || 2),
+      suggestedSessionCount: Math.max(1, Number(p.suggestedSessionCount) || 1),
       isCompleted: false
     }));
     project.learningMaterials = learningMaterials.map(m => ({
@@ -216,6 +231,17 @@ export const selectTimeline = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error generating phases', error: error.message });
   }
+};
+
+export const buildFallbackPhaseTasks = (phase) => {
+  const title = String(phase?.title || 'Project phase');
+  const description = String(phase?.description || `Complete the ${title} phase.`);
+  return [
+    { taskId: `${phase?.phaseId || 'PHASE'}-T1`, title: `Define acceptance criteria for ${title}`, description, steps: ['Review the phase goal and constraints.', 'Write measurable completion criteria.', 'Confirm dependencies and expected outputs.'] },
+    { taskId: `${phase?.phaseId || 'PHASE'}-T2`, title: `Implement the core ${title} work`, description, steps: ['Break the implementation into small changes.', 'Implement the highest-priority path.', 'Keep changes focused and reviewable.'] },
+    { taskId: `${phase?.phaseId || 'PHASE'}-T3`, title: `Verify ${title}`, description, steps: ['Exercise the primary success path.', 'Test important edge cases and failure paths.', 'Fix regressions and record verification evidence.'] },
+    { taskId: `${phase?.phaseId || 'PHASE'}-T4`, title: `Document and finalize ${title}`, description, steps: ['Document decisions and usage.', 'Review the acceptance criteria.', 'Commit the completed work and note follow-ups.'] },
+  ];
 };
 
 // @desc    Start a phase and generate tasks
@@ -233,7 +259,16 @@ export const startPhase = async (req, res) => {
     if (phase.isStarted) return res.status(400).json({ message: 'Phase already started' });
 
     const { generatePhaseTasks } = await import('../utils/geminiApi.js');
-    const tasksData = await generatePhaseTasks(project.title, phase.title, phase.description);
+    let tasksData;
+    let taskGeneration = 'AI';
+    try {
+      tasksData = await generatePhaseTasks(project.title, phase.title, phase.description);
+      if (!Array.isArray(tasksData) || !tasksData.length) throw new Error('Gemini returned no phase tasks.');
+    } catch (generationError) {
+      console.warn(`Falling back to deterministic tasks for ${projectId}/${phaseId}: ${generationError.message}`);
+      taskGeneration = 'FALLBACK';
+      tasksData = buildFallbackPhaseTasks(phase);
+    }
 
     phase.isStarted = true;
     phase.tasks = tasksData.map(t => ({
@@ -245,7 +280,7 @@ export const startPhase = async (req, res) => {
     }));
 
     await project.save();
-    res.status(200).json(project);
+    res.status(200).json({ ...project.toObject(), taskGeneration });
   } catch (error) {
     res.status(500).json({ message: 'Error starting phase', error: error.message });
   }

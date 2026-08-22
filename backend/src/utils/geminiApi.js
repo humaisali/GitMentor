@@ -402,7 +402,7 @@ export const generateProjectPlan = async (projectTitle, projectDescription, skil
     - objectives: An array of 3-5 key outcomes.
     - methodologies: An array of 2-3 development methodologies (e.g. "TDD", "Agile sprint").
     - techStack: An array of 3-6 recommended technologies. Return ONLY the short technology name (e.g. "React", "Node.js", "PostgreSQL", "Docker", "AWS", "OAuth2/JWT"). Do NOT add descriptions, parenthetical notes, or explanations after the name.
-    - timelineOptions: Exactly 3 options (e.g. 1 week, 2 weeks, 4 weeks), each with an 'id', 'title', 'duration', and 'description'.
+    - timelineOptions: Exactly 3 options (e.g. 1 week, 2 weeks, 4 weeks), each with an 'id', 'title', 'duration', numeric 'durationDays', and 'description'.
     Make the objectives and methodologies explicitly help the user improve the target skills and addressed gaps.
   `;
 
@@ -427,9 +427,10 @@ export const generateProjectPlan = async (projectTitle, projectDescription, skil
                   id: { type: Type.STRING },
                   title: { type: Type.STRING },
                   duration: { type: Type.STRING },
+                  durationDays: { type: Type.INTEGER },
                   description: { type: Type.STRING },
                 },
-                required: ["id", "title", "duration", "description"]
+                required: ["id", "title", "duration", "durationDays", "description"]
               }
             }
           },
@@ -453,7 +454,8 @@ export const generateProjectPhases = async (projectTitle, timelineDuration) => {
   const prompt = `
     A user is building "${projectTitle}" over a timeline of "${timelineDuration}".
     Break this project down into exactly 4 or 5 actionable phases.
-    For each phase provide a phaseId, title, description, and an estimatedTime to complete it (e.g. "2 Days", "10 Hours").
+    For each phase provide a phaseId, title, description, estimatedTime display label, numeric estimatedHours, and numeric suggestedSessionCount.
+    suggestedSessionCount should assume focused sessions of roughly 2 hours each and must be at least 1.
   `;
 
   try {
@@ -471,8 +473,10 @@ export const generateProjectPhases = async (projectTitle, timelineDuration) => {
               title: { type: Type.STRING },
               description: { type: Type.STRING },
               estimatedTime: { type: Type.STRING },
+              estimatedHours: { type: Type.INTEGER },
+              suggestedSessionCount: { type: Type.INTEGER },
             },
-            required: ["phaseId", "title", "description", "estimatedTime"]
+            required: ["phaseId", "title", "description", "estimatedTime", "estimatedHours", "suggestedSessionCount"]
           }
         }
       }
