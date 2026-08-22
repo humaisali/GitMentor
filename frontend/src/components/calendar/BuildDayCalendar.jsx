@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card } from '../ui/Card';
+import { getBuildDayDate } from '../../utils/calendarDates';
 
 const sameDay = (left, right) => left.getFullYear() === right.getFullYear()
   && left.getMonth() === right.getMonth() && left.getDate() === right.getDate();
@@ -17,7 +18,7 @@ const addDays = (date, amount) => {
 
 const EventChip = ({ session, onSelect }) => (
   <button type="button" onClick={() => onSelect(session)} title={session.title} className={`w-full text-left rounded-md px-1.5 py-1 text-[10px] font-mono truncate border ${session.status === 'COMPLETED' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : session.status === 'CANCELLED' ? 'bg-white/[0.03] border-white/[0.06] text-muted-steel line-through' : 'bg-muted-cyan/10 border-muted-cyan/20 text-muted-cyan'}`}>
-    {new Date(session.startAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} {session.title}
+    {getBuildDayDate(session)?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || 'Time unavailable'} {session.title}
   </button>
 );
 
@@ -56,7 +57,10 @@ export const BuildDayCalendar = ({ sessions, view, onSelect }) => {
       </div>
       <div className="grid grid-cols-7">
         {days.map(day => {
-          const daySessions = sessions.filter(session => sameDay(new Date(session.startAt), day));
+          const daySessions = sessions.filter(session => {
+            const start = getBuildDayDate(session);
+            return start ? sameDay(start, day) : false;
+          });
           const outsideMonth = view === 'MONTH' && day.getMonth() !== cursor.getMonth();
           return (
             <div key={day.toISOString()} className={`${view === 'WEEK' ? 'min-h-72' : 'min-h-28'} p-1.5 border-r border-b border-white/[0.05] ${outsideMonth ? 'opacity-35' : ''}`}>

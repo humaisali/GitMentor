@@ -10,16 +10,19 @@ import { AutoScheduleModal } from '../components/calendar/AutoScheduleModal';
 import { BuildDayCalendar } from '../components/calendar/BuildDayCalendar';
 import { calendarApi } from '../services/calendarApi';
 import { apiRequest } from '../services/apiClient';
+import { formatBuildDayTime, getBuildDayDate } from '../utils/calendarDates';
 
 const statusVariant = { SCHEDULED: 'primary', COMPLETED: 'success', CANCELLED: 'default' };
 
-const SessionCard = ({ session, onEdit, onComplete, onCancel, onRetry }) => (
-  <Card className={`p-5 ${session.status === 'CANCELLED' ? 'opacity-50' : ''}`}>
+const SessionCard = ({ session, onEdit, onComplete, onCancel, onRetry }) => {
+  const start = getBuildDayDate(session, 'startAt');
+  return (
+    <Card className={`p-5 ${session.status === 'CANCELLED' ? 'opacity-50' : ''}`}>
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
       <div className="flex gap-4 min-w-0">
         <div className="w-14 h-14 shrink-0 rounded-2xl bg-muted-cyan/10 border border-muted-cyan/20 flex flex-col items-center justify-center">
-          <span className="text-[10px] font-mono text-muted-cyan uppercase">{new Date(session.startAt).toLocaleString([], { month: 'short' })}</span>
-          <span className="text-xl font-semibold text-canvas-white leading-none">{new Date(session.startAt).getDate()}</span>
+          <span className="text-[10px] font-mono text-muted-cyan uppercase">{start ? start.toLocaleString([], { month: 'short' }) : 'TBD'}</span>
+          <span className="text-xl font-semibold text-canvas-white leading-none">{start ? String(start.getDate()) : '—'}</span>
         </div>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1.5">
@@ -28,7 +31,7 @@ const SessionCard = ({ session, onEdit, onComplete, onCancel, onRetry }) => (
             {session.syncStatus === 'FAILED' && <Badge variant="error">SYNC FAILED</Badge>}
           </div>
           <p className="text-xs font-mono text-muted-cyan">
-            {new Date(session.startAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – {new Date(session.endAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {formatBuildDayTime(session)}
             <span className="text-muted-steel"> · {session.timeZone}</span>
           </p>
           <p className="text-sm text-muted-steel mt-2 line-clamp-2">{session.objective || session.milestone || session.projectTitle}</p>
@@ -48,8 +51,9 @@ const SessionCard = ({ session, onEdit, onComplete, onCancel, onRetry }) => (
         )}
       </div>
     </div>
-  </Card>
-);
+    </Card>
+  );
+};
 
 const BuildDays = () => {
   const [searchParams] = useSearchParams();
@@ -126,7 +130,7 @@ const BuildDays = () => {
     setMessage('');
     try {
       const result = await action();
-      setMessage(result?.failed ? `${result.successful} Build Days scheduled; ${result.failed} could not be synced.` : successMessage);
+      setMessage(result?.syncWarning || (result?.failed ? `${result.successful} Build Days scheduled; ${result.failed} could not be synced.` : successMessage));
       await loadData();
     } catch (error) {
       setMessage(error.message);
