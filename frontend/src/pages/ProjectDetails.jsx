@@ -17,6 +17,7 @@ const ProjectDetails = () => {
   const [generatingPlan, setGeneratingPlan] = useState(false);
   const [generatingTimeline, setGeneratingTimeline] = useState(false);
   const [selectedOptionId, setSelectedOptionId] = useState(null);
+  const [projectMessage, setProjectMessage] = useState('');
 
   const token = localStorage.getItem('gitmentor_token');
   const headers = { Authorization: `Bearer ${token}` };
@@ -37,17 +38,18 @@ const ProjectDetails = () => {
 
   const handleGeneratePlan = async () => {
     setGeneratingPlan(true);
+    setProjectMessage('');
     try {
       const res = await fetch(`${API_BASE}/${projectId}/plan`, {
         method: 'POST',
         headers
       });
-      if (res.ok) {
-        const updated = await res.json();
-        setProject(updated);
-      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || data.error || 'Unable to generate project blueprint.');
+      setProject(data);
     } catch (err) {
       console.error(err);
+      setProjectMessage(err.message || 'Unable to generate project blueprint.');
     } finally {
       setGeneratingPlan(false);
     }
@@ -56,6 +58,7 @@ const ProjectDetails = () => {
   const handleSelectTimeline = async () => {
     if (!selectedOptionId) return;
     setGeneratingTimeline(true);
+    setProjectMessage('');
     try {
       const res = await fetch(`${API_BASE}/${projectId}/timeline`, {
         method: 'POST',
@@ -65,12 +68,22 @@ const ProjectDetails = () => {
         },
         body: JSON.stringify({ timelineId: selectedOptionId })
       });
-      if (res.ok) {
-        const updated = await res.json();
-        setProject(updated);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || data.error || 'Unable to generate project timeline.');
+      setProject(data);
+      const generationNotes = [];
+      if (data.timelineGeneration === 'FALLBACK') {
+        generationNotes.push('GitMentor created reliable fallback phases because the AI phase generator was unavailable.');
       }
+      if (data.materialsGeneration === 'FALLBACK') {
+        generationNotes.push('Curated official learning resources were added because live resource search was unavailable.');
+      } else if (data.materialsGeneration === 'HYBRID') {
+        generationNotes.push('GitMentor supplemented the available search results with curated official learning resources.');
+      }
+      setProjectMessage(generationNotes.join(' '));
     } catch (err) {
       console.error(err);
+      setProjectMessage(err.message || 'Unable to generate project timeline.');
     } finally {
       setGeneratingTimeline(false);
     }
@@ -134,6 +147,12 @@ const ProjectDetails = () => {
           </div>
         </div>
       </header>
+
+      {projectMessage && (
+        <div className="glass-card p-4 border border-amber-400/20 bg-amber-400/[0.06] text-sm text-amber-100 animate-fade-in-up">
+          {projectMessage}
+        </div>
+      )}
 
       {(project.targetSkills?.length > 0 || project.addressedGaps?.length > 0 || project.skillRationale) && (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-5 animate-fade-in-up stagger-1">

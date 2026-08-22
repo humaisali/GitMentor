@@ -59,12 +59,208 @@ const recordSkillProgressEvents = async ({ userId, project, eventType, title, de
   await SkillProgressEvent.insertMany(events);
 };
 
+const normalizeGeneratedList = value => {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.items)) return value.items;
+  return [];
+};
+
+const GENERAL_LEARNING_MATERIALS = [
+  {
+    title: 'MDN Learn Web Development',
+    url: 'https://developer.mozilla.org/en-US/docs/Learn_web_development',
+    source: 'MDN Web Docs',
+  },
+  {
+    title: 'GitHub Skills: Practice real-world GitHub workflows',
+    url: 'https://skills.github.com/',
+    source: 'GitHub Skills',
+  },
+  {
+    title: 'OWASP Developer Guide',
+    url: 'https://devguide.owasp.org/',
+    source: 'OWASP',
+  },
+  {
+    title: 'web.dev Learn: Modern web development courses',
+    url: 'https://web.dev/learn/',
+    source: 'web.dev',
+  },
+];
+
+const TOPIC_LEARNING_MATERIALS = [
+  {
+    keywords: ['auth', 'login', 'password', 'session', 'jwt', 'security', 'authorization', 'rbac'],
+    title: 'Authentication Cheat Sheet',
+    url: 'https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html',
+    source: 'OWASP',
+  },
+  {
+    keywords: ['auth', 'login', 'password', 'security'],
+    title: 'Password Storage Cheat Sheet',
+    url: 'https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html',
+    source: 'OWASP',
+  },
+  {
+    keywords: ['auth', 'login', 'session', 'jwt', 'security'],
+    title: 'Session Management Cheat Sheet',
+    url: 'https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html',
+    source: 'OWASP',
+  },
+  {
+    keywords: ['auth', 'login', 'jwt', 'http', 'api'],
+    title: 'HTTP Authentication Guide',
+    url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication',
+    source: 'MDN Web Docs',
+  },
+  {
+    keywords: ['api', 'rest', 'backend', 'express', 'node'],
+    title: 'Express Production Security Best Practices',
+    url: 'https://expressjs.com/en/advanced/best-practice-security/',
+    source: 'Express Docs',
+  },
+  {
+    keywords: ['react', 'frontend', 'ui'],
+    title: 'React Learn',
+    url: 'https://react.dev/learn',
+    source: 'React Docs',
+  },
+  {
+    keywords: ['node', 'node.js', 'backend', 'javascript'],
+    title: 'Introduction to Node.js',
+    url: 'https://nodejs.org/en/learn/getting-started/introduction-to-nodejs',
+    source: 'Node.js Docs',
+  },
+  {
+    keywords: ['mongodb', 'database', 'schema', 'data model'],
+    title: 'MongoDB Data Modeling',
+    url: 'https://www.mongodb.com/docs/manual/data-modeling/',
+    source: 'MongoDB Docs',
+  },
+  {
+    keywords: ['postgres', 'postgresql', 'sql', 'database'],
+    title: 'PostgreSQL Tutorial',
+    url: 'https://www.postgresql.org/docs/current/tutorial.html',
+    source: 'PostgreSQL Docs',
+  },
+  {
+    keywords: ['test', 'testing', 'quality', 'vitest'],
+    title: 'Vitest Guide',
+    url: 'https://vitest.dev/guide/',
+    source: 'Vitest Docs',
+  },
+  {
+    keywords: ['deploy', 'deployment', 'container', 'docker'],
+    title: 'Docker Get Started',
+    url: 'https://docs.docker.com/get-started/',
+    source: 'Docker Docs',
+  },
+  {
+    keywords: ['typescript', 'type-safe', 'type safe'],
+    title: 'The TypeScript Handbook',
+    url: 'https://www.typescriptlang.org/docs/handbook/intro.html',
+    source: 'TypeScript Docs',
+  },
+];
+
+export const buildFallbackLearningMaterials = project => {
+  const techStack = Array.isArray(project?.detailedPlan?.techStack)
+    ? project.detailedPlan.techStack
+    : [];
+  const context = [project?.title, project?.description, ...techStack]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  const matched = TOPIC_LEARNING_MATERIALS.filter(material => (
+    material.keywords.some(keyword => context.includes(keyword))
+  )).map(({ keywords, ...material }) => material);
+
+  const unique = new Map();
+  [...matched, ...GENERAL_LEARNING_MATERIALS].forEach(material => {
+    if (!unique.has(material.url)) unique.set(material.url, material);
+  });
+
+  return Array.from(unique.values()).slice(0, 6);
+};
+
+const mergeLearningMaterials = (...collections) => {
+  const unique = new Map();
+  collections.flat().forEach(material => {
+    if (!material?.title || !/^https?:\/\//i.test(String(material?.url || ''))) return;
+    if (!unique.has(material.url)) {
+      unique.set(material.url, {
+        title: String(material.title),
+        url: String(material.url),
+        source: String(material.source || 'Web'),
+      });
+    }
+  });
+  return Array.from(unique.values()).slice(0, 6);
+};
+
+const buildFallbackProjectPhases = (project, timeline) => {
+  const duration = timeline?.duration || project.estTime || 'selected timeline';
+  const projectTitle = project?.title || 'this project';
+
+  return [
+    {
+      phaseId: 'PHASE-1',
+      title: 'Project Setup & Requirements',
+      description: `Define the scope for ${projectTitle}, confirm the core requirements, choose the initial architecture, and prepare the development environment.`,
+      estimatedTime: `Start of ${duration}`,
+      estimatedHours: 4,
+      suggestedSessionCount: 2,
+    },
+    {
+      phaseId: 'PHASE-2',
+      title: 'Core Feature Implementation',
+      description: `Build the primary user-facing and backend functionality for ${projectTitle}, keeping the implementation focused on the selected project goals.`,
+      estimatedTime: `Middle of ${duration}`,
+      estimatedHours: 8,
+      suggestedSessionCount: 4,
+    },
+    {
+      phaseId: 'PHASE-3',
+      title: 'Data, Validation & Integrations',
+      description: 'Connect the main data flows, add validation, handle important edge cases, and integrate any external services or APIs required by the blueprint.',
+      estimatedTime: `Middle of ${duration}`,
+      estimatedHours: 6,
+      suggestedSessionCount: 3,
+    },
+    {
+      phaseId: 'PHASE-4',
+      title: 'Testing, Documentation & Delivery',
+      description: 'Verify the complete workflow, add targeted tests, document setup and architecture decisions, and prepare the project for review or deployment.',
+      estimatedTime: `End of ${duration}`,
+      estimatedHours: 6,
+      suggestedSessionCount: 3,
+    },
+  ];
+};
+
 // @desc    Get user's roadmap projects
 // @route   GET /api/roadmaps
 // @access  Private
 export const getRoadmap = async (req, res) => {
   try {
     const projects = await Project.find({ user: req.user._id }).sort({ order: 1 });
+
+    await Promise.all(projects.map(async project => {
+      const needsResourceRepair = project.selectedTimeline
+        && project.phases?.length > 0
+        && (!project.learningMaterials || project.learningMaterials.length === 0);
+
+      if (needsResourceRepair) {
+        const fallbackMaterials = buildFallbackLearningMaterials(project);
+        project.learningMaterials = fallbackMaterials;
+        await Project.updateOne(
+          { _id: project._id, user: req.user._id },
+          { $set: { learningMaterials: fallbackMaterials } }
+        );
+      }
+    }));
+
     res.status(200).json(projects);
   } catch (error) {
     res.status(500).json({ message: 'Server Error fetching roadmap', error: error.message });
@@ -196,19 +392,40 @@ export const selectTimeline = async (req, res) => {
     const project = await Project.findOne({ projectId, user: req.user._id });
     if (!project) return res.status(404).json({ message: 'Project not found' });
 
-    const timeline = project.timelineOptions.find(t => t.id === timelineId);
+    const timeline = (project.timelineOptions || []).find(t => t.id === timelineId);
     if (!timeline) return res.status(400).json({ message: 'Invalid timeline ID' });
 
-    // Generate phases and grounded learning materials in parallel.
     const { generateProjectPhases, generateLearningMaterials } = await import('../utils/geminiApi.js');
-    const [phases, learningMaterials] = await Promise.all([
-      generateProjectPhases(project.title, timeline.duration),
-      generateLearningMaterials(
+
+    let phases = [];
+    let timelineGeneration = 'AI';
+    try {
+      phases = normalizeGeneratedList(await generateProjectPhases(project.title, timeline.duration));
+      if (phases.length < 4) throw new Error('The AI provider returned fewer than 4 project phases.');
+    } catch (generationError) {
+      console.warn(`Falling back to deterministic phases for ${projectId}: ${generationError.message}`);
+      timelineGeneration = 'FALLBACK';
+      phases = buildFallbackProjectPhases(project, timeline);
+    }
+
+    let aiLearningMaterials = [];
+    let materialsGeneration = 'AI';
+    try {
+      aiLearningMaterials = normalizeGeneratedList(await generateLearningMaterials(
         project.title,
         project.description,
         project.detailedPlan?.techStack || []
-      )
-    ]);
+      ));
+      if (aiLearningMaterials.length < 4) materialsGeneration = 'HYBRID';
+    } catch (materialsError) {
+      console.warn(`Learning material generation failed for ${projectId}: ${materialsError.message}`);
+      materialsGeneration = 'FALLBACK';
+    }
+
+    const learningMaterials = mergeLearningMaterials(
+      aiLearningMaterials,
+      buildFallbackLearningMaterials(project)
+    );
 
     project.selectedTimeline = timelineId;
     project.phases = phases.map(p => ({
@@ -216,9 +433,11 @@ export const selectTimeline = async (req, res) => {
       title: p.title,
       description: p.description,
       estimatedTime: p.estimatedTime,
-      estimatedHours: Math.max(1, Number(p.estimatedHours) || 2),
-      suggestedSessionCount: Math.max(1, Number(p.suggestedSessionCount) || 1),
-      isCompleted: false
+      estimatedHours: Math.max(1, Math.round(Number(p.estimatedHours) || 2)),
+      suggestedSessionCount: Math.max(1, Math.round(Number(p.suggestedSessionCount) || 1)),
+      isCompleted: false,
+      isStarted: false,
+      tasks: [],
     }));
     project.learningMaterials = learningMaterials.map(m => ({
       title: m.title,
@@ -227,8 +446,9 @@ export const selectTimeline = async (req, res) => {
     }));
 
     await project.save();
-    res.status(200).json(project);
+    res.status(200).json({ ...project.toObject(), timelineGeneration, materialsGeneration });
   } catch (error) {
+    console.error('Error selecting timeline:', error);
     res.status(500).json({ message: 'Error generating phases', error: error.message });
   }
 };
