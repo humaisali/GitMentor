@@ -103,6 +103,8 @@ const ProjectDetails = () => {
     );
   }
 
+  const isProjectCompleted = project.status === 'COMPLETED';
+
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto p-4 pb-10">
       <header className="mb-2 shrink-0 animate-fade-in-up">
@@ -125,7 +127,7 @@ const ProjectDetails = () => {
                   <CalendarPlus size={16} /> Schedule
                 </Button>
                 <Button variant="primary" className="px-6 py-2.5 text-sm font-medium gap-2" onClick={handleContinueProject}>
-                  <Play size={16} /> Continue Project
+                  <Play size={16} /> {isProjectCompleted ? 'Review Workspace' : 'Continue Project'}
                 </Button>
               </div>
             )}
@@ -335,7 +337,9 @@ const ProjectDetails = () => {
                     <Sparkles size={20} className="text-muted-cyan" /> Ready to Build?
                   </h3>
                   <p className="text-sm text-muted-steel leading-relaxed mb-1">
-                    Your workspace is ready. Enter the execution phase to start checking off tasks.
+                    {isProjectCompleted
+                      ? 'This project is complete. Open the workspace to review completed phases, task details, and implementation notes.'
+                      : 'Your workspace is ready. Enter the execution phase to start checking off tasks.'}
                   </p>
                 </div>
                 
@@ -344,7 +348,7 @@ const ProjectDetails = () => {
                   className="w-full py-3.5 text-sm font-medium gap-2 relative z-10"
                   onClick={handleContinueProject}
                 >
-                  <Play size={18} /> Continue Project
+                  <Play size={18} /> {isProjectCompleted ? 'Review Workspace' : 'Continue Project'}
                 </Button>
               </div>
             </>

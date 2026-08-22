@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Sparkles, ArrowLeft, CheckCircle2, Circle, Check, X, ListTodo, Bot, BookOpen, ExternalLink, Play, CalendarPlus } from 'lucide-react';
+import { Sparkles, ArrowLeft, CheckCircle2, Circle, Check, X, ListTodo, Bot, BookOpen, ExternalLink, Play, CalendarPlus, ChevronDown } from 'lucide-react';
 import { Badge } from '../components/ui/Badge';
 import ProjectChatAssistant from '../components/ProjectChatAssistant';
 
@@ -21,6 +21,7 @@ const ProjectWorkspace = () => {
   
   const [taskModal, setTaskModal] = useState({ isOpen: false, task: null });
   const [workspaceMessage, setWorkspaceMessage] = useState('');
+  const [openCompletedPhases, setOpenCompletedPhases] = useState({});
 
   const token = localStorage.getItem('gitmentor_token');
   const headers = { Authorization: `Bearer ${token}` };
@@ -105,6 +106,13 @@ const ProjectWorkspace = () => {
     } finally {
       setCompletingPhase(null);
     }
+  };
+
+  const toggleCompletedPhase = (phaseId) => {
+    setOpenCompletedPhases(current => ({
+      ...current,
+      [phaseId]: !current[phaseId],
+    }));
   };
 
   if (loading) {
@@ -194,6 +202,7 @@ const ProjectWorkspace = () => {
             const previousPhasesCompleted = project.phases.slice(0, idx).every(p => p.isCompleted);
             const isUnlocked = previousPhasesCompleted || isCompleted;
             const isStarting = startingPhase === phase.phaseId;
+            const showPhaseDetails = !isCompleted || openCompletedPhases[phase.phaseId];
 
             return (
               <div key={phase.phaseId} className={`relative flex flex-col p-7 glass-card transition-all duration-300 animate-fade-in-up stagger-${Math.min((idx % 6) + 1, 6)}
@@ -233,12 +242,25 @@ const ProjectWorkspace = () => {
                         </span>
                       </div>
                     </div>
-                    <p className="text-[15px] text-muted-steel leading-relaxed">{phase.description}</p>
+                    {showPhaseDetails && (
+                      <p className="text-[15px] text-muted-steel leading-relaxed">{phase.description}</p>
+                    )}
+                    {isCompleted && (
+                      <button
+                        type="button"
+                        onClick={() => toggleCompletedPhase(phase.phaseId)}
+                        aria-expanded={Boolean(openCompletedPhases[phase.phaseId])}
+                        className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-muted-cyan transition-colors hover:text-canvas-white"
+                      >
+                        More
+                        <ChevronDown size={14} className={`transition-transform duration-200 ${openCompletedPhases[phase.phaseId] ? 'rotate-180' : ''}`} />
+                      </button>
+                    )}
                   </div>
                 </div>
 
                 {/* Inline Tasks / Action Area */}
-                {isUnlocked && (
+                {isUnlocked && showPhaseDetails && (
                   <div className="ml-16 mt-4">
                     {/* State 1: Not Started */}
                     {!phase.isStarted && !isStarting && !isCompleted && (

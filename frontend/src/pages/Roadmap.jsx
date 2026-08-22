@@ -269,6 +269,13 @@ const RoadmapNode = ({ node, index }) => {
           <div className="flex flex-row md:flex-col items-center md:items-end gap-2 shrink-0 border-t md:border-t-0 border-white/[0.06] pt-4 md:pt-0">
              <Badge variant={getStatusBadgeVariant(node.status)}>{node.status}</Badge>
              <Badge variant={getDifficultyBadgeVariant(node.difficulty)}>{node.difficulty}</Badge>
+             {isCompleted && (
+               <div className="flex gap-2 mt-2">
+                 <Button variant="secondary" className="h-8 text-xs px-3" onClick={() => navigate(`/roadmaps/${node.projectId}`)}>
+                   Review Project
+                 </Button>
+               </div>
+             )}
              {!isCompleted && !isLocked && (
                <div className="flex gap-2 mt-2">
                  <Button variant="primary" className="h-8 text-xs px-3" onClick={() => navigate(`/roadmaps/${node.projectId}`)}>
