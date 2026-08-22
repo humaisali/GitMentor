@@ -63,6 +63,7 @@ const projectSchema = new mongoose.Schema(
       id: { type: String },
       title: { type: String },
       duration: { type: String },
+      durationDays: { type: Number, min: 1 },
       description: { type: String }
     }],
     selectedTimeline: {
@@ -73,6 +74,8 @@ const projectSchema = new mongoose.Schema(
       title: { type: String },
       description: { type: String },
       estimatedTime: { type: String },
+      estimatedHours: { type: Number, min: 1 },
+      suggestedSessionCount: { type: Number, min: 1 },
       isCompleted: { type: Boolean, default: false },
       isStarted: { type: Boolean, default: false },
       tasks: [{

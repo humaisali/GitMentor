@@ -26,6 +26,18 @@ const userSchema = new mongoose.Schema(
     googleRefreshToken: {
       type: String,
     },
+    googleCalendar: {
+      email: { type: String },
+      refreshToken: { type: String },
+      scopes: [{ type: String }],
+      status: {
+        type: String,
+        enum: ['CONNECTED', 'RECONNECT_REQUIRED', 'DISCONNECTED'],
+        default: 'DISCONNECTED',
+      },
+      connectedAt: { type: Date },
+      lastValidatedAt: { type: Date },
+    },
     githubReposCache: {
       type: Array,
       default: null

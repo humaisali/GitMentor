@@ -25,7 +25,7 @@ const skillProgressEventSchema = new mongoose.Schema(
     },
     eventType: {
       type: String,
-      enum: ['TASK_COMPLETED', 'PHASE_COMPLETED', 'PROJECT_COMPLETED', 'INSIGHT_RESOLVED'],
+      enum: ['TASK_COMPLETED', 'PHASE_COMPLETED', 'PROJECT_COMPLETED', 'INSIGHT_RESOLVED', 'BUILD_SESSION_COMPLETED'],
       required: true,
     },
     title: {
