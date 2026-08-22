@@ -152,7 +152,7 @@ const BuildDays = () => {
   const reconcile = () => runAction(() => calendarApi.reconcile(), 'Calendar synchronization checked.');
 
   return (
-    <div className="flex flex-col gap-6 pb-10">
+    <div className="flex h-[calc(100vh-4rem)] min-h-0 flex-col gap-6 overflow-hidden">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 animate-fade-in-up">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-canvas-white">Build <span className="bg-gradient-to-r from-muted-cyan to-blue-400 bg-clip-text text-transparent">Days</span></h1>
@@ -200,17 +200,23 @@ const BuildDays = () => {
             </div>
           </div>
 
-          {view !== 'LIST' && !loading ? <BuildDayCalendar sessions={visibleSessions} view={view} onSelect={item => item.status === 'SCHEDULED' && setModal({ type: 'manual', session: item })} /> : <div className="space-y-3">
-            {loading ? [1, 2, 3].map(item => <Skeleton key={item} className="h-28" />) : visibleSessions.length ? visibleSessions.map(session => (
-              <SessionCard key={session._id} session={session} onEdit={item => setModal({ type: 'manual', session: item })} onComplete={item => runAction(() => calendarApi.complete(item._id), 'Build Day completed.')} onCancel={cancel} onRetry={item => runAction(() => calendarApi.retry(item._id), 'Calendar sync restored.')} />
-            )) : (
-              <Card hover={false} className="p-10 text-center">
-                <CalendarCheck size={30} className="text-muted-cyan mx-auto mb-3" />
-                <h3 className="text-lg font-medium text-canvas-white">No {filter.toLowerCase()} Build Days</h3>
-                <p className="text-sm text-muted-steel mt-1">Schedule one manually or let GitMentor distribute your roadmap phases.</p>
-              </Card>
+          <div className="scroll-panel min-h-0 flex-1 overflow-y-auto overscroll-contain pr-2">
+            {view !== 'LIST' && !loading ? (
+              <BuildDayCalendar sessions={visibleSessions} view={view} onSelect={item => item.status === 'SCHEDULED' && setModal({ type: 'manual', session: item })} />
+            ) : (
+              <div className="space-y-3 pb-6">
+                {loading ? [1, 2, 3].map(item => <Skeleton key={item} className="h-28" />) : visibleSessions.length ? visibleSessions.map(session => (
+                  <SessionCard key={session._id} session={session} onEdit={item => setModal({ type: 'manual', session: item })} onComplete={item => runAction(() => calendarApi.complete(item._id), 'Build Day completed.')} onCancel={cancel} onRetry={item => runAction(() => calendarApi.retry(item._id), 'Calendar sync restored.')} />
+                )) : (
+                  <Card hover={false} className="p-10 text-center">
+                    <CalendarCheck size={30} className="text-muted-cyan mx-auto mb-3" />
+                    <h3 className="text-lg font-medium text-canvas-white">No {filter.toLowerCase()} Build Days</h3>
+                    <p className="text-sm text-muted-steel mt-1">Schedule one manually or let GitMentor distribute your roadmap phases.</p>
+                  </Card>
+                )}
+              </div>
             )}
-          </div>}
+          </div>
         </>
       )}
 

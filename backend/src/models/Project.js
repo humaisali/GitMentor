@@ -76,6 +76,7 @@ const projectSchema = new mongoose.Schema(
       estimatedTime: { type: String },
       estimatedHours: { type: Number, min: 1 },
       suggestedSessionCount: { type: Number, min: 1 },
+      allocatedDays: { type: Number, min: 0 },
       isCompleted: { type: Boolean, default: false },
       isStarted: { type: Boolean, default: false },
       tasks: [{

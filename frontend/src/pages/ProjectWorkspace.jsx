@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Sparkles, ArrowLeft, CheckCircle2, Circle, Check, X, ListTodo, Bot, BookOpen, ExternalLink, Play, CalendarPlus, ChevronDown } from 'lucide-react';
 import { Badge } from '../components/ui/Badge';
 import ProjectChatAssistant from '../components/ProjectChatAssistant';
+import { getPhaseTimelineAllocations, getSelectedTimeline } from '../utils/schedulePlanner';
 
 const API_BASE = 'http://localhost:5000/api/roadmaps';
 
@@ -137,6 +138,9 @@ const ProjectWorkspace = () => {
     );
   }
 
+  const selectedTimeline = getSelectedTimeline(project);
+  const phaseTimelineAllocations = getPhaseTimelineAllocations(project);
+
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto p-4 pb-10">
       {workspaceMessage && <div className="glass-surface border border-amber-500/20 px-4 py-3 text-sm text-amber-300">{workspaceMessage}</div>}
@@ -197,12 +201,19 @@ const ProjectWorkspace = () => {
 
         {/* Execution Phases List */}
         <div className="md:col-span-8 flex flex-col gap-6">
+          {selectedTimeline && (
+            <div className="glass-surface px-4 py-3 text-sm text-muted-steel">
+              Confirmed timeline · <span className="text-muted-cyan font-medium">{selectedTimeline.duration}</span>
+              <span> · {selectedTimeline.durationDays} total Build Days distributed across all phases</span>
+            </div>
+          )}
           {project.phases && project.phases.map((phase, idx) => {
             const isCompleted = phase.isCompleted;
             const previousPhasesCompleted = project.phases.slice(0, idx).every(p => p.isCompleted);
             const isUnlocked = previousPhasesCompleted || isCompleted;
             const isStarting = startingPhase === phase.phaseId;
             const showPhaseDetails = !isCompleted || openCompletedPhases[phase.phaseId];
+            const allocatedDays = phaseTimelineAllocations[idx] || 0;
 
             return (
               <div key={phase.phaseId} className={`relative flex flex-col p-7 glass-card transition-all duration-300 animate-fade-in-up stagger-${Math.min((idx % 6) + 1, 6)}
@@ -238,7 +249,7 @@ const ProjectWorkspace = () => {
                           </button>
                         )}
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-mono bg-white/[0.04] border border-white/[0.06] text-muted-steel">
-                          {phase.estimatedTime}
+                          {allocatedDays} Build {allocatedDays === 1 ? 'Day' : 'Days'} of {selectedTimeline?.durationDays || allocatedDays}
                         </span>
                       </div>
                     </div>

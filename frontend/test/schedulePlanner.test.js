@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generateBuildDayPreview } from '../src/utils/schedulePlanner.js';
+import { generateBuildDayPreview, getPhaseTimelineAllocations } from '../src/utils/schedulePlanner.js';
 
 const project = {
   projectId: 'PROJECT-1',
@@ -66,6 +66,7 @@ test('one-week timeline creates seven Build Days regardless of phase count', () 
   });
   assert.deepEqual(dayOffsets, [0, 1, 2, 3, 4, 5, 6]);
   assert.ok(sessions.every(session => session.timelineStartAt));
+  assert.deepEqual(getPhaseTimelineAllocations({ ...project, phases }), [2, 2, 1, 1, 1]);
 });
 
 test('planner skips completed phases and rejects incomplete preferences', () => {

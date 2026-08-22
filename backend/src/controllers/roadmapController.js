@@ -65,6 +65,39 @@ const normalizeGeneratedList = value => {
   return [];
 };
 
+const getTimelineDays = (timeline) => {
+  const durationText = String(timeline?.duration || '');
+  const value = Number.parseInt(durationText, 10);
+  const inferredDays = /week/i.test(durationText) ? value * 7 : value;
+  return Math.max(1, Number(timeline?.durationDays) || inferredDays || 1);
+};
+
+export const allocatePhaseDays = (phases = [], durationDays = 1) => {
+  const targetDays = Math.max(1, Math.round(Number(durationDays) || 1));
+  if (!phases.length) return [];
+  const weights = phases.map(phase => Math.max(
+    1,
+    Number(phase.suggestedSessionCount) || 0,
+    Math.ceil((Number(phase.estimatedHours) || 2) / 2)
+  ));
+  const allocated = phases.map(() => 0);
+
+  for (let index = 0; index < Math.min(phases.length, targetDays); index += 1) allocated[index] = 1;
+  for (let remaining = targetDays - allocated.reduce((sum, count) => sum + count, 0); remaining > 0; remaining -= 1) {
+    let selectedIndex = 0;
+    let lowestCoverage = Number.POSITIVE_INFINITY;
+    weights.forEach((weight, index) => {
+      const coverage = allocated[index] / weight;
+      if (coverage < lowestCoverage) {
+        lowestCoverage = coverage;
+        selectedIndex = index;
+      }
+    });
+    allocated[selectedIndex] += 1;
+  }
+  return allocated;
+};
+
 const GENERAL_LEARNING_MATERIALS = [
   {
     title: 'MDN Learn Web Development',
@@ -247,18 +280,33 @@ export const getRoadmap = async (req, res) => {
     const projects = await Project.find({ user: req.user._id }).sort({ order: 1 });
 
     await Promise.all(projects.map(async project => {
+      let needsSave = false;
       const needsResourceRepair = project.selectedTimeline
         && project.phases?.length > 0
         && (!project.learningMaterials || project.learningMaterials.length === 0);
 
       if (needsResourceRepair) {
-        const fallbackMaterials = buildFallbackLearningMaterials(project);
-        project.learningMaterials = fallbackMaterials;
-        await Project.updateOne(
-          { _id: project._id, user: req.user._id },
-          { $set: { learningMaterials: fallbackMaterials } }
-        );
+        project.learningMaterials = buildFallbackLearningMaterials(project);
+        needsSave = true;
       }
+
+      const timeline = (project.timelineOptions || []).find(option => option.id === project.selectedTimeline);
+      if (timeline && project.phases?.length) {
+        const allocations = allocatePhaseDays(project.phases, getTimelineDays(timeline));
+        const allocationChanged = project.phases.some((phase, index) => (
+          phase.allocatedDays !== allocations[index]
+          || phase.estimatedTime !== `${allocations[index]} Build Day${allocations[index] === 1 ? '' : 's'} within ${timeline.duration}`
+        ));
+        if (allocationChanged) {
+          project.phases.forEach((phase, index) => {
+            phase.allocatedDays = allocations[index];
+            phase.estimatedTime = `${allocations[index]} Build Day${allocations[index] === 1 ? '' : 's'} within ${timeline.duration}`;
+          });
+          needsSave = true;
+        }
+      }
+
+      if (needsSave) await project.save();
     }));
 
     res.status(200).json(projects);
@@ -439,6 +487,11 @@ export const selectTimeline = async (req, res) => {
       isStarted: false,
       tasks: [],
     }));
+    const allocations = allocatePhaseDays(project.phases, getTimelineDays(timeline));
+    project.phases.forEach((phase, index) => {
+      phase.allocatedDays = allocations[index];
+      phase.estimatedTime = `${allocations[index]} Build Day${allocations[index] === 1 ? '' : 's'} within ${timeline.duration}`;
+    });
     project.learningMaterials = learningMaterials.map(m => ({
       title: m.title,
       url: m.url,

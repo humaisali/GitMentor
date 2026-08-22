@@ -47,6 +47,18 @@ const allocatePhaseSessions = (phases, availableSlots, durationHours) => {
   return allocated;
 };
 
+export const getPhaseTimelineAllocations = (project) => {
+  const timeline = getSelectedTimeline(project);
+  const phases = project?.phases || [];
+  if (!timeline || !phases.length) return [];
+  const stored = phases.map(phase => Number(phase.allocatedDays));
+  const hasValidStoredAllocation = stored.every(value => Number.isInteger(value) && value >= 0)
+    && stored.reduce((sum, count) => sum + count, 0) === timeline.durationDays;
+  return hasValidStoredAllocation
+    ? stored
+    : allocatePhaseSessions(phases, timeline.durationDays, 2);
+};
+
 const buildTimelineDates = (startDate, durationDays) => (
   Array.from({ length: durationDays }, (_, index) => addDays(startDate, index))
 );
@@ -64,7 +76,11 @@ export const generateBuildDayPreview = ({ project, startDate, startTime, duratio
   const durationMinutes = Math.max(30, Number(duration) || 120);
   const durationHours = durationMinutes / 60;
   const timelineDates = buildTimelineDates(firstSessionDate, timeline.durationDays);
-  const allocations = allocatePhaseSessions(activePhases, timelineDates.length, durationHours);
+  const projectAllocations = getPhaseTimelineAllocations(project);
+  const allPhasesActive = activePhases.length === project.phases.length;
+  const allocations = allPhasesActive
+    ? projectAllocations
+    : allocatePhaseSessions(activePhases, timelineDates.length, durationHours);
   const sessions = [];
   let dateIndex = 0;
 

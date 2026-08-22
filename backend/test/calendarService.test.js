@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { encryptToken, decryptToken } from '../src/utils/tokenCrypto.js';
 import { buildGoogleEvent, getGoogleCalendarErrorDetails, isGoogleCredentialError } from '../src/services/googleCalendarService.js';
 import { getTimelineDurationDays, parseSessionInput } from '../src/controllers/calendarController.js';
-import { buildFallbackPhaseTasks } from '../src/controllers/roadmapController.js';
+import { allocatePhaseDays, buildFallbackPhaseTasks } from '../src/controllers/roadmapController.js';
 
 test('Google refresh tokens are encrypted and decryptable', () => {
   process.env.GOOGLE_TOKEN_ENCRYPTION_KEY = 'test-only-calendar-encryption-secret';
@@ -93,4 +93,16 @@ test('timeline duration uses explicit days and supports legacy week labels', () 
   assert.equal(getTimelineDurationDays({ duration: '1 week', durationDays: 7 }), 7);
   assert.equal(getTimelineDurationDays({ duration: '2 weeks' }), 14);
   assert.equal(getTimelineDurationDays({ duration: '10 days' }), 10);
+});
+
+test('phase day allocation is bounded by the confirmed project timeline', () => {
+  const phases = [
+    { suggestedSessionCount: 2, estimatedHours: 16 },
+    { suggestedSessionCount: 3, estimatedHours: 24 },
+    { suggestedSessionCount: 3, estimatedHours: 24 },
+    { suggestedSessionCount: 3, estimatedHours: 24 },
+  ];
+  const allocation = allocatePhaseDays(phases, 7);
+  assert.deepEqual(allocation, [1, 2, 2, 2]);
+  assert.equal(allocation.reduce((sum, days) => sum + days, 0), 7);
 });
