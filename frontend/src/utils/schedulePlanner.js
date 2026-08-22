@@ -59,11 +59,22 @@ export const getPhaseTimelineAllocations = (project) => {
     : allocatePhaseSessions(phases, timeline.durationDays, 2);
 };
 
-const buildTimelineDates = (startDate, durationDays) => (
-  Array.from({ length: durationDays }, (_, index) => addDays(startDate, index))
-);
+const buildTimelineDates = (startDate, durationDays, workingDays = []) => {
+  const allowedDays = new Set(
+    Array.isArray(workingDays) && workingDays.length > 0
+      ? workingDays.map(Number)
+      : [0, 1, 2, 3, 4, 5, 6]
+  );
+  const dates = [];
+  let cursor = new Date(startDate);
+  for (let attempts = 0; dates.length < durationDays && attempts < 370; attempts += 1) {
+    if (allowedDays.has(cursor.getDay())) dates.push(new Date(cursor));
+    cursor = addDays(cursor, 1);
+  }
+  return dates;
+};
 
-export const generateBuildDayPreview = ({ project, startDate, startTime, duration, reminder, timeZone }) => {
+export const generateBuildDayPreview = ({ project, startDate, startTime, duration, reminder, timeZone, workingDays }) => {
   if (!project?.phases?.length || !startDate || !startTime) return [];
 
   const firstSessionDate = new Date(`${startDate}T${startTime}`);
@@ -75,7 +86,7 @@ export const generateBuildDayPreview = ({ project, startDate, startTime, duratio
   const activePhases = project.phases.filter(phase => !phase.isCompleted);
   const durationMinutes = Math.max(30, Number(duration) || 120);
   const durationHours = durationMinutes / 60;
-  const timelineDates = buildTimelineDates(firstSessionDate, timeline.durationDays);
+  const timelineDates = buildTimelineDates(firstSessionDate, timeline.durationDays, workingDays);
   const projectAllocations = getPhaseTimelineAllocations(project);
   const allPhasesActive = activePhases.length === project.phases.length;
   const allocations = allPhasesActive

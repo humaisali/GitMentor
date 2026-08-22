@@ -76,3 +76,20 @@ test('planner skips completed phases and rejects incomplete preferences', () => 
     startDate: '2026-08-24', startTime: '18:00', duration: 60,
   }), []);
 });
+
+test('planner honors preferred working days while preserving the required Build Day count', () => {
+  const sessions = generateBuildDayPreview({
+    project,
+    startDate: '2026-08-24',
+    startTime: '18:00',
+    duration: '90',
+    reminder: '60',
+    timeZone: 'Asia/Karachi',
+    workingDays: [1, 3, 5],
+  });
+
+  assert.equal(sessions.length, 7);
+  assert.ok(sessions.every(session => [1, 3, 5].includes(new Date(session.startAt).getDay())));
+  assert.ok(sessions.every(session => new Date(session.endAt) - new Date(session.startAt) === 90 * 60 * 1000));
+  assert.ok(sessions.every(session => session.reminderMinutes[0] === 60));
+});

@@ -140,8 +140,8 @@ const validateBatchTimelineBounds = async (userId, inputs) => {
 
     const dayOffset = calendarDayOrdinal(startAt, timeZone) - calendarDayOrdinal(timelineStartAt, timeZone);
     const durationDays = getTimelineDurationDays(timeline);
-    if (dayOffset < 0 || dayOffset >= durationDays) {
-      throw Object.assign(new Error(`${project.title} uses a ${timeline.duration || `${durationDays}-day`} timeline. Every Build Day must fall within that confirmed window.`), { statusCode: 400 });
+    if (dayOffset < 0 || dayOffset > 366) {
+      throw Object.assign(new Error(`${project.title} Build Days must start on or after the selected timeline date and stay within one year.`), { statusCode: 400 });
     }
     const occupiedKey = `${project.projectId}:${dayOffset}`;
     if (occupiedDays.has(occupiedKey)) {

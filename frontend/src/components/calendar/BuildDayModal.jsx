@@ -10,25 +10,41 @@ const toLocalInput = (value) => {
   return date.toISOString().slice(0, 16);
 };
 
-const defaultEnd = (startValue) => {
+const defaultEnd = (startValue, durationMinutes = 120) => {
   const date = new Date(startValue || Date.now() + 60 * 60 * 1000);
-  date.setHours(date.getHours() + 2);
+  date.setMinutes(date.getMinutes() + Number(durationMinutes || 120));
   return toLocalInput(date);
 };
 
-export const BuildDayModal = ({ projects, initialProjectId, initialPhaseId, session, onClose, onSubmit }) => {
-  const [form, setForm] = useState(() => ({
-    projectId: session?.project?.projectId || session?.projectId || initialProjectId || projects[0]?.projectId || '',
-    phaseId: session?.phaseId || initialPhaseId || '',
-    taskIds: session?.taskIds || [],
-    title: session?.title || '',
-    objective: session?.objective || '',
-    milestone: session?.milestone || '',
-    notes: session?.notes || '',
-    startAt: toLocalInput(session?.startAt),
-    endAt: session?.endAt ? toLocalInput(session.endAt) : defaultEnd(),
-    reminder: String(session?.reminderMinutes?.[0] ?? 30),
-  }));
+const preferredStart = (session, defaults = {}) => {
+  if (session?.startAt) return toLocalInput(session.startAt);
+  const start = new Date();
+  const [hours, minutes] = String(defaults.startTime || '').split(':').map(Number);
+  if (Number.isInteger(hours) && Number.isInteger(minutes)) {
+    start.setHours(hours, minutes, 0, 0);
+    if (start <= new Date()) start.setDate(start.getDate() + 1);
+  } else {
+    start.setHours(start.getHours() + 1);
+  }
+  return toLocalInput(start);
+};
+
+export const BuildDayModal = ({ projects, defaults = {}, initialProjectId, initialPhaseId, session, onClose, onSubmit }) => {
+  const [form, setForm] = useState(() => {
+    const startAt = preferredStart(session, defaults);
+    return {
+      projectId: session?.project?.projectId || session?.projectId || initialProjectId || projects[0]?.projectId || '',
+      phaseId: session?.phaseId || initialPhaseId || '',
+      taskIds: session?.taskIds || [],
+      title: session?.title || '',
+      objective: session?.objective || '',
+      milestone: session?.milestone || '',
+      notes: session?.notes || '',
+      startAt,
+      endAt: session?.endAt ? toLocalInput(session.endAt) : defaultEnd(startAt, defaults.durationMinutes),
+      reminder: String(session?.reminderMinutes?.[0] ?? defaults.reminderMinutes ?? 30),
+    };
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -52,7 +68,7 @@ export const BuildDayModal = ({ projects, initialProjectId, initialPhaseId, sess
         phaseId: form.phaseId || undefined,
         startAt: new Date(form.startAt).toISOString(),
         endAt: new Date(form.endAt).toISOString(),
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+        timeZone: defaults.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         reminderMinutes: [Number(form.reminder)],
       });
       onClose();

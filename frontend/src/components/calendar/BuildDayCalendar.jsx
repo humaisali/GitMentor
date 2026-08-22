@@ -5,9 +5,10 @@ import { getBuildDayDate, getBuildDayPhase } from '../../utils/calendarDates';
 
 const sameDay = (left, right) => left.getFullYear() === right.getFullYear()
   && left.getMonth() === right.getMonth() && left.getDate() === right.getDate();
-const startOfWeek = (date) => {
+const startOfWeek = (date, weekStartsOn = 0) => {
   const result = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  result.setDate(result.getDate() - result.getDay());
+  const dayOffset = (result.getDay() - weekStartsOn + 7) % 7;
+  result.setDate(result.getDate() - dayOffset);
   return result;
 };
 const addDays = (date, amount) => {
@@ -25,18 +26,21 @@ const EventChip = ({ session, onSelect }) => {
   );
 };
 
-export const BuildDayCalendar = ({ sessions, view, onSelect }) => {
+export const BuildDayCalendar = ({ sessions, view, weekStartsOn = 0, onSelect }) => {
   const [cursor, setCursor] = useState(() => new Date());
   const [today] = useState(() => new Date());
   const days = useMemo(() => {
     if (view === 'WEEK') {
-      const start = startOfWeek(cursor);
+      const start = startOfWeek(cursor, weekStartsOn);
       return Array.from({ length: 7 }, (_, index) => addDays(start, index));
     }
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
-    const gridStart = startOfWeek(first);
+    const gridStart = startOfWeek(first, weekStartsOn);
     return Array.from({ length: 42 }, (_, index) => addDays(gridStart, index));
-  }, [cursor, view]);
+  }, [cursor, view, weekStartsOn]);
+  const dayLabels = weekStartsOn === 1
+    ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   const move = (direction) => setCursor(current => {
     const next = new Date(current);
@@ -56,7 +60,7 @@ export const BuildDayCalendar = ({ sessions, view, onSelect }) => {
         <button type="button" onClick={() => move(1)} className="p-2 text-muted-steel hover:text-canvas-white" aria-label={`Next ${view.toLowerCase()}`}><ChevronRight size={17} /></button>
       </div>
       <div className="grid grid-cols-7 border-b border-white/[0.06]">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => <div key={day} className="py-2 text-center text-[10px] font-mono uppercase text-muted-steel">{day}</div>)}
+        {dayLabels.map(day => <div key={day} className="py-2 text-center text-[10px] font-mono uppercase text-muted-steel">{day}</div>)}
       </div>
       <div className="grid grid-cols-7">
         {days.map(day => {

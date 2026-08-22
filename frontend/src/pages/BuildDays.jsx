@@ -10,6 +10,7 @@ import { AutoScheduleModal } from '../components/calendar/AutoScheduleModal';
 import { BuildDayCalendar } from '../components/calendar/BuildDayCalendar';
 import { calendarApi } from '../services/calendarApi';
 import { apiRequest } from '../services/apiClient';
+import { settingsApi } from '../services/settingsApi';
 import { formatBuildDayTime, getBuildDayDate, getBuildDayPhase } from '../utils/calendarDates';
 
 const statusVariant = { SCHEDULED: 'primary', COMPLETED: 'success', CANCELLED: 'default' };
@@ -63,6 +64,7 @@ const BuildDays = () => {
   const [sessions, setSessions] = useState([]);
   const [projects, setProjects] = useState([]);
   const [connection, setConnection] = useState(null);
+  const [schedulingDefaults, setSchedulingDefaults] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('UPCOMING');
   const [view, setView] = useState('LIST');
@@ -79,12 +81,17 @@ const BuildDays = () => {
 
   const loadData = useCallback(async () => {
     try {
-      const [sessionData, projectData, connectionData] = await Promise.all([
-        calendarApi.list(), apiRequest('/roadmaps'), calendarApi.connectionStatus(),
+      const [sessionData, projectData, connectionData, settingsData] = await Promise.all([
+        calendarApi.list(), apiRequest('/roadmaps'), calendarApi.connectionStatus(), settingsApi.get().catch(() => null),
       ]);
       setSessions(sessionData);
       setProjects(projectData);
       setConnection(connectionData);
+      if (settingsData?.preferences) setSchedulingDefaults({
+        ...settingsData.preferences.buildDays,
+        timeZone: settingsData.preferences.general.timeZone,
+        weekStartsOn: settingsData.preferences.general.weekStartsOn,
+      });
     } catch (error) {
       setMessage(error.message);
     } finally {
@@ -94,12 +101,17 @@ const BuildDays = () => {
 
   useEffect(() => {
     let active = true;
-    Promise.all([calendarApi.list(), apiRequest('/roadmaps'), calendarApi.connectionStatus()])
-      .then(([sessionData, projectData, connectionData]) => {
+    Promise.all([calendarApi.list(), apiRequest('/roadmaps'), calendarApi.connectionStatus(), settingsApi.get().catch(() => null)])
+      .then(([sessionData, projectData, connectionData, settingsData]) => {
         if (!active) return;
         setSessions(sessionData);
         setProjects(projectData);
         setConnection(connectionData);
+        if (settingsData?.preferences) setSchedulingDefaults({
+          ...settingsData.preferences.buildDays,
+          timeZone: settingsData.preferences.general.timeZone,
+          weekStartsOn: settingsData.preferences.general.weekStartsOn,
+        });
       })
       .catch(error => { if (active) setMessage(error.message); })
       .finally(() => { if (active) setLoading(false); });
@@ -152,7 +164,7 @@ const BuildDays = () => {
   const reconcile = () => runAction(() => calendarApi.reconcile(), 'Calendar synchronization checked.');
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] min-h-0 flex-col gap-6 overflow-hidden">
+    <div className="flex h-[calc(100vh-5.5rem)] min-h-0 flex-col gap-6 overflow-hidden md:h-[calc(100vh-4rem)]">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 animate-fade-in-up">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-canvas-white">Build <span className="bg-gradient-to-r from-muted-cyan to-blue-400 bg-clip-text text-transparent">Days</span></h1>
@@ -202,7 +214,7 @@ const BuildDays = () => {
 
           <div className="scroll-panel min-h-0 flex-1 overflow-y-auto overscroll-contain pr-2">
             {view !== 'LIST' && !loading ? (
-              <BuildDayCalendar sessions={visibleSessions} view={view} onSelect={item => item.status === 'SCHEDULED' && setModal({ type: 'manual', session: item })} />
+              <BuildDayCalendar sessions={visibleSessions} view={view} weekStartsOn={schedulingDefaults?.weekStartsOn} onSelect={item => item.status === 'SCHEDULED' && setModal({ type: 'manual', session: item })} />
             ) : (
               <div className="space-y-3 pb-6">
                 {loading ? [1, 2, 3].map(item => <Skeleton key={item} className="h-28" />) : visibleSessions.length ? visibleSessions.map(session => (
@@ -220,8 +232,8 @@ const BuildDays = () => {
         </>
       )}
 
-      {!loading && modal?.type === 'manual' && <BuildDayModal projects={projects} session={modal.session} initialProjectId={modal.projectId} initialPhaseId={modal.phaseId} onClose={() => setModal(null)} onSubmit={data => runAction(() => modal.session ? calendarApi.update(modal.session._id, data) : calendarApi.create(data), modal.session ? 'Build Day updated.' : 'Build Day scheduled.', true)} />}
-      {!loading && modal?.type === 'auto' && <AutoScheduleModal projects={projects} initialProjectId={modal.projectId} onClose={() => setModal(null)} onSubmit={items => runAction(() => calendarApi.createBatch(items), 'Roadmap Build Days scheduled.', true)} />}
+      {!loading && modal?.type === 'manual' && <BuildDayModal projects={projects} defaults={schedulingDefaults} session={modal.session} initialProjectId={modal.projectId} initialPhaseId={modal.phaseId} onClose={() => setModal(null)} onSubmit={data => runAction(() => modal.session ? calendarApi.update(modal.session._id, data) : calendarApi.create(data), modal.session ? 'Build Day updated.' : 'Build Day scheduled.', true)} />}
+      {!loading && modal?.type === 'auto' && <AutoScheduleModal projects={projects} defaults={schedulingDefaults} initialProjectId={modal.projectId} onClose={() => setModal(null)} onSubmit={items => runAction(() => calendarApi.createBatch(items), 'Roadmap Build Days scheduled.', true)} />}
     </div>
   );
 };

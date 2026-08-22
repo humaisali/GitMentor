@@ -14,21 +14,26 @@ const tomorrowValue = () => {
 
 const TOMORROW = tomorrowValue();
 
-export const AutoScheduleModal = ({ projects, initialProjectId, onClose, onSubmit }) => {
+export const AutoScheduleModal = ({ projects, defaults = {}, initialProjectId, onClose, onSubmit }) => {
   const eligible = projects.filter(project => project.phases?.some(phase => !phase.isCompleted) && getSelectedTimeline(project));
   const [form, setForm] = useState({
     projectId: initialProjectId && eligible.some(project => project.projectId === initialProjectId) ? initialProjectId : eligible[0]?.projectId || '',
     startDate: TOMORROW,
-    startTime: '18:00',
-    duration: '120',
-    reminder: '30',
+    startTime: defaults.startTime || '18:00',
+    duration: String(defaults.durationMinutes || 120),
+    reminder: String(defaults.reminderMinutes || 30),
   });
   const [reviewing, setReviewing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const project = eligible.find(item => item.projectId === form.projectId);
   const selectedTimeline = getSelectedTimeline(project);
-  const preview = generateBuildDayPreview({ ...form, project });
+  const preview = generateBuildDayPreview({
+    ...form,
+    project,
+    timeZone: defaults.timeZone,
+    workingDays: defaults.workingDays,
+  });
   const previewStart = preview[0] ? new Date(preview[0].startAt) : null;
   const previewEnd = preview.at(-1) ? new Date(preview.at(-1).startAt) : null;
 

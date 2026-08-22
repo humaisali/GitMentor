@@ -12,6 +12,7 @@ import roadmapRoutes from './src/routes/roadmapRoutes.js';
 import calendarRoutes from './src/routes/calendarRoutes.js';
 import analyticsRoutes from './src/routes/analyticsRoutes.js';
 import skillRoutes from './src/routes/skillRoutes.js';
+import settingsRoutes from './src/routes/settingsRoutes.js';
 import { startCalendarSyncWorker } from './src/services/calendarSyncWorker.js';
 
 dotenv.config();
@@ -73,6 +74,7 @@ app.use('/api/roadmaps', roadmapRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/skills', skillRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Start Server
 const PORT = process.env.PORT || 5000;
