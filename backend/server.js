@@ -12,6 +12,7 @@ import roadmapRoutes from './src/routes/roadmapRoutes.js';
 import calendarRoutes from './src/routes/calendarRoutes.js';
 import analyticsRoutes from './src/routes/analyticsRoutes.js';
 import skillRoutes from './src/routes/skillRoutes.js';
+import { startCalendarSyncWorker } from './src/services/calendarSyncWorker.js';
 
 dotenv.config();
 
@@ -19,7 +20,7 @@ const app = express();
 
 // Middlewares
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true,
 }));
 app.use(express.json());
@@ -41,6 +42,7 @@ const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
+    startCalendarSyncWorker();
   } catch (error) {
     console.error(`Error connecting to MongoDB: ${error.message}`);
     process.exit(1);
