@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Sparkles, ArrowLeft, CheckCircle2, Circle, Check, Info, X, ListTodo, Bot, BookOpen, ExternalLink, Play } from 'lucide-react';
+import { Sparkles, ArrowLeft, CheckCircle2, Circle, Check, X, ListTodo, Bot, BookOpen, ExternalLink, Play, CalendarPlus } from 'lucide-react';
 import { Badge } from '../components/ui/Badge';
 import ProjectChatAssistant from '../components/ProjectChatAssistant';
 
@@ -20,12 +20,23 @@ const ProjectWorkspace = () => {
   const [completingPhase, setCompletingPhase] = useState(null);
   
   const [taskModal, setTaskModal] = useState({ isOpen: false, task: null });
+  const [workspaceMessage, setWorkspaceMessage] = useState('');
 
   const token = localStorage.getItem('gitmentor_token');
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
-    fetchProject();
+    let active = true;
+    const requestHeaders = { Authorization: `Bearer ${localStorage.getItem('gitmentor_token')}` };
+    fetch(API_BASE, { headers: requestHeaders })
+      .then(async res => {
+        if (!res.ok) throw new Error('Unable to load project.');
+        const roadmaps = await res.json();
+        if (active) setProject(roadmaps.find(item => item.projectId === projectId) || null);
+      })
+      .catch(err => console.error('Error fetching project:', err))
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, [projectId]);
 
   useEffect(() => {
@@ -39,36 +50,22 @@ const ProjectWorkspace = () => {
     };
   }, [taskModal.isOpen]);
 
-  const fetchProject = async () => {
-    try {
-      const res = await fetch(API_BASE, { headers });
-      if (res.ok) {
-        const roadmaps = await res.json();
-        const foundProject = roadmaps.find(p => p.projectId === projectId);
-        if (foundProject) {
-          setProject(foundProject);
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching project:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleStartPhase = async (phaseId) => {
     setStartingPhase(phaseId);
+    setWorkspaceMessage('');
     try {
       const res = await fetch(`${API_BASE}/${projectId}/phases/${phaseId}/start`, {
         method: 'POST',
         headers
       });
-      if (res.ok) {
-        const updatedProject = await res.json();
-        setProject(updatedProject);
+      const responseData = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(responseData.error || responseData.message || 'Unable to start this phase.');
+      setProject(responseData);
+      if (responseData.taskGeneration === 'FALLBACK') {
+        setWorkspaceMessage('The AI task generator was unavailable, so GitMentor created a reliable starter task plan instead.');
       }
     } catch (err) {
-      console.error(err);
+      setWorkspaceMessage(err.message);
     } finally {
       setStartingPhase(null);
     }
@@ -134,6 +131,7 @@ const ProjectWorkspace = () => {
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto p-4 pb-10">
+      {workspaceMessage && <div className="glass-surface border border-amber-500/20 px-4 py-3 text-sm text-amber-300">{workspaceMessage}</div>}
       <header className="mb-2 shrink-0">
         <button 
           onClick={() => navigate(`/roadmaps/${projectId}`)}
@@ -224,9 +222,16 @@ const ProjectWorkspace = () => {
                       <h4 className={`text-xl font-medium pr-4 ${isCompleted ? 'text-muted-steel line-through' : 'text-canvas-white'}`}>
                         {phase.title}
                       </h4>
-                      <span className="shrink-0 inline-flex items-center px-3 py-1 rounded-full text-xs font-mono bg-white/[0.04] border border-white/[0.06] text-muted-steel">
-                        {phase.estimatedTime}
-                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {isUnlocked && !isCompleted && (
+                          <button onClick={() => navigate(`/build-days?projectId=${encodeURIComponent(projectId)}&phaseId=${encodeURIComponent(phase.phaseId)}`)} className="p-1.5 rounded-lg text-muted-steel hover:text-muted-cyan hover:bg-muted-cyan/10" title="Schedule this phase">
+                            <CalendarPlus size={15} />
+                          </button>
+                        )}
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-mono bg-white/[0.04] border border-white/[0.06] text-muted-steel">
+                          {phase.estimatedTime}
+                        </span>
+                      </div>
                     </div>
                     <p className="text-[15px] text-muted-steel leading-relaxed">{phase.description}</p>
                   </div>

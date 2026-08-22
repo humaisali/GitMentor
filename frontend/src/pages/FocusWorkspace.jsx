@@ -2,6 +2,7 @@ import { AIInsightsWidget } from '../components/widgets/AIInsightsWidget';
 import { RepositoryOverviewWidget } from '../components/widgets/RepositoryOverviewWidget';
 import { SystemMetricsWidget } from '../components/widgets/SystemMetricsWidget';
 import { LiveActivityFeedWidget } from '../components/widgets/LiveActivityFeedWidget';
+import { NextBuildDayWidget } from '../components/widgets/NextBuildDayWidget';
 
 const FocusWorkspace = () => {
   return (
@@ -14,26 +15,29 @@ const FocusWorkspace = () => {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-12 animate-fade-in-up stagger-1">
+          <NextBuildDayWidget />
+        </div>
         
         {/* Row 1 */}
-        <div className="lg:col-span-8 flex flex-col animate-fade-in-up stagger-1">
+        <div className="lg:col-span-8 flex flex-col animate-fade-in-up stagger-2">
           <div className="flex-1 h-full [&>*]:h-full">
             <AIInsightsWidget />
           </div>
         </div>
-        <div className="lg:col-span-4 flex flex-col animate-fade-in-up stagger-2">
+        <div className="lg:col-span-4 flex flex-col animate-fade-in-up stagger-3">
           <div className="flex-1 h-full [&>*]:h-full">
             <SystemMetricsWidget />
           </div>
         </div>
 
         {/* Row 2 */}
-        <div className="lg:col-span-8 flex flex-col animate-fade-in-up stagger-3">
+        <div className="lg:col-span-8 flex flex-col animate-fade-in-up stagger-4">
           <div className="flex-1 h-full [&>*]:h-full">
             <LiveActivityFeedWidget />
           </div>
         </div>
-        <div className="lg:col-span-4 flex flex-col animate-fade-in-up stagger-4">
+        <div className="lg:col-span-4 flex flex-col animate-fade-in-up stagger-5">
           <div className="flex-1 h-full [&>*]:h-full">
             <RepositoryOverviewWidget />
           </div>

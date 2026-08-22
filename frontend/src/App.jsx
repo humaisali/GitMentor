@@ -9,6 +9,7 @@ import ProjectDetails from './pages/ProjectDetails';
 import ProjectWorkspace from './pages/ProjectWorkspace';
 import SkillProfile from './pages/SkillProfile';
 import Settings from './pages/Settings';
+import BuildDays from './pages/BuildDays';
 import Login from './pages/Login';
 import AuthCallback from './pages/AuthCallback';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -33,6 +34,7 @@ function App() {
         <Route path="analytics" element={<Analytics />} />
         <Route path="skills" element={<SkillProfile />} />
         <Route path="roadmap" element={<Roadmap />} />
+        <Route path="build-days" element={<BuildDays />} />
         <Route path="roadmaps/:projectId" element={<ProjectDetails />} />
         <Route path="roadmaps/:projectId/workspace" element={<ProjectWorkspace />} />
         <Route path="repositories" element={<Repositories />} />

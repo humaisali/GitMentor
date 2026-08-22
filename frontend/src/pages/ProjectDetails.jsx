@@ -4,7 +4,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { Badge } from '../components/ui/Badge';
-import { Sparkles, ArrowLeft, CheckCircle2, Circle, Clock, Check, ExternalLink, BookOpen, Layers, Compass, ListTodo, Info, X, Play, Brain, Target, Gauge } from 'lucide-react';
+import { Sparkles, ArrowLeft, Circle, Clock, Check, Layers, Compass, Play, Brain, Target, Gauge, CalendarPlus } from 'lucide-react';
 import ProjectChatAssistant from '../components/ProjectChatAssistant';
 
 const API_BASE = 'http://localhost:5000/api/roadmaps';
@@ -17,32 +17,22 @@ const ProjectDetails = () => {
   const [generatingPlan, setGeneratingPlan] = useState(false);
   const [generatingTimeline, setGeneratingTimeline] = useState(false);
   const [selectedOptionId, setSelectedOptionId] = useState(null);
-  const [completingPhase, setCompletingPhase] = useState(null);
 
   const token = localStorage.getItem('gitmentor_token');
   const headers = { Authorization: `Bearer ${token}` };
 
-  const fetchProject = async () => {
-    try {
-      const res = await fetch(API_BASE, { headers });
-      if (res.ok) {
+  useEffect(() => {
+    let active = true;
+    const requestHeaders = { Authorization: `Bearer ${localStorage.getItem('gitmentor_token')}` };
+    fetch(API_BASE, { headers: requestHeaders })
+      .then(async res => {
+        if (!res.ok) throw new Error('Unable to load project.');
         const roadmaps = await res.json();
-        const found = roadmaps.find(p => p.projectId === projectId);
-        setProject(found);
-      }
-    } catch (err) {
-      console.error('Error fetching project:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProject();
-  }, [projectId]);
-
-  useEffect(() => {
-    fetchProject();
+        if (active) setProject(roadmaps.find(item => item.projectId === projectId));
+      })
+      .catch(err => console.error('Error fetching project:', err))
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, [projectId]);
 
   const handleGeneratePlan = async () => {
@@ -83,24 +73,6 @@ const ProjectDetails = () => {
       console.error(err);
     } finally {
       setGeneratingTimeline(false);
-    }
-  };
-
-  const handleCompletePhase = async (phaseId) => {
-    setCompletingPhase(phaseId);
-    try {
-      const res = await fetch(`${API_BASE}/${projectId}/phases/${phaseId}/complete`, {
-        method: 'POST',
-        headers
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setProject(updated);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setCompletingPhase(null);
     }
   };
 
@@ -148,13 +120,14 @@ const ProjectDetails = () => {
           <div className="flex flex-col items-end gap-3 shrink-0">
             <Badge variant={project.status === 'COMPLETED' ? 'success' : 'primary'}>{project.status}</Badge>
             {project.selectedTimeline && (
-              <Button 
-                variant="primary" 
-                className="px-6 py-2.5 text-sm font-medium gap-2"
-                onClick={handleContinueProject}
-              >
-                <Play size={16} /> Continue Project
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="secondary" className="px-4 py-2.5 text-sm gap-2" onClick={() => navigate(`/build-days?projectId=${encodeURIComponent(projectId)}&mode=auto`)}>
+                  <CalendarPlus size={16} /> Schedule
+                </Button>
+                <Button variant="primary" className="px-6 py-2.5 text-sm font-medium gap-2" onClick={handleContinueProject}>
+                  <Play size={16} /> Continue Project
+                </Button>
+              </div>
             )}
           </div>
         </div>

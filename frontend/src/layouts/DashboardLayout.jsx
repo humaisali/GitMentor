@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Target, GitMerge, Settings, FileText, BarChart2, Brain } from 'lucide-react';
+import { LayoutDashboard, Target, GitMerge, Settings, FileText, BarChart2, Brain, CalendarClock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const DashboardLayout = () => {
@@ -26,6 +26,7 @@ const DashboardLayout = () => {
           <NavItem to="/analytics" icon={<BarChart2 size={18} />} label="Analytics" />
           <NavItem to="/skills" icon={<Brain size={18} />} label="Skill Profile" />
           <NavItem to="/roadmap" icon={<Target size={18} />} label="Roadmap" />
+          <NavItem to="/build-days" icon={<CalendarClock size={18} />} label="Build Days" />
           <NavItem to="/repositories" icon={<FileText size={18} />} label="Repositories" />
           <NavItem to="/settings" icon={<Settings size={18} />} label="Settings" />
         </nav>
