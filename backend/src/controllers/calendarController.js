@@ -84,6 +84,72 @@ const validatePhaseAndTasks = (project, data) => {
   }
 };
 
+export const getTimelineDurationDays = (timeline) => {
+  const durationText = String(timeline?.duration || '');
+  const value = Number.parseInt(durationText, 10);
+  const inferredDays = /week/i.test(durationText) ? value * 7 : value;
+  return Math.max(1, Number(timeline?.durationDays) || inferredDays || 1);
+};
+
+const calendarDayOrdinal = (value, timeZone) => {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(value);
+  const part = type => Number(parts.find(item => item.type === type)?.value);
+  return Math.floor(Date.UTC(part('year'), part('month') - 1, part('day')) / (24 * 60 * 60 * 1000));
+};
+
+const validateBatchTimelineBounds = async (userId, inputs) => {
+  const projectIds = [...new Set(inputs.map(input => input.projectId).filter(Boolean))];
+  const projects = await Project.find({ user: userId, projectId: { $in: projectIds } });
+  const projectMap = new Map(projects.map(project => [project.projectId, project]));
+  const timelineStarts = new Map();
+  const sessionCounts = new Map();
+  const occupiedDays = new Set();
+
+  for (const input of inputs) {
+    const project = projectMap.get(input.projectId);
+    if (!project) throw Object.assign(new Error(`Project ${input.projectId || ''} was not found.`), { statusCode: 404 });
+    const timeline = (project.timelineOptions || []).find(option => option.id === project.selectedTimeline);
+    if (!timeline) throw Object.assign(new Error(`Confirm a project timeline before auto-scheduling ${project.title}.`), { statusCode: 400 });
+    const startAt = new Date(input.startAt);
+    const timelineStartAt = new Date(input.timelineStartAt);
+    const timeZone = input.timeZone || 'UTC';
+    if (Number.isNaN(startAt.getTime()) || Number.isNaN(timelineStartAt.getTime()) || !isValidTimeZone(timeZone)) {
+      throw Object.assign(new Error('Auto-scheduled sessions require a valid timeline start and timezone.'), { statusCode: 400 });
+    }
+    const existingStart = timelineStarts.get(project.projectId);
+    if (existingStart !== undefined && existingStart !== timelineStartAt.getTime()) {
+      throw Object.assign(new Error('All sessions for a project must use the same timeline start.'), { statusCode: 400 });
+    }
+    timelineStarts.set(project.projectId, timelineStartAt.getTime());
+
+    const dayOffset = calendarDayOrdinal(startAt, timeZone) - calendarDayOrdinal(timelineStartAt, timeZone);
+    const durationDays = getTimelineDurationDays(timeline);
+    if (dayOffset < 0 || dayOffset >= durationDays) {
+      throw Object.assign(new Error(`${project.title} uses a ${timeline.duration || `${durationDays}-day`} timeline. Every Build Day must fall within that confirmed window.`), { statusCode: 400 });
+    }
+    const occupiedKey = `${project.projectId}:${dayOffset}`;
+    if (occupiedDays.has(occupiedKey)) {
+      throw Object.assign(new Error('Auto-planning supports one Build Day per project day.'), { statusCode: 400 });
+    }
+    occupiedDays.add(occupiedKey);
+    sessionCounts.set(project.projectId, (sessionCounts.get(project.projectId) || 0) + 1);
+  }
+
+  for (const [projectId, sessionCount] of sessionCounts) {
+    const project = projectMap.get(projectId);
+    const timeline = project.timelineOptions.find(option => option.id === project.selectedTimeline);
+    const durationDays = getTimelineDurationDays(timeline);
+    if (sessionCount !== durationDays) {
+      throw Object.assign(new Error(`${project.title} has a confirmed ${timeline.duration || `${durationDays}-day`} timeline and requires exactly ${durationDays} Build Days.`), { statusCode: 400 });
+    }
+  }
+};
+
 const markReconnectRequired = async (user, error) => {
   if (!user || !isGoogleCredentialError(error)) return;
   if (!user.googleCalendar) user.googleCalendar = {};
@@ -175,6 +241,11 @@ export const scheduleSessionsBatch = async (req, res) => {
   }
   const user = await User.findById(req.user._id);
   if (!user) return res.status(404).json({ message: 'User not found.' });
+  try {
+    await validateBatchTimelineBounds(user._id, inputs);
+  } catch (error) {
+    return res.status(error.statusCode || 400).json({ message: error.message, code: 'TIMELINE_BOUNDARY_VIOLATION' });
+  }
   try {
     await verifyCalendarAccess(user);
   } catch (error) {

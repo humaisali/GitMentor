@@ -24,23 +24,21 @@ export const getSelectedTimeline = (project) => {
 
 const allocatePhaseSessions = (phases, availableSlots, durationHours) => {
   if (!phases.length || availableSlots <= 0) return [];
-  const desired = phases.map(phase => Math.max(
+  const weights = phases.map(phase => Math.max(
     1,
-    Number(phase.suggestedSessionCount)
-      || Math.ceil((Number(phase.estimatedHours) || durationHours) / durationHours)
+    Number(phase.suggestedSessionCount) || 0,
+    Math.ceil((Number(phase.estimatedHours) || durationHours) / durationHours)
   ));
-  const totalDesired = desired.reduce((sum, count) => sum + count, 0);
-  const target = Math.min(totalDesired, availableSlots);
   const allocated = phases.map(() => 0);
 
-  for (let index = 0; index < Math.min(phases.length, target); index += 1) allocated[index] = 1;
-  for (let remaining = target - allocated.reduce((sum, count) => sum + count, 0); remaining > 0; remaining -= 1) {
+  for (let index = 0; index < Math.min(phases.length, availableSlots); index += 1) allocated[index] = 1;
+  for (let remaining = availableSlots - allocated.reduce((sum, count) => sum + count, 0); remaining > 0; remaining -= 1) {
     let selectedIndex = 0;
-    let largestGap = -1;
-    desired.forEach((count, index) => {
-      const gap = count - allocated[index];
-      if (gap > largestGap) {
-        largestGap = gap;
+    let lowestCoverage = Number.POSITIVE_INFINITY;
+    weights.forEach((weight, index) => {
+      const coverage = allocated[index] / weight;
+      if (coverage < lowestCoverage) {
+        lowestCoverage = coverage;
         selectedIndex = index;
       }
     });
@@ -49,18 +47,12 @@ const allocatePhaseSessions = (phases, availableSlots, durationHours) => {
   return allocated;
 };
 
-const buildTimelineDates = (startDate, durationDays, allowedDays, minimumSlots) => {
-  const allDates = Array.from({ length: durationDays }, (_, index) => addDays(startDate, index));
-  const preferred = allDates.filter(date => allowedDays.has(date.getDay()));
-  if (preferred.length >= minimumSlots) return preferred;
-  const preferredKeys = new Set(preferred.map(date => date.toDateString()));
-  return [...preferred, ...allDates.filter(date => !preferredKeys.has(date.toDateString()))]
-    .sort((left, right) => left - right)
-    .slice(0, Math.min(durationDays, minimumSlots));
-};
+const buildTimelineDates = (startDate, durationDays) => (
+  Array.from({ length: durationDays }, (_, index) => addDays(startDate, index))
+);
 
-export const generateBuildDayPreview = ({ project, startDate, startTime, duration, weekdays, reminder, timeZone }) => {
-  if (!project?.phases?.length || !weekdays?.length || !startDate || !startTime) return [];
+export const generateBuildDayPreview = ({ project, startDate, startTime, duration, reminder, timeZone }) => {
+  if (!project?.phases?.length || !startDate || !startTime) return [];
 
   const firstSessionDate = new Date(`${startDate}T${startTime}`);
   const timelineStart = new Date(`${startDate}T00:00:00`);
@@ -69,10 +61,9 @@ export const generateBuildDayPreview = ({ project, startDate, startTime, duratio
   if (!timeline) return [];
 
   const activePhases = project.phases.filter(phase => !phase.isCompleted);
-  const allowedDays = new Set(weekdays.map(Number));
   const durationMinutes = Math.max(30, Number(duration) || 120);
   const durationHours = durationMinutes / 60;
-  const timelineDates = buildTimelineDates(firstSessionDate, timeline.durationDays, allowedDays, activePhases.length);
+  const timelineDates = buildTimelineDates(firstSessionDate, timeline.durationDays);
   const allocations = allocatePhaseSessions(activePhases, timelineDates.length, durationHours);
   const sessions = [];
   let dateIndex = 0;

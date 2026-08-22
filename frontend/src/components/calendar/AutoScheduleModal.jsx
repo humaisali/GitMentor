@@ -3,13 +3,7 @@ import { CalendarRange, ChevronLeft, Sparkles, X } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
-import { generateBuildDayPreview } from '../../utils/schedulePlanner';
-
-const WEEKDAYS = [
-  { value: 1, label: 'Mon' }, { value: 2, label: 'Tue' }, { value: 3, label: 'Wed' },
-  { value: 4, label: 'Thu' }, { value: 5, label: 'Fri' }, { value: 6, label: 'Sat' },
-  { value: 0, label: 'Sun' },
-];
+import { generateBuildDayPreview, getSelectedTimeline } from '../../utils/schedulePlanner';
 
 const tomorrowValue = () => {
   const date = new Date();
@@ -20,25 +14,22 @@ const tomorrowValue = () => {
 const TOMORROW = tomorrowValue();
 
 export const AutoScheduleModal = ({ projects, initialProjectId, onClose, onSubmit }) => {
-  const eligible = projects.filter(project => project.phases?.length);
+  const eligible = projects.filter(project => project.phases?.some(phase => !phase.isCompleted) && getSelectedTimeline(project));
   const [form, setForm] = useState({
     projectId: initialProjectId && eligible.some(project => project.projectId === initialProjectId) ? initialProjectId : eligible[0]?.projectId || '',
     startDate: TOMORROW,
     startTime: '18:00',
     duration: '120',
-    weekdays: [1, 3, 5],
     reminder: '30',
   });
   const [reviewing, setReviewing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const project = eligible.find(item => item.projectId === form.projectId);
+  const selectedTimeline = getSelectedTimeline(project);
   const preview = generateBuildDayPreview({ ...form, project });
-
-  const toggleWeekday = (day) => setForm(current => ({
-    ...current,
-    weekdays: current.weekdays.includes(day) ? current.weekdays.filter(value => value !== day) : [...current.weekdays, day],
-  }));
+  const previewStart = preview[0] ? new Date(preview[0].startAt) : null;
+  const previewEnd = preview.at(-1) ? new Date(preview.at(-1).startAt) : null;
 
   const confirm = async () => {
     setSaving(true);
@@ -66,7 +57,7 @@ export const AutoScheduleModal = ({ projects, initialProjectId, onClose, onSubmi
             <h2 className="text-xl font-semibold text-canvas-white flex items-center gap-2">
               <CalendarRange size={20} className="text-muted-cyan" /> Auto-plan Roadmap
             </h2>
-            <p className="text-sm text-muted-steel mt-1">Split each phase into focused Build Days using its estimated effort and tasks.</p>
+            <p className="text-sm text-muted-steel mt-1">Fit focused Build Days inside the project’s confirmed timeline.</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-lg text-muted-steel hover:text-canvas-white hover:bg-white/[0.06]" aria-label="Close"><X size={18} /></button>
         </div>
@@ -80,6 +71,13 @@ export const AutoScheduleModal = ({ projects, initialProjectId, onClose, onSubmi
         ) : reviewing ? (
           <div className="space-y-5">
             <button onClick={() => setReviewing(false)} className="text-sm text-muted-steel hover:text-canvas-white flex items-center gap-2"><ChevronLeft size={15} /> Edit preferences</button>
+            {selectedTimeline && (
+              <div className="rounded-xl border border-muted-cyan/20 bg-muted-cyan/[0.06] p-4">
+                <p className="text-xs font-mono uppercase tracking-wider text-muted-cyan">Confirmed timeline · {selectedTimeline.duration}</p>
+                <p className="text-sm text-canvas-white mt-1">{preview.length} Build Days from {previewStart?.toLocaleDateString()} to {previewEnd?.toLocaleDateString()}</p>
+                <p className="text-xs text-muted-steel mt-1">One Build Day is created for every calendar day; phases are distributed across the confirmed window.</p>
+              </div>
+            )}
             <div className="space-y-3">
               {preview.map((session, index) => (
                 <div key={session.previewId} className="glass-surface p-4 flex items-start justify-between gap-4">
@@ -104,7 +102,7 @@ export const AutoScheduleModal = ({ projects, initialProjectId, onClose, onSubmi
             )}
             <div className="flex justify-end gap-3">
               <Button variant="secondary" onClick={onClose}>Cancel</Button>
-              <Button onClick={confirm} disabled={saving}>{saving ? 'Syncing roadmap...' : `Confirm ${preview.length} Build Days`}</Button>
+              <Button onClick={confirm} disabled={saving || !preview.length}>{saving ? 'Syncing roadmap...' : `Confirm ${preview.length} Build Days`}</Button>
             </div>
           </div>
         ) : (
@@ -115,6 +113,13 @@ export const AutoScheduleModal = ({ projects, initialProjectId, onClose, onSubmi
                 {eligible.map(item => <option key={item.projectId} value={item.projectId}>{item.title}</option>)}
               </select>
             </label>
+
+            {selectedTimeline && (
+              <div className="rounded-xl border border-muted-cyan/20 bg-muted-cyan/[0.06] px-4 py-3 text-sm">
+                <span className="text-muted-cyan font-medium">Confirmed project timeline: {selectedTimeline.duration}</span>
+                <span className="text-muted-steel"> · This creates exactly {selectedTimeline.durationDays} Build Days.</span>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Input label="Start date" type="date" min={TOMORROW} value={form.startDate} onChange={event => setForm(current => ({ ...current, startDate: event.target.value }))} />
@@ -127,15 +132,6 @@ export const AutoScheduleModal = ({ projects, initialProjectId, onClose, onSubmi
               </label>
             </div>
 
-            <div>
-              <p className="text-sm text-canvas-white mb-3">Preferred coding days</p>
-              <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
-                {WEEKDAYS.map(day => (
-                  <button key={day.value} type="button" onClick={() => toggleWeekday(day.value)} className={`py-2 rounded-xl text-xs font-mono border transition-all ${form.weekdays.includes(day.value) ? 'bg-muted-cyan/10 border-muted-cyan/30 text-muted-cyan' : 'bg-white/[0.03] border-white/[0.08] text-muted-steel'}`}>{day.label}</button>
-                ))}
-              </div>
-            </div>
-
             <label className="flex flex-col gap-1.5 text-sm text-canvas-white max-w-xs">
               Reminder
               <select value={form.reminder} onChange={event => setForm(current => ({ ...current, reminder: event.target.value }))} className="bg-bg-base border border-white/[0.1] rounded-xl px-4 py-2.5 text-sm">
@@ -145,7 +141,7 @@ export const AutoScheduleModal = ({ projects, initialProjectId, onClose, onSubmi
 
             <div className="flex justify-end gap-3">
               <Button variant="secondary" onClick={onClose}>Cancel</Button>
-              <Button onClick={() => form.weekdays.length && setReviewing(true)} disabled={!form.weekdays.length}>Preview Schedule</Button>
+              <Button onClick={() => setReviewing(true)}>Preview Schedule</Button>
             </div>
           </div>
         )}
