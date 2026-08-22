@@ -71,7 +71,7 @@ export const getRoadmap = async (req, res) => {
   }
 };
 
-// @desc    Generate a new roadmap using Gemini AI
+// @desc    Generate a new roadmap using the configured AI providers
 // @route   POST /api/roadmaps/generate
 // @access  Private
 export const generateNewRoadmap = async (req, res) => {
@@ -98,12 +98,12 @@ export const generateNewRoadmap = async (req, res) => {
     // 2. Fetch skill profile if available (for enhanced personalization)
     const skillProfile = await SkillProfile.findOne({ user: req.user._id });
 
-    // 3. Generate Roadmap using Gemini
+    // 3. Generate the roadmap through the AI router.
     const { prompt } = req.body || {};
     const roadmapData = await generateRoadmap(repositories, prompt, skillProfile);
 
     if (!Array.isArray(roadmapData)) {
-      throw new Error(`Gemini did not return an array: ${JSON.stringify(roadmapData)}`);
+      throw new Error(`The AI provider did not return a roadmap array: ${JSON.stringify(roadmapData)}`);
     }
 
     // 3. Delete old roadmap if exists
@@ -161,7 +161,7 @@ export const generatePlan = async (req, res) => {
     const project = await Project.findOne({ projectId, user: req.user._id });
     if (!project) return res.status(404).json({ message: 'Project not found' });
 
-    // Generate from Gemini
+    // Generate through the configured AI provider.
     const { generateProjectPlan } = await import('../utils/geminiApi.js');
     const planData = await generateProjectPlan(project.title, project.description, {
       targetSkills: project.targetSkills || [],
@@ -199,7 +199,7 @@ export const selectTimeline = async (req, res) => {
     const timeline = project.timelineOptions.find(t => t.id === timelineId);
     if (!timeline) return res.status(400).json({ message: 'Invalid timeline ID' });
 
-    // Generate phases and learning materials in parallel from Gemini
+    // Generate phases and grounded learning materials in parallel.
     const { generateProjectPhases, generateLearningMaterials } = await import('../utils/geminiApi.js');
     const [phases, learningMaterials] = await Promise.all([
       generateProjectPhases(project.title, timeline.duration),
@@ -263,7 +263,7 @@ export const startPhase = async (req, res) => {
     let taskGeneration = 'AI';
     try {
       tasksData = await generatePhaseTasks(project.title, phase.title, phase.description);
-      if (!Array.isArray(tasksData) || !tasksData.length) throw new Error('Gemini returned no phase tasks.');
+      if (!Array.isArray(tasksData) || !tasksData.length) throw new Error('The AI provider returned no phase tasks.');
     } catch (generationError) {
       console.warn(`Falling back to deterministic tasks for ${projectId}/${phaseId}: ${generationError.message}`);
       taskGeneration = 'FALLBACK';
@@ -394,8 +394,12 @@ export const chatWithProject = async (req, res) => {
       return res.status(404).json({ message: 'Project not found.' });
     }
 
-    // Limit history to last 15 messages to control token usage
-    const trimmedHistory = history.slice(-15);
+    // Keep project chat context bounded to control latency and provider token limits.
+    const configuredHistoryLimit = Number(process.env.AI_CHAT_HISTORY_LIMIT);
+    const historyLimit = Number.isFinite(configuredHistoryLimit) && configuredHistoryLimit > 0
+      ? Math.floor(configuredHistoryLimit)
+      : 12;
+    const trimmedHistory = history.slice(-historyLimit);
 
     const reply = await chatWithProjectAssistant(project.toObject(), trimmedHistory, message.trim());
 

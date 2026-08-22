@@ -381,7 +381,7 @@ export const assessSkills = async (req, res) => {
     try {
       assessment = await generateSkillAssessment(analyticsData, trackedRepos, skillSignals, careerTrack);
     } catch (aiError) {
-      console.warn('Gemini skill refinement failed; using rule-based assessment:', aiError.message);
+      console.warn('AI skill refinement failed; using rule-based assessment:', aiError.message);
       assessment = {
         overallLevel: skillSignals.overallLevel,
         overallScore: skillSignals.overallScore,

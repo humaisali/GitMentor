@@ -1,16 +1,13 @@
-import { GoogleGenAI, Type } from '@google/genai';
-
-let aiInstance = null;
-
-const getAI = () => {
-  if (!aiInstance) {
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY is not defined in environment variables.');
-    }
-    aiInstance = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  }
-  return aiInstance;
-};
+import { aiRouter } from '../ai/aiRouter.js';
+import { AI_TASKS } from '../ai/taskPolicies.js';
+import {
+  phaseTasksSchema,
+  projectPhasesSchema,
+  projectPlanSchema,
+  repoInsightsSchema,
+  roadmapSchema,
+  skillAssessmentSchema,
+} from '../ai/schemas.js';
 
 /**
  * Generate a comprehensive AI skill assessment from GitHub data.
@@ -19,8 +16,6 @@ const getAI = () => {
  * @returns {Object} Structured skill assessment profile.
  */
 export const generateSkillAssessment = async (analyticsData, trackedRepos = [], skillSignals = null, careerTrack = null) => {
-  const ai = getAI();
-
   const repoSummary = (analyticsData.allRepos || []).map(repo => ({
     name: repo.name,
     description: repo.description || 'No description',
@@ -97,100 +92,11 @@ export const generateSkillAssessment = async (analyticsData, trackedRepos = [], 
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            overallLevel: { type: Type.STRING },
-            overallScore: { type: Type.NUMBER },
-            confidence: { type: Type.NUMBER },
-            summary: { type: Type.STRING },
-            categories: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  slug: { type: Type.STRING },
-                  level: { 
-                    type: Type.STRING,
-                    description: "Must be exactly 'BEGINNER', 'INTERMEDIATE', or 'ADVANCED'"
-                  },
-                  score: { type: Type.NUMBER },
-                  confidence: { type: Type.NUMBER },
-                  description: { type: Type.STRING },
-                  strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
-                  gaps: { type: Type.ARRAY, items: { type: Type.STRING } },
-                  evidence: {
-                    type: Type.ARRAY,
-                    items: {
-                      type: Type.OBJECT,
-                      properties: {
-                        source: { type: Type.STRING },
-                        label: { type: Type.STRING },
-                        detail: { type: Type.STRING },
-                        weight: { type: Type.NUMBER },
-                      },
-                      required: ["source", "label", "detail"],
-                    },
-                  },
-                  recommendedActions: { type: Type.ARRAY, items: { type: Type.STRING } },
-                },
-                required: ["name", "slug", "level", "score", "confidence", "description", "strengths", "gaps", "evidence", "recommendedActions"],
-              },
-            },
-            topLanguages: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  proficiency: { 
-                    type: Type.STRING,
-                    description: "Must be exactly 'BEGINNER', 'INTERMEDIATE', or 'ADVANCED'"
-                  },
-                  projectCount: { type: Type.NUMBER },
-                },
-                required: ["name", "proficiency", "projectCount"],
-              },
-            },
-            recommendations: { type: Type.ARRAY, items: { type: Type.STRING } },
-            nextBestActions: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  title: { type: Type.STRING },
-                  description: { type: Type.STRING },
-                  categorySlug: { type: Type.STRING },
-                  impact: { type: Type.STRING },
-                },
-                required: ["title", "description", "categorySlug", "impact"],
-              },
-            },
-            readinessScores: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  track: { type: Type.STRING },
-                  score: { type: Type.NUMBER },
-                  summary: { type: Type.STRING },
-                },
-                required: ["track", "score", "summary"],
-              },
-            },
-          },
-          required: ["overallLevel", "overallScore", "confidence", "summary", "categories", "topLanguages", "recommendations", "nextBestActions", "readinessScores"],
-        },
-      },
+    return await aiRouter.generateStructured({
+      task: AI_TASKS.SKILL_ASSESSMENT,
+      prompt,
+      schema: skillAssessmentSchema,
     });
-
-    return JSON.parse(response.text);
   } catch (error) {
     console.error('Error generating skill assessment:', error);
     throw error;
@@ -204,8 +110,6 @@ export const generateSkillAssessment = async (analyticsData, trackedRepos = [], 
  * @returns {Array} List of project objects for the roadmap.
  */
 export const generateRoadmap = async (repositories, userPrompt = null, skillProfile = null) => {
-  const ai = getAI();
-
   const customGoalSection = userPrompt
     ? `\n    The user has a specific goal: "${userPrompt}". 
     Create a highly focused 5-step roadmap specifically to achieve this goal, taking their current skill level into account as a starting point.`
@@ -265,44 +169,11 @@ export const generateRoadmap = async (repositories, userPrompt = null, skillProf
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              projectId: { type: Type.STRING },
-              title: { type: Type.STRING },
-              description: { type: Type.STRING },
-              difficulty: { type: Type.STRING },
-              estTime: { type: Type.STRING },
-              prereq: { type: Type.STRING },
-              targetSkills: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    name: { type: Type.STRING },
-                    slug: { type: Type.STRING },
-                  },
-                  required: ["name", "slug"],
-                },
-              },
-              addressedGaps: { type: Type.ARRAY, items: { type: Type.STRING } },
-              skillRationale: { type: Type.STRING },
-              readinessTrack: { type: Type.STRING },
-            },
-            required: ["projectId", "title", "description", "difficulty", "estTime", "prereq", "targetSkills", "addressedGaps", "skillRationale", "readinessTrack"],
-          },
-        },
-      },
+    return await aiRouter.generateStructured({
+      task: AI_TASKS.ROADMAP,
+      prompt: `${prompt}\nReturn the projects inside a top-level "items" array.`,
+      schema: roadmapSchema,
     });
-
-    return JSON.parse(response.text);
   } catch (error) {
     console.error('Error generating roadmap:', error);
     throw error;
@@ -316,8 +187,6 @@ export const generateRoadmap = async (repositories, userPrompt = null, skillProf
  * @returns {Array} List of insight objects.
  */
 export const generateRepoInsights = async (repository, context = {}) => {
-  const ai = getAI();
-
   const prompt = `
     You are an expert Senior Software Engineer and Security Reviewer.
     Analyze the following repository metadata, its top-level file structure, recent commits, and README.
@@ -350,31 +219,11 @@ export const generateRepoInsights = async (repository, context = {}) => {
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              insightId: { type: Type.STRING },
-              type: { type: Type.STRING },
-              severity: { type: Type.STRING },
-              title: { type: Type.STRING },
-              description: { type: Type.STRING },
-              suggestedSolution: { type: Type.STRING },
-              file: { type: Type.STRING },
-            },
-            required: ["insightId", "type", "severity", "title", "description", "suggestedSolution", "file"],
-          },
-        },
-      },
+    return await aiRouter.generateStructured({
+      task: AI_TASKS.REPO_INSIGHTS,
+      prompt: `${prompt}\nReturn the insights inside a top-level "items" array.`,
+      schema: repoInsightsSchema,
     });
-
-    return JSON.parse(response.text);
   } catch (error) {
     console.error('Error generating repo insights:', error);
     throw error;
@@ -385,8 +234,6 @@ export const generateRepoInsights = async (repository, context = {}) => {
  * Generate a detailed project plan and 3 timeline options.
  */
 export const generateProjectPlan = async (projectTitle, projectDescription, skillTargeting = {}) => {
-  const ai = getAI();
-
   const prompt = `
     You are an expert tech lead. A user is starting a project: "${projectTitle}".
     Description: "${projectDescription}"
@@ -407,38 +254,11 @@ export const generateProjectPlan = async (projectTitle, projectDescription, skil
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            scope: { type: Type.STRING },
-            objectives: { type: Type.ARRAY, items: { type: Type.STRING } },
-            methodologies: { type: Type.ARRAY, items: { type: Type.STRING } },
-            techStack: { type: Type.ARRAY, items: { type: Type.STRING } },
-            timelineOptions: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  id: { type: Type.STRING },
-                  title: { type: Type.STRING },
-                  duration: { type: Type.STRING },
-                  durationDays: { type: Type.INTEGER },
-                  description: { type: Type.STRING },
-                },
-                required: ["id", "title", "duration", "durationDays", "description"]
-              }
-            }
-          },
-          required: ["scope", "objectives", "methodologies", "techStack", "timelineOptions"]
-        }
-      }
+    return await aiRouter.generateStructured({
+      task: AI_TASKS.PROJECT_PLAN,
+      prompt,
+      schema: projectPlanSchema,
     });
-    return JSON.parse(response.text);
   } catch (error) {
     console.error('Error generating project plan:', error);
     throw error;
@@ -449,8 +269,6 @@ export const generateProjectPlan = async (projectTitle, projectDescription, skil
  * Split project into phases based on chosen timeline.
  */
 export const generateProjectPhases = async (projectTitle, timelineDuration) => {
-  const ai = getAI();
-
   const prompt = `
     A user is building "${projectTitle}" over a timeline of "${timelineDuration}".
     Break this project down into exactly 4 or 5 actionable phases.
@@ -459,29 +277,11 @@ export const generateProjectPhases = async (projectTitle, timelineDuration) => {
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              phaseId: { type: Type.STRING },
-              title: { type: Type.STRING },
-              description: { type: Type.STRING },
-              estimatedTime: { type: Type.STRING },
-              estimatedHours: { type: Type.INTEGER },
-              suggestedSessionCount: { type: Type.INTEGER },
-            },
-            required: ["phaseId", "title", "description", "estimatedTime", "estimatedHours", "suggestedSessionCount"]
-          }
-        }
-      }
+    return await aiRouter.generateStructured({
+      task: AI_TASKS.PROJECT_PHASES,
+      prompt: `${prompt}\nReturn the phases inside a top-level "items" array.`,
+      schema: projectPhasesSchema,
     });
-    return JSON.parse(response.text);
   } catch (error) {
     console.error('Error generating phases:', error);
     throw error;
@@ -492,8 +292,6 @@ export const generateProjectPhases = async (projectTitle, timelineDuration) => {
  * Split a phase into detailed, actionable tasks with step-by-step guides.
  */
 export const generatePhaseTasks = async (projectTitle, phaseTitle, phaseDescription) => {
-  const ai = getAI();
-
   const prompt = `
     A user is building "${projectTitle}". They are currently working on a phase titled "${phaseTitle}".
     Phase Description: "${phaseDescription}"
@@ -508,27 +306,11 @@ export const generatePhaseTasks = async (projectTitle, phaseTitle, phaseDescript
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              taskId: { type: Type.STRING },
-              title: { type: Type.STRING },
-              description: { type: Type.STRING },
-              steps: { type: Type.ARRAY, items: { type: Type.STRING } },
-            },
-            required: ["taskId", "title", "description", "steps"]
-          }
-        }
-      }
+    return await aiRouter.generateStructured({
+      task: AI_TASKS.PHASE_TASKS,
+      prompt: `${prompt}\nReturn the tasks inside a top-level "items" array.`,
+      schema: phaseTasksSchema,
     });
-    return JSON.parse(response.text);
   } catch (error) {
     console.error('Error generating phase tasks:', error);
     throw error;
@@ -544,8 +326,6 @@ export const generatePhaseTasks = async (projectTitle, phaseTitle, phaseDescript
  * @returns {Array} List of learning material objects with title, url, and source.
  */
 export const generateLearningMaterials = async (projectTitle, projectDescription, techStack = []) => {
-  const ai = getAI();
-
   const techStackStr = techStack.length > 0 ? techStack.join(', ') : 'general web development';
 
   const prompt = `
@@ -559,12 +339,9 @@ export const generateLearningMaterials = async (projectTitle, projectDescription
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        tools: [{ googleSearch: {} }],
-      },
+    const response = await aiRouter.generateGrounded({
+      task: AI_TASKS.LEARNING_MATERIALS,
+      prompt,
     });
 
     // Extract real URLs from Google Search grounding metadata
@@ -632,8 +409,6 @@ export const generateLearningMaterials = async (projectTitle, projectDescription
  * @returns {String} The assistant's response text.
  */
 export const chatWithProjectAssistant = async (projectData, conversationHistory, userMessage) => {
-  const ai = getAI();
-
   // Serialize project context
   const phaseSummary = (projectData.phases || []).map((p, i) => {
     const taskList = (p.tasks || []).map(t => {
@@ -698,22 +473,16 @@ YOUR STRICT RULES:
 
   // Build conversation history for the chat
   const history = conversationHistory.map(msg => ({
-    role: msg.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: msg.content }]
+    role: msg.role === 'assistant' ? 'assistant' : 'user',
+    content: msg.content,
   }));
 
   try {
-    const chat = ai.chats.create({
-      model: 'gemini-2.5-flash',
-      config: {
-        systemInstruction,
-        temperature: 0.7,
-      },
-      history,
+    return await aiRouter.generateText({
+      task: AI_TASKS.PROJECT_CHAT,
+      systemInstruction,
+      messages: [...history, { role: 'user', content: userMessage }],
     });
-
-    const response = await chat.sendMessage({ message: userMessage });
-    return response.text;
   } catch (error) {
     console.error('Error in project chat:', error);
     throw error;
