@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -6,10 +7,42 @@ import { useNavigate } from 'react-router-dom';
 import { FaGithub } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { LogOut, User, Link2 } from 'lucide-react';
+import { calendarApi } from '../services/calendarApi';
 
 const Settings = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
+  const [calendarWorking, setCalendarWorking] = useState(false);
+  const [calendarMessage, setCalendarMessage] = useState('');
+  const calendarConnected = user?.googleCalendar
+    ? Boolean(user.googleCalendar.connected)
+    : Boolean(user?.googleId);
+
+  const connectCalendar = async () => {
+    setCalendarWorking(true);
+    setCalendarMessage('');
+    try {
+      const { authorizationUrl } = await calendarApi.connect('/settings');
+      window.location.href = authorizationUrl;
+    } catch (error) {
+      setCalendarMessage(error.message);
+      setCalendarWorking(false);
+    }
+  };
+
+  const disconnectCalendar = async () => {
+    if (!window.confirm('Disconnect Google Calendar? Existing events will remain in Google Calendar.')) return;
+    setCalendarWorking(true);
+    try {
+      const result = await calendarApi.disconnect();
+      await refreshUser();
+      setCalendarMessage(result.warning || result.message || 'Google Calendar disconnected.');
+    } catch (error) {
+      setCalendarMessage(error.message);
+    } finally {
+      setCalendarWorking(false);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -78,32 +111,34 @@ const Settings = () => {
           </div>
 
           {/* Google */}
-          <div className={`flex items-center justify-between p-4 glass-surface transition-all duration-300 ${!user?.googleId ? 'opacity-60' : 'hover:border-muted-cyan/15 hover:shadow-[0_0_12px_rgba(88,166,255,0.06)]'}`}>
+          <div className={`flex items-center justify-between p-4 glass-surface transition-all duration-300 ${!calendarConnected ? 'opacity-80' : 'hover:border-muted-cyan/15 hover:shadow-[0_0_12px_rgba(88,166,255,0.06)]'}`}>
             <div className="flex items-center gap-3">
               <FcGoogle size={20} />
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-canvas-white">Google Calendar</span>
                 <span className="text-xs font-mono text-muted-steel">
-                  {user?.googleId ? 'Linked' : 'Not linked'}
+                  {calendarConnected ? (user?.googleCalendar?.email || 'Linked') : 'Not linked'}
                 </span>
               </div>
             </div>
-            {user?.googleId ? (
-              <Badge variant="success">CONNECTED</Badge>
+            {calendarConnected ? (
+              <div className="flex items-center gap-2">
+                <Badge variant="success">CONNECTED</Badge>
+                <Button variant="ghost" className="text-xs h-7 text-red-400" disabled={calendarWorking} onClick={disconnectCalendar}>Disconnect</Button>
+              </div>
             ) : (
               <Button
                 variant="secondary"
                 className="text-xs h-7"
-                onClick={() => {
-                  const token = localStorage.getItem('gitmentor_token');
-                  window.location.href = `http://localhost:5000/api/auth/google?token=${token}`;
-                }}
+                disabled={calendarWorking}
+                onClick={connectCalendar}
               >
-                Connect
+                {user?.googleCalendar?.status === 'RECONNECT_REQUIRED' ? 'Reconnect' : 'Connect'}
               </Button>
             )}
           </div>
         </div>
+        {calendarMessage && <p className="text-xs text-muted-steel mt-3">{calendarMessage}</p>}
       </Card>
 
       {/* Danger Zone */}

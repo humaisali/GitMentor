@@ -52,15 +52,14 @@ const Login = () => {
             <span>Continue with GitHub</span>
           </Button>
 
-          <Button 
-            variant="secondary" 
-            className="w-full gap-3 py-3 opacity-40 cursor-not-allowed"
-            disabled
-          >
+          <div className="w-full flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 py-3">
             <FcGoogle size={18} />
-            <span>Continue with Google</span>
-          </Button>
-          <p className="text-center text-[11px] text-muted-steel font-mono tracking-wider">GOOGLE AUTH COMING SOON</p>
+            <div className="flex flex-col">
+              <span className="text-sm text-canvas-white">Google Calendar integration</span>
+              <span className="text-[11px] text-muted-steel">Available in Settings after GitHub sign-in</span>
+            </div>
+          </div>
+          <p className="text-center text-[11px] text-muted-steel font-mono tracking-wider">GITHUB IS YOUR GITMENTOR IDENTITY</p>
         </div>
 
         {/* Footer */}

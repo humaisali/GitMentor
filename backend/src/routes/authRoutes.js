@@ -1,6 +1,14 @@
 import express from 'express';
 import passport from 'passport';
-import { githubCallback, getMe, logout } from '../controllers/authController.js';
+import {
+  githubCallback,
+  getMe,
+  logout,
+  startGoogleConnection,
+  googleCallback,
+  getGoogleStatus,
+  disconnectGoogle,
+} from '../controllers/authController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -13,7 +21,7 @@ router.get('/github', passport.authenticate('github', { scope: ['user:email', 'r
 // GitHub redirects back here after user grants access
 router.get(
   '/github/callback',
-  passport.authenticate('github', { failureRedirect: 'http://localhost:5173/login', session: false }),
+  passport.authenticate('github', { failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:5173'}/login`, session: false }),
   githubCallback
 );
 
@@ -24,24 +32,9 @@ router.get('/me', protect, getMe);
 // @route   POST /api/auth/logout
 router.post('/logout', protect, logout);
 
-// @route   GET /api/auth/google
-router.get('/google', (req, res, next) => {
-  const token = req.query.token;
-  passport.authenticate('google', {
-    scope: ['profile', 'email', 'https://www.googleapis.com/auth/calendar.events'],
-    accessType: 'offline',
-    prompt: 'consent',
-    state: token
-  })(req, res, next);
-});
-
-// @route   GET /api/auth/google/callback
-router.get(
-  '/google/callback',
-  passport.authenticate('google', { failureRedirect: 'http://localhost:5173/settings?error=google_auth_failed', session: false }),
-  (req, res) => {
-    res.redirect('http://localhost:5173/settings?google=connected');
-  }
-);
+router.post('/google/connect', protect, startGoogleConnection);
+router.get('/google/callback', googleCallback);
+router.get('/google/status', protect, getGoogleStatus);
+router.delete('/google/disconnect', protect, disconnectGoogle);
 
 export default router;

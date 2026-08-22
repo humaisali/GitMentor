@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
@@ -5,16 +6,6 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // On app load, check if we have a token in localStorage
-    const token = localStorage.getItem('gitmentor_token');
-    if (token) {
-      fetchUser(token);
-    } else {
-      setLoading(false);
-    }
-  }, []);
 
   const fetchUser = async (token) => {
     try {
@@ -36,6 +27,29 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  useEffect(() => {
+    const token = localStorage.getItem('gitmentor_token');
+    if (!token) {
+      Promise.resolve().then(() => setLoading(false));
+      return;
+    }
+
+    let active = true;
+    fetch('http://localhost:5000/api/auth/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then(async response => {
+      if (!response.ok) throw new Error('Session expired.');
+      const data = await response.json();
+      if (active) setUser(data);
+    }).catch(() => {
+      localStorage.removeItem('gitmentor_token');
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+
+    return () => { active = false; };
+  }, []);
+
   const loginWithToken = (token) => {
     localStorage.setItem('gitmentor_token', token);
     fetchUser(token);
@@ -46,8 +60,14 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const refreshUser = () => {
+    const token = localStorage.getItem('gitmentor_token');
+    if (token) return fetchUser(token);
+    return Promise.resolve();
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, loginWithToken, logout }}>
+    <AuthContext.Provider value={{ user, loading, loginWithToken, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
