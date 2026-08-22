@@ -46,6 +46,8 @@ export const SystemMetricsWidget = () => {
             <MetricCard label="Tasks Completed" value={metrics.tasksCompleted} index={1} />
             <MetricCard label="Insights Fixed" value={metrics.insightsFixed} index={2} />
             <MetricCard label="Repos Tracked" value={metrics.reposTracked} index={3} />
+            <MetricCard label="Build Days Done" value={metrics.buildDaysCompleted || 0} index={4} />
+            <MetricCard label="Build Days Next" value={metrics.upcomingBuildDays || 0} index={5} />
           </>
         ) : (
           <div className="col-span-2 text-center text-sm text-muted-steel mt-4">Failed to load metrics.</div>
