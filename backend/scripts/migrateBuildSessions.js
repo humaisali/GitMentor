@@ -20,15 +20,18 @@ const migrate = async () => {
       : await Project.findOne({ user: session.user, projectId: session.projectId });
     const startAt = new Date(session.startTime);
     const endAt = new Date(session.endTime || startAt.getTime() + 2 * 60 * 60 * 1000);
-    if (!project || Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime())) {
+    if (!session.project || Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime())) {
       skipped += 1;
       continue;
     }
+    const fallbackTitle = String(session.title || 'Legacy Build Day')
+      .replace(/^GitMentor Build Day:\s*/i, '')
+      .trim();
     await BuildSession.collection.updateOne({ _id: session._id }, {
       $set: {
-        project: project._id,
-        projectId: project.projectId,
-        projectTitle: project.title,
+        project: project?._id || session.project,
+        projectId: project?.projectId || session.projectId || `legacy-${session.project}`,
+        projectTitle: project?.title || session.projectTitle || fallbackTitle,
         startAt,
         endAt,
         timeZone: session.timeZone || 'UTC',

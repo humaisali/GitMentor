@@ -99,6 +99,24 @@ const applyGoogleEvent = (session, event) => {
   session.lastSyncError = undefined;
 };
 
+const hydrateLegacySession = async session => {
+  const raw = session.toObject();
+  const legacyStart = raw.startTime ? new Date(raw.startTime) : null;
+  const legacyEnd = raw.endTime ? new Date(raw.endTime) : null;
+  if (!session.startAt && legacyStart && !Number.isNaN(legacyStart.getTime())) session.startAt = legacyStart;
+  if (!session.endAt && legacyEnd && !Number.isNaN(legacyEnd.getTime())) session.endAt = legacyEnd;
+
+  if (!session.projectId || !session.projectTitle) {
+    const project = session.project ? await Project.findById(session.project) : null;
+    const fallbackTitle = String(session.title || 'Legacy Build Day')
+      .replace(/^GitMentor Build Day:\s*/i, '')
+      .trim();
+    session.projectId ||= project?.projectId || `legacy-${session.project || session._id}`;
+    session.projectTitle ||= project?.title || fallbackTitle;
+  }
+  return session;
+};
+
 const createSession = async ({ user, input }) => {
   const project = await findOwnedProject(user._id, input.projectId);
   const data = parseSessionInput(input);
@@ -264,8 +282,9 @@ export const updateSession = async (req, res) => {
 export const cancelSession = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    const session = await BuildSession.findOne({ _id: req.params.sessionId, user: user._id });
+    let session = await BuildSession.findOne({ _id: req.params.sessionId, user: user._id });
     if (!session) return res.status(404).json({ message: 'Build Day not found.' });
+    session = await hydrateLegacySession(session);
     if (session.googleEventId && session.syncStatus !== 'DELETED') {
       try {
         await deleteCalendarEvent(user, session);
