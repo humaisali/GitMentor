@@ -99,7 +99,7 @@ A persistent, floating AI chat assistant is available throughout the application
 | 1 | GitHub Profile & Repository Analysis | Completed |
 | 2 | AI Skill Assessment Engine | Completed |
 | 3 | Personalized Project Roadmap Generation | Completed |
-| 4 | Build Day Scheduling with Google Calendar Sync | Not Implemented |
+| 4 | Build Day Scheduling with Google Calendar Sync | Completed |
 | 5 | AI Mentor Assistance | Completed |
 | 6 | AI-Powered Repository Code Review | Completed |
 | 7 | Progress Dashboard & Analytics | Completed |
@@ -113,11 +113,11 @@ A persistent, floating AI chat assistant is available throughout the application
 | ID | Requirement | Status |
 |:---|:-----------|:------:|
 | FR-1 | User can authenticate using GitHub | Completed |
-| FR-2 | User can connect Google Calendar | Not Implemented |
+| FR-2 | User can connect Google Calendar | Completed |
 | FR-3 | System can fetch repositories | Completed |
 | FR-4 | System can analyze developer skills | Completed |
 | FR-5 | AI can recommend projects | Completed |
-| FR-6 | User can schedule Build Days | Not Implemented |
+| FR-6 | User can schedule Build Days | Completed |
 | FR-7 | AI can provide development guidance | Completed |
 | FR-8 | System can review repositories | Completed |
 | FR-9 | Dashboard can track progress | Completed |
@@ -245,6 +245,7 @@ GitMentor/
 │           ├── FocusWorkspace   # Main dashboard with widget grid
 │           ├── Analytics        # Gamification, badges, GitHub stats
 │           ├── Roadmap          # AI roadmap generation and listing
+│           ├── BuildDays        # Manual and automatic Google Calendar scheduling
 │           ├── ProjectDetails   # Phase execution and tracking
 │           ├── Repositories     # Repo list with AI analysis
 │           └── Settings         # Account configuration
@@ -305,10 +306,20 @@ GITHUB_CALLBACK_URL=http://localhost:5000/api/auth/github/callback
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
+GOOGLE_TOKEN_ENCRYPTION_KEY=your_separate_long_random_secret
 
 GEMINI_API_KEY=your_gemini_api_key
 
 CLIENT_URL=http://localhost:5173
+
+CALENDAR_SYNC_ENABLED=true
+CALENDAR_SYNC_INTERVAL_MINUTES=15
+```
+
+If upgrading from the earlier Build Day prototype that stored `startTime`/`endTime`, run the idempotent migration once:
+
+```bash
+npm run migrate:build-sessions
 ```
 
 Start the server:
@@ -340,8 +351,10 @@ All endpoints are under `/api`. Routes marked with Auth require a valid JWT toke
 | GET | `/api/health` | Health check | No |
 | GET | `/api/auth/github` | Start GitHub OAuth | No |
 | GET | `/api/auth/github/callback` | GitHub OAuth callback | No |
-| GET | `/api/auth/google` | Start Google OAuth | No |
+| POST | `/api/auth/google/connect` | Create a secure Google OAuth URL | Yes |
 | GET | `/api/auth/google/callback` | Google OAuth callback | No |
+| GET | `/api/auth/google/status?verify=true` | Google Calendar connection status with optional live credential validation | Yes |
+| DELETE | `/api/auth/google/disconnect` | Revoke and disconnect Google Calendar | Yes |
 | GET | `/api/auth/me` | Current user profile | Yes |
 | GET | `/api/repositories` | List user repositories | Yes |
 | GET | `/api/repositories/:id` | Repository details | Yes |
@@ -351,7 +364,13 @@ All endpoints are under `/api`. Routes marked with Auth require a valid JWT toke
 | POST | `/api/roadmaps/generate` | Generate an AI roadmap | Yes |
 | GET | `/api/roadmaps` | List user roadmaps | Yes |
 | GET | `/api/roadmaps/:id` | Roadmap details | Yes |
-| POST | `/api/calendar/sync` | Sync roadmap to Google Calendar | Yes |
+| GET | `/api/calendar/sessions` | List Build Days | Yes |
+| POST | `/api/calendar/sessions` | Schedule one Build Day | Yes |
+| POST | `/api/calendar/sessions/batch` | Atomically schedule a roadmap preview (`atomic: false` allows partial results) | Yes |
+| PATCH | `/api/calendar/sessions/:id` | Update a Build Day and Google event | Yes |
+| DELETE | `/api/calendar/sessions/:id` | Cancel a Build Day and Google event | Yes |
+| POST | `/api/calendar/sessions/:id/complete` | Complete a Build Day | Yes |
+| POST | `/api/calendar/reconcile` | Reconcile upcoming Google events | Yes |
 | GET | `/api/analytics` | Get gamification stats | Yes |
 | POST | `/api/analytics/evaluate` | Evaluate badge eligibility | Yes |
 
@@ -361,12 +380,12 @@ All endpoints are under `/api`. Routes marked with Auth require a valid JWT toke
 
 | Model | Key Fields | Purpose |
 |:------|:-----------|:--------|
-| User | `githubId`, `googleId`, `username`, `avatarUrl`, `accessToken`, `googleRefreshToken` | User profile and OAuth credentials |
+| User | `githubId`, `username`, `googleCalendar`, `accessToken` | User profile, encrypted Calendar credentials, and OAuth state |
 | Repository | `userId`, `githubRepoId`, `name`, `language`, `stars`, `forks` | Cached GitHub repo data |
 | Project | `userId`, `title`, `description`, `phases[]`, `pacing`, `status` | AI-generated project plans and execution state |
 | Insight | `userId`, `repositoryId`, `type`, `feedback`, `score` | AI code review and analysis records |
 | Analytics | `userId`, `unlockedBadges[]`, `stats`, `lastEvaluated` | Gamification state and badge tracking |
-| BuildSession | `userId`, `projectId`, `scheduledDate`, `status` | Scheduled coding sessions |
+| BuildSession | `user`, `project`, `phaseId`, `taskIds`, `startAt`, `endAt`, `timeZone`, `status`, `syncStatus` | Roadmap-linked Build Days and Google event state |
 
 ---
 
