@@ -19,10 +19,6 @@ const Roadmap = () => {
   const token = localStorage.getItem('gitmentor_token');
   const headers = { Authorization: `Bearer ${token}` };
 
-  useEffect(() => {
-    fetchRoadmap();
-  }, []);
-
   const fetchRoadmap = async () => {
     setLoading(true);
     try {
@@ -37,6 +33,13 @@ const Roadmap = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(fetchRoadmap, 0);
+    return () => clearTimeout(timer);
+    // Initial roadmap hydration intentionally runs once; regeneration is explicit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -162,11 +165,11 @@ const RoadmapNode = ({ node, index }) => {
   const isInProgress = node.status === 'IN_PROGRESS';
   const isLocked = node.status === 'LOCKED';
 
-  const StatusIcon = () => {
-    if (isCompleted) return <CheckCircle2 size={20} className="text-muted-cyan" />;
-    if (isInProgress) return <Circle size={20} className="text-muted-cyan fill-muted-cyan/20" />;
-    return <Lock size={18} className="text-muted-steel" />;
-  };
+  const statusIcon = isCompleted
+    ? <CheckCircle2 size={20} className="text-muted-cyan" />
+    : isInProgress
+      ? <Circle size={20} className="text-muted-cyan fill-muted-cyan/20" />
+      : <Lock size={18} className="text-muted-steel" />;
 
   const getStatusBadgeVariant = (status) => {
     if (status === 'COMPLETED') return 'success';
@@ -186,7 +189,7 @@ const RoadmapNode = ({ node, index }) => {
       {/* Timeline Node Connector */}
       <div className="absolute -left-[35px] top-4 flex items-center justify-center">
         <div className={`w-7 h-7 rounded-full flex items-center justify-center bg-bg-deep border ${isInProgress ? 'border-muted-cyan shadow-[0_0_12px_rgba(88,166,255,0.3)]' : isCompleted ? 'border-muted-cyan/40' : 'border-white/[0.1]'}`}>
-          <StatusIcon />
+          {statusIcon}
         </div>
       </div>
 

@@ -4,7 +4,7 @@ import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
-import { RefreshCcw, GitBranch, Star, GitFork, Plus, Check, ExternalLink, ChevronRight } from 'lucide-react';
+import { RefreshCcw, Star, GitFork, Plus, ExternalLink, ChevronRight } from 'lucide-react';
 
 const API_BASE = 'http://localhost:5000/api/repositories';
 
@@ -19,10 +19,6 @@ const Repositories = () => {
 
   const token = localStorage.getItem('gitmentor_token');
   const headers = { Authorization: `Bearer ${token}` };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -48,6 +44,13 @@ const Repositories = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(fetchData, 0);
+    return () => clearTimeout(timer);
+    // Initial repository hydration intentionally runs once; refreshes are explicit user actions.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleRefresh = async () => {
     setRefreshing(true);

@@ -521,7 +521,8 @@ const SkillProfile = () => {
   };
 
   useEffect(() => {
-    fetchProfile();
+    const timer = setTimeout(fetchProfile, 0);
+    return () => clearTimeout(timer);
   }, [fetchProfile]);
 
   const sortedCategories = useMemo(() => {

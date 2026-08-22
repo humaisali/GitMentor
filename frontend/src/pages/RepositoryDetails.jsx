@@ -3,7 +3,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ShieldAlert, Zap, Layers, Info, CheckCircle2, Loader2 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { Skeleton } from '../components/ui/Skeleton';
 
 const RepositoryDetails = () => {
   const { id } = useParams();
@@ -13,14 +12,6 @@ const RepositoryDetails = () => {
 
   const [insights, setInsights] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!repo) {
-      navigate('/repositories');
-      return;
-    }
-    fetchInsights();
-  }, [repo, id]);
 
   useEffect(() => {
     if (insights.length > 0 && state?.highlightInsightId) {
@@ -51,6 +42,17 @@ const RepositoryDetails = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!repo) {
+      navigate('/repositories');
+      return undefined;
+    }
+    const timer = setTimeout(fetchInsights, 0);
+    return () => clearTimeout(timer);
+    // The request is keyed by route identity; the local fetch closure is not reactive state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [repo, id, navigate]);
 
   const handleResolve = async (insightId) => {
     try {

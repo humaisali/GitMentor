@@ -30,7 +30,8 @@ const Analytics = () => {
   };
 
   useEffect(() => {
-    fetchProfile();
+    const timer = setTimeout(fetchProfile, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
