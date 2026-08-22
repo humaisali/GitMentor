@@ -4,6 +4,7 @@ import { google } from 'googleapis';
 import User from '../models/User.js';
 import OAuthState from '../models/OAuthState.js';
 import { encryptToken, decryptToken } from '../utils/tokenCrypto.js';
+import { normalizeUserPreferences } from '../utils/userSettings.js';
 import {
   createOAuthClient,
   GOOGLE_CALENDAR_SCOPES,
@@ -33,7 +34,7 @@ const hashState = (state) => crypto.createHash('sha256').update(state).digest('h
 export const githubCallback = (req, res) => {
   // User is now authenticated and available on req.user
   const token = jwt.sign(
-    { id: req.user._id, username: req.user.username },
+    { id: req.user._id, username: req.user.username, tokenVersion: req.user.tokenVersion || 0 },
     JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -55,6 +56,7 @@ export const getMe = async (req, res) => {
       username: req.user.username,
       avatarUrl: req.user.avatarUrl,
       githubId: req.user.githubId,
+      preferences: normalizeUserPreferences(req.user.preferences?.toObject?.() || req.user.preferences || {}),
       googleId: req.user.googleId,
       googleCalendar: {
         connected: hasGoogleToken && googleStatus !== 'RECONNECT_REQUIRED',

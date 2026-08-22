@@ -333,6 +333,8 @@ export const assessSkills = async (req, res) => {
     if (!user || !user.accessToken) {
       return res.status(401).json({ message: 'GitHub access token not found. Please re-authenticate.' });
     }
+    user.set('preferences.skillEngine.targetRole', careerTrack.id);
+    await user.save();
 
     // 2. Fetch GitHub data via GraphQL
     const githubRes = await fetch(GITHUB_GRAPHQL_URL, {

@@ -11,6 +11,9 @@ export const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, JWT_SECRET);
       req.user = await User.findById(decoded.id).select('-accessToken');
+      if (!req.user || Number(decoded.tokenVersion || 0) !== Number(req.user.tokenVersion || 0)) {
+        throw new Error('Session has been invalidated.');
+      }
       next();
     } catch (error) {
       res.status(401).json({ message: 'Not authorized, invalid token' });

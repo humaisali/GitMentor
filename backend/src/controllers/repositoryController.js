@@ -19,6 +19,7 @@ export const getGitHubRepos = async (req, res) => {
 
     const repos = await fetchUserRepos(user.accessToken);
     user.githubReposCache = repos;
+    user.githubCacheUpdatedAt = new Date();
     await user.save();
     res.status(200).json(repos);
   } catch (error) {
@@ -39,6 +40,7 @@ export const refreshGitHubRepos = async (req, res) => {
 
     const repos = await fetchUserRepos(user.accessToken);
     user.githubReposCache = repos;
+    user.githubCacheUpdatedAt = new Date();
     await user.save();
     res.status(200).json(repos);
   } catch (error) {
