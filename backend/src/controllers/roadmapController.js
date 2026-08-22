@@ -674,7 +674,12 @@ export const chatWithProject = async (req, res) => {
       : 12;
     const trimmedHistory = history.slice(-historyLimit);
 
-    const reply = await chatWithProjectAssistant(project.toObject(), trimmedHistory, message.trim());
+    const reply = await chatWithProjectAssistant(
+      project.toObject(),
+      trimmedHistory,
+      message.trim(),
+      req.user.preferences?.mentor
+    );
 
     res.status(200).json({ reply });
   } catch (error) {
