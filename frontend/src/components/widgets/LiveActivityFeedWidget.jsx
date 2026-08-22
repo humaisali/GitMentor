@@ -25,10 +25,13 @@ export const LiveActivityFeedWidget = () => {
   };
 
   useEffect(() => {
-    fetchEvents();
+    const initial = setTimeout(fetchEvents, 0);
     // Auto refresh every 60 seconds
     const interval = setInterval(fetchEvents, 60000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initial);
+      clearInterval(interval);
+    };
   }, []);
 
   const getEventIcon = (type) => {
@@ -43,9 +46,10 @@ export const LiveActivityFeedWidget = () => {
 
   const getEventDescription = (event) => {
     switch(event.type) {
-      case 'PushEvent': 
+      case 'PushEvent': {
         const commits = event.payload.commits?.length || 0;
         return `Pushed ${commits} commit${commits !== 1 ? 's' : ''} to ${event.repo.name}`;
+      }
       case 'PullRequestEvent': 
         return `${event.payload.action === 'opened' ? 'Opened' : 'Updated'} pull request in ${event.repo.name}`;
       case 'IssuesEvent': 

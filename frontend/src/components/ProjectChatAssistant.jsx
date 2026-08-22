@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { Button } from './ui/Button';
 import { Sparkles, X, Send, MessageCircle, BotMessageSquare } from 'lucide-react';
 
 const API_BASE = 'http://localhost:5000/api/roadmaps';

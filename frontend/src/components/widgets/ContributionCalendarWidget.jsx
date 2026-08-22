@@ -7,15 +7,6 @@ export const ContributionCalendarWidget = ({ initialData, className }) => {
   const [data, setData] = useState(initialData || null);
   const [loading, setLoading] = useState(!initialData);
 
-  useEffect(() => {
-    if (initialData) {
-      setData(initialData);
-      setLoading(false);
-    } else if (!data) {
-      fetchContributions();
-    }
-  }, [initialData]);
-
   const fetchContributions = async () => {
     try {
       const token = localStorage.getItem('gitmentor_token');
@@ -33,10 +24,22 @@ export const ContributionCalendarWidget = ({ initialData, className }) => {
     }
   };
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (initialData) {
+        setData(initialData);
+        setLoading(false);
+      } else {
+        fetchContributions();
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [initialData]);
+
   const processedWeeks = useMemo(() => {
     if (!data || !data.weeks) return [];
     let currentMonth = -1;
-    return data.weeks.map((week, i) => {
+    return data.weeks.map((week) => {
       let monthLabel = null;
       const firstDay = week.contributionDays[0];
       if (firstDay) {
@@ -62,7 +65,7 @@ export const ContributionCalendarWidget = ({ initialData, className }) => {
   const calculateTotal = () => {
     if (!data || !data.weeks) return 0;
     return data.weeks.reduce((acc, week) => {
-      return acc + week.contributionDays.reduce((dAcc, day) => dAcc + day.contributionCount, 0);
+      return acc + week.contributionDays.reduce((dAcc, day) => dAcc + (Number(day.contributionCount) || 0), 0);
     }, 0);
   };
 
