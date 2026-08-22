@@ -3,6 +3,7 @@ import Analytics from '../models/Analytics.js';
 import Project from '../models/Project.js';
 import Repository from '../models/Repository.js';
 import Insight from '../models/Insight.js';
+import BuildSession from '../models/BuildSession.js';
 import { evaluateBadges } from '../utils/badgeRules.js';
 
 const GITHUB_GRAPHQL_URL = 'https://api.github.com/graphql';
@@ -265,11 +266,18 @@ export const getDashboardMetrics = async (req, res) => {
     const repoIds = repos.map(r => r._id);
     const insightsFixed = await Insight.countDocuments({ repository: { $in: repoIds }, isResolved: true });
 
+    const [buildDaysCompleted, upcomingBuildDays] = await Promise.all([
+      BuildSession.countDocuments({ user: userId, status: 'COMPLETED' }),
+      BuildSession.countDocuments({ user: userId, status: 'SCHEDULED', startAt: { $gte: new Date() } }),
+    ]);
+
     res.status(200).json({
       roadmapsCompleted: completedRoadmaps,
       tasksCompleted,
       insightsFixed,
-      reposTracked
+      reposTracked,
+      buildDaysCompleted,
+      upcomingBuildDays,
     });
   } catch (error) {
     console.error('Error fetching dashboard metrics:', error);
