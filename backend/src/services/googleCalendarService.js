@@ -89,6 +89,9 @@ export const getGoogleCalendarErrorDetails = (error) => {
 const buildDescription = (session, project) => {
   const sections = [
     `GitMentor project: ${project.title}`,
+    session.phaseTitle
+      ? `Roadmap phase: Phase ${session.phaseNumber || '?'} of ${session.phaseCount || '?'} — ${session.phaseTitle}`
+      : '',
     session.objective ? `Objective: ${session.objective}` : '',
     session.milestone ? `Milestone: ${session.milestone}` : '',
     session.notes ? `Notes: ${session.notes}` : '',
@@ -119,6 +122,7 @@ export const buildGoogleEvent = (session, project, { includeId = false } = {}) =
       private: {
         gitmentorSessionId: session._id.toString(),
         gitmentorProjectId: project.projectId,
+        ...(session.phaseId ? { gitmentorPhaseId: session.phaseId } : {}),
       },
     },
   };

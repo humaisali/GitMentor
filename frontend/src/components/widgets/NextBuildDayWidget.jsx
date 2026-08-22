@@ -4,10 +4,12 @@ import { ArrowRight, CalendarClock } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { calendarApi } from '../../services/calendarApi';
+import { getBuildDayPhase } from '../../utils/calendarDates';
 
 export const NextBuildDayWidget = () => {
   const [session, setSession] = useState(null);
   const [connected, setConnected] = useState(true);
+  const phase = getBuildDayPhase(session);
 
   useEffect(() => {
     let active = true;
@@ -34,6 +36,7 @@ export const NextBuildDayWidget = () => {
             {session && <Badge variant="primary">SCHEDULED</Badge>}
           </div>
           <h2 className="text-base font-medium text-canvas-white mt-1 truncate">{session?.title || (connected ? 'No focus session scheduled' : 'Connect Google Calendar')}</h2>
+          {phase && <p className="text-xs font-mono text-muted-cyan mt-1">{phase.label}</p>}
           <p className="text-xs font-mono text-muted-steel mt-1">
             {session ? `${new Date(session.startAt).toLocaleDateString()} · ${new Date(session.startAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Protect time for your next roadmap milestone.'}
           </p>

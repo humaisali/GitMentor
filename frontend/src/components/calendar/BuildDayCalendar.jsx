@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card } from '../ui/Card';
-import { getBuildDayDate } from '../../utils/calendarDates';
+import { getBuildDayDate, getBuildDayPhase } from '../../utils/calendarDates';
 
 const sameDay = (left, right) => left.getFullYear() === right.getFullYear()
   && left.getMonth() === right.getMonth() && left.getDate() === right.getDate();
@@ -16,11 +16,14 @@ const addDays = (date, amount) => {
   return result;
 };
 
-const EventChip = ({ session, onSelect }) => (
-  <button type="button" onClick={() => onSelect(session)} title={session.title} className={`w-full text-left rounded-md px-1.5 py-1 text-[10px] font-mono truncate border ${session.status === 'COMPLETED' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : session.status === 'CANCELLED' ? 'bg-white/[0.03] border-white/[0.06] text-muted-steel line-through' : 'bg-muted-cyan/10 border-muted-cyan/20 text-muted-cyan'}`}>
-    {getBuildDayDate(session)?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || 'Time unavailable'} {session.title}
-  </button>
-);
+const EventChip = ({ session, onSelect }) => {
+  const phase = getBuildDayPhase(session);
+  return (
+    <button type="button" onClick={() => onSelect(session)} title={phase?.label || session.title} className={`w-full text-left rounded-md px-1.5 py-1 text-[10px] font-mono truncate border ${session.status === 'COMPLETED' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : session.status === 'CANCELLED' ? 'bg-white/[0.03] border-white/[0.06] text-muted-steel line-through' : 'bg-muted-cyan/10 border-muted-cyan/20 text-muted-cyan'}`}>
+      {getBuildDayDate(session)?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || 'Time unavailable'} {phase ? `P${phase.number} · ${phase.title}` : session.title}
+    </button>
+  );
+};
 
 export const BuildDayCalendar = ({ sessions, view, onSelect }) => {
   const [cursor, setCursor] = useState(() => new Date());

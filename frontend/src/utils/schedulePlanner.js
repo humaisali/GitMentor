@@ -70,6 +70,9 @@ export const generateBuildDayPreview = ({ project, startDate, startTime, duratio
 
   activePhases.forEach((phase, phaseIndex) => {
     const sessionCount = allocations[phaseIndex];
+    const roadmapPhaseIndex = project.phases.findIndex(item => item.phaseId === phase.phaseId);
+    const phaseNumber = roadmapPhaseIndex + 1;
+    const phaseCount = project.phases.length;
     const openTasks = (phase.tasks || []).filter(task => !task.isCompleted);
     for (let sessionIndex = 0; sessionIndex < sessionCount; sessionIndex += 1) {
       const scheduledDate = timelineDates[dateIndex];
@@ -79,8 +82,11 @@ export const generateBuildDayPreview = ({ project, startDate, startTime, duratio
       sessions.push({
         projectId: project.projectId,
         phaseId: phase.phaseId,
+        phaseTitle: phase.title,
+        phaseNumber,
+        phaseCount,
         taskIds: distributeTasks(openTasks, sessionIndex, sessionCount),
-        title: `GitMentor Build Day: ${phase.title} (${sessionIndex + 1}/${sessionCount})`,
+        title: `GitMentor Build Day: Phase ${phaseNumber} of ${phaseCount} · ${phase.title} (${sessionIndex + 1}/${sessionCount})`,
         objective: sessionCount > 1 ? `${phase.description} — focus session ${sessionIndex + 1} of ${sessionCount}.` : phase.description,
         milestone: `Complete session ${sessionIndex + 1} of ${sessionCount} for ${phase.title}`,
         notes: `Confirmed project timeline: ${timeline.duration || `${timeline.durationDays} days`}. Estimated phase effort was compressed to fit this window.`,

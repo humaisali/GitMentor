@@ -10,12 +10,13 @@ import { AutoScheduleModal } from '../components/calendar/AutoScheduleModal';
 import { BuildDayCalendar } from '../components/calendar/BuildDayCalendar';
 import { calendarApi } from '../services/calendarApi';
 import { apiRequest } from '../services/apiClient';
-import { formatBuildDayTime, getBuildDayDate } from '../utils/calendarDates';
+import { formatBuildDayTime, getBuildDayDate, getBuildDayPhase } from '../utils/calendarDates';
 
 const statusVariant = { SCHEDULED: 'primary', COMPLETED: 'success', CANCELLED: 'default' };
 
 const SessionCard = ({ session, onEdit, onComplete, onCancel, onRetry }) => {
   const start = getBuildDayDate(session, 'startAt');
+  const phase = getBuildDayPhase(session);
   return (
     <Card className={`p-5 ${session.status === 'CANCELLED' ? 'opacity-50' : ''}`}>
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
@@ -28,12 +29,14 @@ const SessionCard = ({ session, onEdit, onComplete, onCancel, onRetry }) => {
           <div className="flex flex-wrap items-center gap-2 mb-1.5">
             <h3 className="font-medium text-canvas-white truncate">{session.title}</h3>
             <Badge variant={statusVariant[session.status]}>{session.status}</Badge>
+            {phase && <Badge variant="outline">PHASE {phase.number} OF {phase.count}</Badge>}
             {session.syncStatus === 'FAILED' && <Badge variant="error">SYNC FAILED</Badge>}
           </div>
           <p className="text-xs font-mono text-muted-cyan">
             {formatBuildDayTime(session)}
             <span className="text-muted-steel"> · {session.timeZone}</span>
           </p>
+          {phase && <p className="text-xs font-mono text-muted-cyan mt-2">Roadmap phase · {phase.title}</p>}
           <p className="text-sm text-muted-steel mt-2 line-clamp-2">{session.objective || session.milestone || session.projectTitle}</p>
           <p className="text-[11px] font-mono text-muted-steel/70 mt-2">{session.project?.title || session.projectTitle}</p>
         </div>

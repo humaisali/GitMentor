@@ -84,6 +84,17 @@ const validatePhaseAndTasks = (project, data) => {
   }
 };
 
+const getPhaseMetadata = (project, phaseId) => {
+  const phases = project?.phases || [];
+  const phaseIndex = phases.findIndex(item => item.phaseId === phaseId);
+  if (phaseIndex < 0) return { phaseTitle: undefined, phaseNumber: undefined, phaseCount: undefined };
+  return {
+    phaseTitle: phases[phaseIndex].title,
+    phaseNumber: phaseIndex + 1,
+    phaseCount: phases.length,
+  };
+};
+
 export const getTimelineDurationDays = (timeline) => {
   const durationText = String(timeline?.duration || '');
   const value = Number.parseInt(durationText, 10);
@@ -190,6 +201,7 @@ const createSession = async ({ user, input }) => {
 
   const session = new BuildSession({
     ...data,
+    ...getPhaseMetadata(project, data.phaseId),
     user: user._id,
     project: project._id,
     projectId: project.projectId,
@@ -317,6 +329,7 @@ export const getSessions = async (req, res) => {
     }
     if (req.query.projectId) filter.project = (await findOwnedProject(req.user._id, req.query.projectId))._id;
     const sessions = await BuildSession.find(filter).populate('project').sort({ startAt: 1 });
+    sessions.forEach(session => Object.assign(session, getPhaseMetadata(session.project, session.phaseId)));
     res.status(200).json(sessions);
   } catch (error) {
     res.status(error.statusCode || 500).json({ message: error.message || 'Error fetching Build Days.' });
@@ -332,7 +345,7 @@ export const updateSession = async (req, res) => {
 
     const data = parseSessionInput({ ...session.toObject(), ...req.body });
     validatePhaseAndTasks(session.project, data);
-    Object.assign(session, data, { syncStatus: 'PENDING' });
+    Object.assign(session, data, getPhaseMetadata(session.project, data.phaseId), { syncStatus: 'PENDING' });
     await session.save();
     try {
       applyGoogleEvent(session, await updateCalendarEvent(user, session, session.project));

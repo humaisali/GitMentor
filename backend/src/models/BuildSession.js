@@ -15,6 +15,9 @@ const buildSessionSchema = new mongoose.Schema(
     projectId: { type: String, required: true },
     projectTitle: { type: String, required: true },
     phaseId: { type: String },
+    phaseTitle: { type: String, trim: true },
+    phaseNumber: { type: Number, min: 1 },
+    phaseCount: { type: Number, min: 1 },
     taskIds: [{ type: String }],
     title: {
       type: String,

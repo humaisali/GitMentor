@@ -33,6 +33,9 @@ test('confirmed timeline controls the Build Day count and distributes phase task
   assert.deepEqual(sessions.flatMap(session => session.taskIds), ['task-1', 'task-2', 'task-3', 'task-4', 'task-5']);
   assert.ok(sessions.every(session => new Date(session.endAt) - new Date(session.startAt) === 120 * 60 * 1000));
   assert.equal(new Set(sessions.map(session => session.previewId)).size, 7);
+  assert.ok(sessions.every(session => session.phaseTitle === 'API delivery'));
+  assert.ok(sessions.every(session => session.phaseNumber === 1 && session.phaseCount === 1));
+  assert.match(sessions[0].title, /Phase 1 of 1/);
 });
 
 test('one-week timeline creates seven Build Days regardless of phase count', () => {
@@ -56,6 +59,7 @@ test('one-week timeline creates seven Build Days regardless of phase count', () 
   const timelineStart = new Date('2026-08-24T00:00:00');
   assert.equal(sessions.length, 7);
   assert.deepEqual(new Set(sessions.map(session => session.phaseId)).size, 5);
+  assert.deepEqual([...new Set(sessions.map(session => session.phaseNumber))], [1, 2, 3, 4, 5]);
   const dayOffsets = sessions.map(session => {
     const dayOffset = Math.floor((new Date(session.startAt) - timelineStart) / (24 * 60 * 60 * 1000));
     return dayOffset;

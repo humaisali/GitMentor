@@ -3,6 +3,7 @@ import { CalendarRange, ChevronLeft, Sparkles, X } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { Badge } from '../ui/Badge';
 import { generateBuildDayPreview, getSelectedTimeline } from '../../utils/schedulePlanner';
 
 const tomorrowValue = () => {
@@ -82,7 +83,11 @@ export const AutoScheduleModal = ({ projects, initialProjectId, onClose, onSubmi
               {preview.map((session, index) => (
                 <div key={session.previewId} className="glass-surface p-4 flex items-start justify-between gap-4">
                   <div>
-                    <span className="text-[10px] font-mono text-muted-cyan">BUILD DAY {index + 1}</span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[10px] font-mono text-muted-cyan">BUILD DAY {index + 1}</span>
+                      <Badge variant="outline" className="text-[10px]">PHASE {session.phaseNumber} OF {session.phaseCount}</Badge>
+                    </div>
+                    <p className="text-xs font-mono text-muted-cyan mt-2">Roadmap phase · {session.phaseTitle}</p>
                     <h3 className="text-sm font-medium text-canvas-white mt-1">{session.title.replace('GitMentor Build Day: ', '')}</h3>
                     <p className="text-xs text-muted-steel mt-1 line-clamp-2">{session.objective}</p>
                   </div>

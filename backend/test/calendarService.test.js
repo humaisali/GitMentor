@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { encryptToken, decryptToken } from '../src/utils/tokenCrypto.js';
 import { buildGoogleEvent, getGoogleCalendarErrorDetails, isGoogleCredentialError } from '../src/services/googleCalendarService.js';
-import { parseSessionInput } from '../src/controllers/calendarController.js';
+import { getTimelineDurationDays, parseSessionInput } from '../src/controllers/calendarController.js';
 import { buildFallbackPhaseTasks } from '../src/controllers/roadmapController.js';
 
 test('Google refresh tokens are encrypted and decryptable', () => {
@@ -19,6 +19,10 @@ test('Google event payload preserves timezone, reminders, and GitMentor identity
   const session = {
     _id: { toString: () => '64b7f1a2c3d4e5f607182930' },
     title: 'GitMentor Build Day: API phase',
+    phaseId: 'P2',
+    phaseTitle: 'API delivery',
+    phaseNumber: 2,
+    phaseCount: 4,
     objective: 'Ship the REST API',
     milestone: 'Endpoints verified',
     notes: 'Run integration tests',
@@ -34,7 +38,9 @@ test('Google event payload preserves timezone, reminders, and GitMentor identity
   assert.equal(event.start.timeZone, 'Asia/Karachi');
   assert.deepEqual(event.reminders.overrides, [{ method: 'popup', minutes: 30 }]);
   assert.equal(event.extendedProperties.private.gitmentorProjectId, 'MOD-1');
+  assert.equal(event.extendedProperties.private.gitmentorPhaseId, 'P2');
   assert.match(event.description, /Ship the REST API/);
+  assert.match(event.description, /Phase 2 of 4 — API delivery/);
 });
 
 test('Build Day input validation rejects invalid ranges and timezones', () => {
@@ -81,4 +87,10 @@ test('disabled Calendar API errors become actionable setup guidance', () => {
   assert.equal(details.code, 'CALENDAR_API_DISABLED');
   assert.match(details.message, /12345/);
   assert.equal(details.actionUrl, 'https://console.example/calendar');
+});
+
+test('timeline duration uses explicit days and supports legacy week labels', () => {
+  assert.equal(getTimelineDurationDays({ duration: '1 week', durationDays: 7 }), 7);
+  assert.equal(getTimelineDurationDays({ duration: '2 weeks' }), 14);
+  assert.equal(getTimelineDurationDays({ duration: '10 days' }), 10);
 });
