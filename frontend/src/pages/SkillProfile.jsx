@@ -757,7 +757,9 @@ const SkillProfile = () => {
         <Card className="min-w-0 overflow-hidden">
           <SectionTitle icon={TrendingUp} title="Assessment History" />
           {profile.history?.length > 0 ? (
-            profile.history.slice(-5).reverse().map((item, index) => <HistoryItem key={`${item.assessedAt}-${index}`} item={item} />)
+            <div className="scroll-panel max-h-[303px] overflow-y-auto overscroll-contain">
+              {profile.history.slice(-8).reverse().map((item, index) => <HistoryItem key={`${item.assessedAt}-${index}`} item={item} />)}
+            </div>
           ) : (
             <EmptyPanel>No previous assessments yet.</EmptyPanel>
           )}
