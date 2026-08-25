@@ -5,6 +5,7 @@ import { FaGithub } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { API_URL } from '../services/apiClient';
 
 const Login = () => {
   const { user } = useAuth();
@@ -16,7 +17,7 @@ const Login = () => {
 
   const handleGitHubLogin = () => {
     // Redirect to our backend's GitHub OAuth endpoint
-    window.location.href = 'http://localhost:5000/api/auth/github';
+    window.location.href = `${API_URL}/auth/github`;
   };
 
   return (

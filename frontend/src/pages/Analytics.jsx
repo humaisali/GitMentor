@@ -4,6 +4,7 @@ import { BADGES } from '../utils/badges';
 import { ContributionCalendarWidget } from '../components/widgets/ContributionCalendarWidget';
 import { Card } from '../components/ui/Card';
 import { Skeleton } from '../components/ui/Skeleton';
+import { API_URL } from '../services/apiClient';
 
 const Analytics = () => {
   const [data, setData] = useState(null);
@@ -14,7 +15,7 @@ const Analytics = () => {
     try {
       if (forceRefresh) setRefreshing(true);
       const token = localStorage.getItem('gitmentor_token');
-      const res = await fetch(`http://localhost:5000/api/analytics/profile${forceRefresh ? '?forceRefresh=true' : ''}`, {
+      const res = await fetch(`${API_URL}/analytics/profile${forceRefresh ? '?forceRefresh=true' : ''}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {

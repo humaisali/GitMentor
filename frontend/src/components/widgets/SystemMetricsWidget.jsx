@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '../ui/Card';
 import { Skeleton } from '../ui/Skeleton';
+import { API_URL } from '../../services/apiClient';
 
 export const SystemMetricsWidget = () => {
   const [metrics, setMetrics] = useState(null);
@@ -10,7 +11,7 @@ export const SystemMetricsWidget = () => {
     const fetchMetrics = async () => {
       try {
         const token = localStorage.getItem('gitmentor_token');
-        const res = await fetch('http://localhost:5000/api/analytics/dashboard', {
+        const res = await fetch(`${API_URL}/analytics/dashboard`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {

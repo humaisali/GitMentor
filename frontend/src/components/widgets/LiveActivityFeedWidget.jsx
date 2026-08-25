@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '../ui/Card';
 import { Activity, GitCommit, GitPullRequest, MessageSquare, Star, Terminal } from 'lucide-react';
 import { Skeleton } from '../ui/Skeleton';
+import { API_URL } from '../../services/apiClient';
 
 export const LiveActivityFeedWidget = () => {
   const [events, setEvents] = useState([]);
@@ -10,7 +11,7 @@ export const LiveActivityFeedWidget = () => {
   const fetchEvents = async () => {
     try {
       const token = localStorage.getItem('gitmentor_token');
-      const res = await fetch('http://localhost:5000/api/analytics/events', {
+      const res = await fetch(`${API_URL}/analytics/events`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {

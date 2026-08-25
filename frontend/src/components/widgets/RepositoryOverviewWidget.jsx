@@ -3,6 +3,7 @@ import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Skeleton } from '../ui/Skeleton';
 import { GitBranch, GitCommit, GitMerge } from 'lucide-react';
+import { API_URL } from '../../services/apiClient';
 
 export const RepositoryOverviewWidget = () => {
   const [repositories, setRepositories] = useState([]);
@@ -12,7 +13,7 @@ export const RepositoryOverviewWidget = () => {
     const fetchRepos = async () => {
       try {
         const token = localStorage.getItem('gitmentor_token');
-        const response = await fetch('http://localhost:5000/api/repositories/tracked', {
+        const response = await fetch(`${API_URL}/repositories/tracked`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) throw new Error('Failed to fetch');

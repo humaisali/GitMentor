@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ShieldAlert, Zap, Layers, Info, CheckCircle2, Loader2 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { API_URL } from '../services/apiClient';
 
 const RepositoryDetails = () => {
   const { id } = useParams();
@@ -29,7 +30,7 @@ const RepositoryDetails = () => {
   const fetchInsights = async () => {
     try {
       const token = localStorage.getItem('gitmentor_token');
-      const res = await fetch(`http://localhost:5000/api/insights/${id}`, {
+      const res = await fetch(`${API_URL}/insights/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -57,7 +58,7 @@ const RepositoryDetails = () => {
   const handleResolve = async (insightId) => {
     try {
       const token = localStorage.getItem('gitmentor_token');
-      const res = await fetch(`http://localhost:5000/api/insights/${insightId}/resolve`, {
+      const res = await fetch(`${API_URL}/insights/${insightId}/resolve`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` }
       });

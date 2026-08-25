@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Sparkles, X, Send, MessageCircle, BotMessageSquare } from 'lucide-react';
+import { API_URL } from '../services/apiClient';
 
-const API_BASE = 'http://localhost:5000/api/roadmaps';
+const API_BASE = `${API_URL}/roadmaps`;
 
 const ProjectChatAssistant = ({ projectId }) => {
   const [isOpen, setIsOpen] = useState(false);

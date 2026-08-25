@@ -6,8 +6,9 @@ import { Sparkles, ArrowLeft, CheckCircle2, Circle, Check, X, ListTodo, Bot, Boo
 import { Badge } from '../components/ui/Badge';
 import ProjectChatAssistant from '../components/ProjectChatAssistant';
 import { getPhaseTimelineAllocations, getSelectedTimeline } from '../utils/schedulePlanner';
+import { API_URL } from '../services/apiClient';
 
-const API_BASE = 'http://localhost:5000/api/roadmaps';
+const API_BASE = `${API_URL}/roadmaps`;
 
 const ProjectWorkspace = () => {
   const { projectId } = useParams();

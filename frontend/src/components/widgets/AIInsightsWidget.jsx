@@ -5,6 +5,7 @@ import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Skeleton } from '../ui/Skeleton';
 import { ShieldAlert, Zap, BookOpen, ExternalLink } from 'lucide-react';
+import { API_URL } from '../../services/apiClient';
 
 const getIcon = (type) => {
   switch(type) {
@@ -22,7 +23,7 @@ export const AIInsightsWidget = () => {
   const fetchInsights = async () => {
     try {
       const token = localStorage.getItem('gitmentor_token');
-      const response = await fetch('http://localhost:5000/api/insights/user', {
+      const response = await fetch(`${API_URL}/insights/user`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!response.ok) {

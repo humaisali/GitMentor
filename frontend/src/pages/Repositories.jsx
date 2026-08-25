@@ -5,8 +5,9 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { RefreshCcw, Star, GitFork, Plus, ExternalLink, ChevronRight } from 'lucide-react';
+import { API_URL } from '../services/apiClient';
 
-const API_BASE = 'http://localhost:5000/api/repositories';
+const API_BASE = `${API_URL}/repositories`;
 
 const Repositories = () => {
   const [activeTab, setActiveTab] = useState('github');

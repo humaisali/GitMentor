@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { API_URL } from '../services/apiClient';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -35,7 +36,7 @@ import {
   Zap,
 } from 'lucide-react';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = API_URL;
 
 const CAREER_TRACK_OPTIONS = [
   { id: 'frontend-developer', label: 'Frontend Developer' },

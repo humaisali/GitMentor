@@ -6,8 +6,9 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { Badge } from '../components/ui/Badge';
 import { Sparkles, ArrowLeft, Circle, Clock, Check, Layers, Compass, Play, Brain, Target, Gauge, CalendarPlus } from 'lucide-react';
 import ProjectChatAssistant from '../components/ProjectChatAssistant';
+import { API_URL } from '../services/apiClient';
 
-const API_BASE = 'http://localhost:5000/api/roadmaps';
+const API_BASE = `${API_URL}/roadmaps`;
 
 const ProjectDetails = () => {
   const { projectId } = useParams();

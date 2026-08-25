@@ -6,8 +6,9 @@ import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { Input } from '../components/ui/Input';
 import { CheckCircle2, Circle, Lock, Sparkles, X, Brain, Target } from 'lucide-react';
+import { API_URL } from '../services/apiClient';
 
-const API_BASE = 'http://localhost:5000/api/roadmaps';
+const API_BASE = `${API_URL}/roadmaps`;
 
 const Roadmap = () => {
   const [roadmap, setRoadmap] = useState([]);

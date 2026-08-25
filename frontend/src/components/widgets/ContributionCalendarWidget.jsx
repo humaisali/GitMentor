@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card } from '../ui/Card';
 import { Skeleton } from '../ui/Skeleton';
 import { Activity } from 'lucide-react';
+import { API_URL } from '../../services/apiClient';
 
 export const ContributionCalendarWidget = ({ initialData, className }) => {
   const [data, setData] = useState(initialData || null);
@@ -10,7 +11,7 @@ export const ContributionCalendarWidget = ({ initialData, className }) => {
   const fetchContributions = async () => {
     try {
       const token = localStorage.getItem('gitmentor_token');
-      const res = await fetch('http://localhost:5000/api/analytics/profile', {
+      const res = await fetch(`${API_URL}/analytics/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
