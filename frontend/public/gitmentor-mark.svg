@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="gitmentor-cyan" x1="14" y1="12" x2="51" y2="52" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#06B6D4"/>
+      <stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#020617"/>
+  <rect x="1" y="1" width="62" height="62" rx="15" fill="none" stroke="#1E293B" stroke-width="2"/>
+  <path d="M20 18v19a9 9 0 0 0 9 9h15M20 25h12a9 9 0 0 1 9 9v12" fill="none" stroke="url(#gitmentor-cyan)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="20" cy="15" r="5" fill="#F8FAFC"/>
+  <circle cx="44" cy="49" r="5" fill="#06B6D4"/>
+  <circle cx="41" cy="31" r="5" fill="#F8FAFC"/>
+</svg>
