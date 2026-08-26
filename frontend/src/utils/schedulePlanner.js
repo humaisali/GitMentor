@@ -114,7 +114,7 @@ export const generateBuildDayPreview = ({ project, startDate, startTime, duratio
         phaseCount,
         taskIds: distributeTasks(openTasks, sessionIndex, sessionCount),
         title: `GitMentor Build Day: Phase ${phaseNumber} of ${phaseCount} · ${phase.title} (${sessionIndex + 1}/${sessionCount})`,
-        objective: sessionCount > 1 ? `${phase.description} — focus session ${sessionIndex + 1} of ${sessionCount}.` : phase.description,
+        objective: sessionCount > 1 ? `${phase.description}. Focus session ${sessionIndex + 1} of ${sessionCount}.` : phase.description,
         milestone: `Complete session ${sessionIndex + 1} of ${sessionCount} for ${phase.title}`,
         notes: `Confirmed project timeline: ${timeline.duration || `${timeline.durationDays} days`}. Estimated phase effort was compressed to fit this window.`,
         startAt: startAt.toISOString(),

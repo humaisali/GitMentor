@@ -24,7 +24,7 @@ const SessionCard = ({ session, onEdit, onComplete, onCancel, onRetry }) => {
       <div className="flex gap-4 min-w-0">
         <div className="w-14 h-14 shrink-0 rounded-2xl bg-muted-cyan/10 border border-muted-cyan/20 flex flex-col items-center justify-center">
           <span className="text-[10px] font-mono text-muted-cyan uppercase">{start ? start.toLocaleString([], { month: 'short' }) : 'TBD'}</span>
-          <span className="text-xl font-semibold text-canvas-white leading-none">{start ? String(start.getDate()) : '—'}</span>
+          <span className="text-xl font-semibold text-canvas-white leading-none">{start ? String(start.getDate()) : 'N/A'}</span>
         </div>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1.5">

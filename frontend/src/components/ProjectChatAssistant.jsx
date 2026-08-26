@@ -228,7 +228,7 @@ const ProjectChatAssistant = ({ projectId }) => {
                 </div>
                 <h4 className="text-canvas-white font-medium mb-2">How can I help?</h4>
                 <p className="text-sm text-muted-steel leading-relaxed max-w-[280px]">
-                  Ask me anything about this project — tech stack, architecture, phase guidance, debugging help, or best practices.
+                  Ask me anything about this project: tech stack, architecture, phase guidance, debugging help, or best practices.
                 </p>
                 <div className="mt-5 space-y-2 w-full">
                   {[

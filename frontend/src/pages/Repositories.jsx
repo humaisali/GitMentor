@@ -145,7 +145,7 @@ const Repositories = () => {
         </Button>
       </header>
 
-      {/* Tabs — Glass treatment */}
+      {/* Tabs with glass treatment */}
       <div className="flex gap-1 border-b border-white/[0.06] shrink-0 animate-fade-in-up stagger-1">
         <button
           onClick={() => setActiveTab('github')}

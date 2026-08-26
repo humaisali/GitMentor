@@ -29,7 +29,7 @@ const DashboardLayout = () => {
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
-          <NavItem to="/" icon={<LayoutDashboard size={18} />} label="Focus Workspace" onNavigate={() => setMobileNavOpen(false)} />
+          <NavItem to="/workspace" icon={<LayoutDashboard size={18} />} label="Focus Workspace" onNavigate={() => setMobileNavOpen(false)} />
           <NavItem to="/analytics" icon={<BarChart2 size={18} />} label="Analytics" onNavigate={() => setMobileNavOpen(false)} />
           <NavItem to="/skills" icon={<Brain size={18} />} label="Skill Profile" onNavigate={() => setMobileNavOpen(false)} />
           <NavItem to="/roadmap" icon={<Target size={18} />} label="Roadmap" onNavigate={() => setMobileNavOpen(false)} />
@@ -93,7 +93,7 @@ const NavItem = ({ to, icon, label, onNavigate }) => {
   return (
     <NavLink
       to={to}
-      end={to === '/'}
+      end={to === '/workspace'}
       onClick={onNavigate}
       className={({ isActive }) =>
         `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-300 ${
