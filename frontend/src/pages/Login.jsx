@@ -1,76 +1,66 @@
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { GitMerge } from 'lucide-react';
+import { useEffect } from 'react';
+import { Link, Navigate } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, GitMerge, ShieldCheck } from 'lucide-react';
 import { FaGithub } from 'react-icons/fa';
-import { FcGoogle } from 'react-icons/fc';
 import { useAuth } from '../context/AuthContext';
-import { Navigate } from 'react-router-dom';
 import { API_URL } from '../services/apiClient';
+import './Login.css';
 
 const Login = () => {
   const { user } = useAuth();
 
-  // If already logged in, redirect to dashboard
+  useEffect(() => {
+    document.title = 'GitMentor | Sign in';
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute('content', 'Sign in to GitMentor securely with GitHub and turn your repositories into a focused developer growth plan.');
+  }, []);
+
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/workspace" replace />;
   }
 
   const handleGitHubLogin = () => {
-    // Redirect to our backend's GitHub OAuth endpoint
-    window.location.href = `${API_URL}/auth/github`;
+    window.location.assign(`${API_URL}/auth/github`);
   };
 
   return (
-    <div className="min-h-screen bg-bg-deep flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated Background Blobs */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-muted-cyan/[0.05] blur-[120px] animate-blob" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-purple-500/[0.04] blur-[100px] animate-blob-delay-2" />
-        <div className="absolute top-1/2 right-1/3 w-[350px] h-[350px] rounded-full bg-indigo-500/[0.03] blur-[100px] animate-blob-delay-4" />
-      </div>
+    <div className="auth-page">
+      <a className="auth-skip" href="#auth-main">Skip to sign in</a>
+      <div className="auth-axis auth-axis-horizontal" aria-hidden="true" />
+      <div className="auth-axis auth-axis-vertical" aria-hidden="true" />
 
-      <Card hover={false} className="w-full max-w-md p-8 flex flex-col items-center relative z-10 shadow-elevation-4 animate-fade-in-up">
-        
-        {/* Brand Header */}
-        <div className="flex flex-col items-center mb-8 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-muted-cyan to-blue-400 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(88,166,255,0.3)] animate-pulse-glow">
-            <GitMerge className="w-7 h-7 text-bg-deep" />
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-canvas-white mb-2">GitMentor</h1>
-          <p className="text-sm text-muted-steel leading-relaxed">
-            Clinical precision for professional software engineering.
-          </p>
-        </div>
+      <header className="auth-header">
+        <Link className="auth-brand" to="/" aria-label="GitMentor home">
+          <span><GitMerge aria-hidden="true" /></span>
+          <b>GitMentor</b>
+        </Link>
+        <nav aria-label="Sign-in page navigation">
+          <Link to="/"><ArrowLeft aria-hidden="true" /> Home</Link>
+          <Link to="/product">View product</Link>
+        </nav>
+      </header>
 
-        {/* Auth Actions */}
-        <div className="w-full space-y-3">
-          <Button 
-            variant="secondary" 
-            className="w-full gap-3 py-3"
-            onClick={handleGitHubLogin}
-          >
-            <FaGithub size={18} />
+      <main className="auth-main" id="auth-main">
+        <section className="auth-content" aria-labelledby="auth-title">
+          <div className="auth-mark" aria-hidden="true"><GitMerge /></div>
+          <span className="auth-kicker">YOUR GITHUB. YOUR GROWTH PLAN.</span>
+          <h1 id="auth-title">Let&apos;s connect<br />your GitHub.</h1>
+          <p className="auth-subtitle">GitHub is the only identity you need. Connect once to open your private GitMentor workspace.</p>
+
+          <button className="auth-github-button" type="button" onClick={handleGitHubLogin}>
+            <FaGithub aria-hidden="true" />
             <span>Continue with GitHub</span>
-          </Button>
+            <ArrowRight aria-hidden="true" />
+          </button>
 
-          <div className="w-full flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 py-3">
-            <FcGoogle size={18} />
-            <div className="flex flex-col">
-              <span className="text-sm text-canvas-white">Google Calendar integration</span>
-              <span className="text-[11px] text-muted-steel">Available in Settings after GitHub sign-in</span>
-            </div>
-          </div>
-          <p className="text-center text-[11px] text-muted-steel font-mono tracking-wider">GITHUB IS YOUR GITMENTOR IDENTITY</p>
-        </div>
+          <p className="auth-security"><ShieldCheck aria-hidden="true" /> Secure GitHub OAuth. No separate password.</p>
+        </section>
+      </main>
 
-        {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-xs text-muted-steel/60 font-mono tracking-widest">
-            SECURE ENGINEERING WORKSPACE
-          </p>
-        </div>
-
-      </Card>
+      <footer className="auth-footer">
+        <span>By continuing, you agree to the <Link to="/terms">Terms</Link> and <Link to="/privacy">Privacy Policy</Link>.</span>
+        <span>Repository-aware mentorship</span>
+      </footer>
     </div>
   );
 };

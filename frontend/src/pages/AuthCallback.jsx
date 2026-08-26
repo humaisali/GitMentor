@@ -11,7 +11,7 @@ const AuthCallback = () => {
     const token = searchParams.get('token');
     if (token) {
       loginWithToken(token);
-      navigate('/', { replace: true });
+      navigate('/workspace', { replace: true });
     } else {
       navigate('/login', { replace: true });
     }

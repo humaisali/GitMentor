@@ -1,0 +1,78 @@
+.auth-page {
+  --auth-bg: #020617;
+  --auth-text: #f8fafc;
+  --auth-muted: #a2afbf;
+  --auth-border: rgba(148, 163, 184, .12);
+  --auth-cyan: #06b6d4;
+  min-height: 100dvh;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+  color: var(--auth-text);
+  background: var(--auth-bg);
+}
+
+.auth-page *, .auth-page *::before, .auth-page *::after { box-sizing: border-box; }
+.auth-page a { color: inherit; text-decoration: none; }
+.auth-page a, .auth-page button { touch-action: manipulation; }
+.auth-page :focus-visible { outline: 2px solid #38bdf8; outline-offset: 4px; }
+.auth-skip { position: fixed; z-index: 50; top: -56px; left: 24px; padding: 11px 15px; color: #020617 !important; background: var(--auth-cyan); border-radius: 0 0 8px 8px; font-size: 14px; font-weight: 650; transition: top 180ms ease; }
+.auth-skip:focus { top: 0; }
+
+.auth-axis { position: absolute; z-index: -1; pointer-events: none; background: linear-gradient(90deg, transparent, rgba(6,182,212,.12), transparent); }
+.auth-axis-horizontal { width: min(880px, 90vw); height: 1px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.auth-axis-vertical { width: 1px; height: min(620px, 76vh); top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(transparent, rgba(6,182,212,.1), transparent); }
+
+.auth-header { min-height: 68px; width: min(1240px, calc(100% - 48px)); margin-inline: auto; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--auth-border); }
+.auth-brand { display: inline-flex; align-items: center; gap: 10px; font-size: 15px; letter-spacing: -.02em; }
+.auth-brand > span { width: 31px; height: 31px; display: grid; place-items: center; color: #020617; background: var(--auth-cyan); border-radius: 8px; }
+.auth-brand svg { width: 17px; height: 17px; }
+.auth-header nav { display: flex; align-items: center; gap: 26px; }
+.auth-header nav a { min-height: 44px; display: inline-flex; align-items: center; gap: 7px; color: var(--auth-muted); font-size: 13px; font-weight: 500; transition: color 180ms ease; }
+.auth-header nav a:hover { color: var(--auth-text); }
+.auth-header nav svg { width: 14px; height: 14px; }
+
+.auth-main { min-height: 600px; padding: 72px 24px; display: grid; place-items: center; }
+.auth-content { width: min(100%, 460px); display: flex; flex-direction: column; align-items: center; text-align: center; }
+.auth-mark { width: 52px; height: 52px; margin-bottom: 28px; display: grid; place-items: center; color: #020617; background: var(--auth-cyan); border-radius: 14px; }
+.auth-mark svg { width: 25px; height: 25px; }
+.auth-kicker { color: #67d8e8; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 650; line-height: 1.5; letter-spacing: .1em; }
+.auth-content h1 { margin: 20px 0; font-size: clamp(46px, 5.5vw, 66px); font-weight: 570; line-height: .98; letter-spacing: -.058em; text-wrap: balance; }
+.auth-subtitle { max-width: 430px; margin: 0; color: var(--auth-muted); font-size: 16px; line-height: 1.7; }
+.auth-github-button { width: min(100%, 360px); min-height: 56px; margin-top: 34px; padding: 0 18px; display: grid; grid-template-columns: 22px 1fr 18px; align-items: center; gap: 12px; color: #07111f; background: #f8fafc; border: 1px solid #f8fafc; border-radius: 9px; cursor: pointer; font: 650 15px 'Geist Sans', sans-serif; transition: color 180ms ease, background 180ms ease, border-color 180ms ease; }
+.auth-github-button:hover { color: #020617; background: #cffafe; border-color: #cffafe; }
+.auth-github-button:active { background: #a5f3fc; }
+.auth-github-button > svg:first-child { width: 22px; height: 22px; }
+.auth-github-button > svg:last-child { width: 17px; height: 17px; transition: transform 180ms ease; }
+.auth-github-button:hover > svg:last-child { transform: translateX(3px); }
+.auth-security { margin: 18px 0 0; display: inline-flex; align-items: center; gap: 7px; color: #8191a5; font: 11px 'JetBrains Mono', monospace; }
+.auth-security svg { width: 14px; height: 14px; color: var(--auth-cyan); }
+
+.auth-footer { width: min(1240px, calc(100% - 48px)); min-height: 68px; margin-inline: auto; display: flex; align-items: center; justify-content: space-between; gap: 30px; color: #718197; border-top: 1px solid var(--auth-border); font-size: 11px; line-height: 1.6; }
+.auth-footer a { color: #b9c6d4; text-decoration: underline; text-underline-offset: 3px; }
+.auth-footer > span:last-child { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+
+@media (max-width: 640px) {
+  .auth-header, .auth-footer { width: calc(100% - 32px); }
+  .auth-header { min-height: 62px; }
+  .auth-header nav a:first-child { display: none; }
+  .auth-main { min-height: 0; padding: 64px 18px 48px; }
+  .auth-mark { width: 48px; height: 48px; margin-bottom: 24px; }
+  .auth-content h1 { font-size: 48px; }
+  .auth-subtitle { font-size: 15px; }
+  .auth-github-button { margin-top: 30px; }
+  .auth-footer { padding: 18px 0; text-align: center; justify-content: center; }
+  .auth-footer > span:last-child { display: none; }
+}
+
+@media (max-height: 690px) and (min-width: 641px) {
+  .auth-main { min-height: 500px; padding-top: 40px; padding-bottom: 40px; }
+  .auth-mark { margin-bottom: 20px; }
+  .auth-content h1 { font-size: 52px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-page *, .auth-page *::before, .auth-page *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
