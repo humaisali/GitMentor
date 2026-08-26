@@ -14,6 +14,7 @@ import BuildDays from './pages/BuildDays';
 import Login from './pages/Login';
 import AuthCallback from './pages/AuthCallback';
 import ProtectedRoute from './components/ProtectedRoute';
+import { AppLoader } from './components/ui/KineticTextLoader';
 
 const Landing = lazy(() => import('./pages/Landing'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
@@ -24,7 +25,7 @@ const About = lazy(() => import('./pages/About'));
 
 function App() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-bg-deep flex items-center justify-center text-muted-steel font-mono text-sm">Loading GitMentor…</div>}>
+    <Suspense fallback={<AppLoader />}>
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Landing />} />
