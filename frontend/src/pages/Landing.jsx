@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   ArrowRight, BarChart3, BookOpen, BrainCircuit, CalendarCheck, Check,
   ChevronDown, Code2, FileSearch, GitBranch, GitPullRequest, Layers3,
-  MessageSquareText, Route, ShieldCheck, Sparkles, Target, Zap,
+  MessageSquareText, Route, ShieldCheck, Sparkles, Target, Trophy, Zap,
 } from 'lucide-react';
 import { FaGithub, FaGoogle } from 'react-icons/fa';
 import {
@@ -18,6 +18,7 @@ const featureCards = [
   { icon: FileSearch, label: 'REPOSITORY REVIEW', title: 'Turn code into a feedback loop', body: 'Get actionable observations, improvement areas, and suggested solutions for connected repositories.' },
   { icon: CalendarCheck, label: 'BUILD DAYS', title: 'Put growth on the calendar', body: 'Choose a pace, schedule focused sessions, and optionally sync them with Google Calendar.' },
   { icon: BarChart3, label: 'PROGRESS SIGNALS', title: 'Measure more than commits', body: 'Track project momentum, contribution consistency, skill progress, and earned achievements.', className: 'wide' },
+  { icon: Trophy, label: 'ACHIEVEMENTS', title: 'Make milestones visible', body: 'Recognize meaningful portfolio, project, and consistency milestones as your body of work grows.' },
 ];
 
 const faqs = [
